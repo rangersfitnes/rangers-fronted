@@ -1,0 +1,39 @@
+.evento-form__imagen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.evento-form__file {
+  width: 100%;
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.evento-form__preview-wrap {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+.evento-form__preview {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+}
+
+.evento-form__preview-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #a3a3a3;
+}
+
+.evento-form__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #a3a3a3;
+}

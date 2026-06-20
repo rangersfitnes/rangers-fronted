@@ -1,0 +1,120 @@
+.planes-table-wrapper {
+  overflow-x: auto;
+  touch-action: pan-x;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.planes-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.88rem;
+  color: #e5e5e5;
+}
+
+.planes-table thead th {
+  position: sticky;
+  top: 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.planes-table tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.planes-table thead th + th {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.planes-table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+.planes-table__row {
+  cursor: pointer;
+}
+
+.planes-table tbody tr:hover td {
+  background-color: rgba(249, 115, 22, 0.06);
+}
+
+.planes-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.planes-table tbody td:last-child,
+.planes-table thead th:last-child {
+  border-right: none;
+}
+
+.planes-table__id {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.8rem;
+  color: #a3a3a3;
+}
+
+.planes-table__nombre {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.planes-table__descripcion {
+  max-width: 320px;
+  color: #d4d4d4;
+}
+
+.planes-table__precio {
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.planes-table__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+  background-color: #262626;
+  border: 1px solid #2e2e2e;
+  border-radius: 9999px;
+}
+
+.planes-table__badge--on {
+  color: #fdba74;
+  background-color: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.planes-table__badge--activo {
+  color: #86efac;
+  background-color: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.planes-table__badge--inactivo {
+  color: #fca5a5;
+  background-color: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+}

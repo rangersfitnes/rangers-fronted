@@ -1,0 +1,201 @@
+.pf-clases-grupales {
+  padding-bottom: 2rem;
+}
+
+.pf-clases-grupales__code {
+  font-size: 0.78rem;
+  color: #fdba74;
+}
+
+.pf-clases-grupales__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pf-clases-grupales__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pf-clases-grupales__dia {
+  padding: 1.25rem 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.pf-clases-grupales__dia-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pf-clases-grupales__dia-title {
+  margin: 0 0 0.25rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.85rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.pf-clases-grupales__dia-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #a3a3a3;
+}
+
+.pf-clases-grupales__doc-id {
+  color: #f97316;
+  font-family: ui-monospace, monospace;
+}
+
+.pf-clases-grupales__dia-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pf-clases-grupales__btn-sm {
+  padding: 0.5rem 0.9rem !important;
+  font-size: 0.72rem !important;
+}
+
+.pf-clases-grupales__quitar-dia {
+  padding: 0.5rem 0;
+  border: none;
+  background: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fca5a5;
+  cursor: pointer;
+}
+
+.pf-clases-grupales__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.pf-clases-grupales__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.pf-clases-grupales__card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pf-clases-grupales__card-num {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f97316;
+}
+
+.pf-clases-grupales__quitar {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fca5a5;
+  cursor: pointer;
+}
+
+.pf-clases-grupales__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pf-clases-grupales__campo span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.pf-clases-grupales__campo input,
+.pf-clases-grupales__campo textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid #404040;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.pf-clases-grupales__campo input:focus,
+.pf-clases-grupales__campo textarea:focus {
+  outline: none;
+  border-color: #f97316;
+}
+
+.pf-clases-grupales__hora-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+}
+
+.pf-clases-grupales__hora-valor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pf-clases-grupales__hora-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #737373;
+}
+
+.pf-clases-grupales__hora-valor strong {
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.pf-clases-grupales__hora-24 {
+  font-size: 0.75rem;
+  color: #a3a3a3;
+  font-family: ui-monospace, monospace;
+}
+
+@media (max-width: 640px) {
+  .pf-clases-grupales__lista {
+    grid-template-columns: 1fr;
+  }
+}

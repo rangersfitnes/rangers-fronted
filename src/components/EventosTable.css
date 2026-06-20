@@ -1,0 +1,145 @@
+.eventos-table-wrapper {
+  overflow-x: auto;
+  touch-action: pan-x;
+}
+
+.eventos-table__empty {
+  margin: 0;
+}
+
+.eventos-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.88rem;
+  color: #e5e5e5;
+}
+
+.eventos-table thead th {
+  position: sticky;
+  top: 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.eventos-table tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.eventos-table tbody tr:hover td {
+  background-color: rgba(249, 115, 22, 0.06);
+}
+
+.eventos-table__img-cell {
+  width: 120px;
+}
+
+.eventos-table__thumb {
+  display: block;
+  width: 96px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.eventos-table__no-img {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 56px;
+  font-size: 0.72rem;
+  color: #737373;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+
+.eventos-table__nombre {
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.eventos-table__descripcion {
+  max-width: 280px;
+  line-height: 1.45;
+  color: #d4d4d4;
+}
+
+.eventos-table__url {
+  max-width: 220px;
+}
+
+.eventos-table__link {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #fdba74;
+  text-decoration: none;
+}
+
+.eventos-table__link:hover {
+  color: #f97316;
+  text-decoration: underline;
+}
+
+.eventos-table__pos {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.eventos-table__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  white-space: nowrap;
+}
+
+.eventos-table__edit {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fdba74;
+  cursor: pointer;
+}
+
+.eventos-table__edit:hover {
+  color: #f97316;
+}
+
+.eventos-table__delete {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fca5a5;
+  cursor: pointer;
+}
+
+.eventos-table__delete:hover {
+  color: #f87171;
+}

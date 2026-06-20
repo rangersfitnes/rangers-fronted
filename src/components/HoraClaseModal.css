@@ -1,0 +1,135 @@
+.hora-clase-modal__clase {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  color: #d4d4d4;
+}
+
+.hora-clase-modal__clase strong {
+  color: #ffffff;
+}
+
+.hora-clase-modal__hint {
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #a3a3a3;
+}
+
+.hora-clase-modal__calendario {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.45rem;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  padding: 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 rgba(255, 255, 255, 0.08);
+}
+
+.hora-clase-modal__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0.35rem;
+  font-family: inherit;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.hora-clase-modal__slot:hover {
+  border-color: rgba(249, 115, 22, 0.45);
+  background-color: rgba(249, 115, 22, 0.08);
+}
+
+.hora-clase-modal__slot--active {
+  border-color: #f97316;
+  background-color: rgba(249, 115, 22, 0.2);
+}
+
+.hora-clase-modal__slot-24 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hora-clase-modal__slot-12 {
+  font-size: 0.65rem;
+  color: #a3a3a3;
+}
+
+.hora-clase-modal__custom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.hora-clase-modal__custom span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.hora-clase-modal__custom input {
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid #404040;
+  border-radius: 8px;
+}
+
+.hora-clase-modal__custom input:focus {
+  outline: none;
+  border-color: #f97316;
+}
+
+.hora-clase-modal__preview {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.hora-clase-modal__preview strong {
+  color: #fdba74;
+}
+
+.hora-clase-modal__btn {
+  padding: 0.65rem 1.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: #f97316;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.hora-clase-modal__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hora-clase-modal__btn--ghost {
+  color: #d4d4d4;
+  background-color: transparent;
+  border: 1px solid #404040;
+  margin-right: 0.5rem;
+}
+
+.modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}

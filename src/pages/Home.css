@@ -1,0 +1,17 @@
+.home {
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.home::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Usuario autenticado: el scroll vive en .hero__scroll */
+.home--auth {
+  height: 100vh;
+  overflow: hidden;
+}

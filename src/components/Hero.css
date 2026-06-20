@@ -1,0 +1,641 @@
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hero--auth,
+.hero--guest {
+  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hero__scroll {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  box-sizing: border-box;
+}
+
+.hero__scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.hero--auth .hero__scroll {
+  padding-top: 0;
+  padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+}
+
+.hero--guest .hero__scroll {
+  padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+}
+
+.hero--auth .hero__content--top {
+  margin-top: 0;
+  padding: 1.5rem 2rem 4.5rem;
+}
+
+.hero__background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.hero__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero__overlay--user {
+  background: linear-gradient(
+    100deg,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.65) 45%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+}
+
+.hero__carousel {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  margin-top: 0;
+  padding-top: 0.75rem;
+}
+
+.hero__content {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  max-width: 720px;
+  margin-top: 0;
+  padding: 2rem 2rem 4rem;
+}
+
+.hero--guest .hero__content {
+  margin-top: 0;
+  padding-top: 1.5rem;
+  padding-bottom: 4.5rem;
+}
+
+.hero__content--top {
+  justify-content: flex-start;
+  gap: 1.75rem;
+  animation: hero-fade-in 0.6s ease-out both;
+}
+
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === Saludo / título genérico === */
+
+.hero__title {
+  margin: 0 0 2.5rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.75rem, 6vw, 4.5rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.hero__title--after-carousel {
+  margin-top: 0;
+}
+
+.hero__title-accent {
+  display: inline;
+}
+
+.hero__subtitle {
+  margin: 0 0 3.5rem;
+  max-width: 520px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #d4d4d4;
+}
+
+/* === Saludo autenticado === */
+
+.hero__welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hero__welcome-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #f97316;
+}
+
+.hero__welcome-dot {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: #f97316;
+  border-radius: 1px;
+}
+
+.hero__welcome-name {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 7.5vw, 5.5rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.45);
+}
+
+.hero__welcome-sub {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e5e5e5;
+  letter-spacing: 0.01em;
+}
+
+/* === Tagline === */
+
+.hero__tagline {
+  position: relative;
+  margin: 0;
+  padding-left: 1.1rem;
+  max-width: 620px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.hero__tagline::before {
+  content: '';
+  position: absolute;
+  top: 0.35em;
+  bottom: 0.35em;
+  left: 0;
+  width: 3px;
+  border-radius: 2px;
+  background-color: #f97316;
+}
+
+.hero__training-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: -0.35rem;
+  padding: 0.5rem 1.15rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #ffffff;
+  background-color: #f97316;
+  border: none;
+  border-radius: 9999px;
+  box-shadow: none;
+  transition: none;
+}
+
+.hero__training-btn:hover,
+.hero__training-btn:focus-visible {
+  background-color: #c2410c;
+  color: #ffffff;
+  outline: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.hero__training-btn:active {
+  background-color: #9a3412;
+}
+
+.hero__training-btn-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* === Card del plan activo === */
+
+.hero__plan-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 1.5rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+  transition: transform 0.25s ease, border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.hero__plan-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.55);
+}
+
+.hero__plan-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hero__plan-card-eyebrow {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.hero__plan-card-title {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.hero__plan-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #4ade80;
+  background-color: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  border-radius: 9999px;
+}
+
+.hero__plan-status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background-color: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+}
+
+.hero__plan-card--vencido {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.hero__plan-status--vencido {
+  color: #f87171;
+  background-color: rgba(239, 68, 68, 0.14);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.hero__plan-status-dot--vencido {
+  background-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2);
+}
+
+.hero__plan-card-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #d4d4d4;
+}
+
+.hero__plan-card-meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.9rem 1.25rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero__plan-card-meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.hero__plan-card-meta dt {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.hero__plan-card-meta dd {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hero__plan-card-period {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #a3a3a3;
+}
+
+.hero__plan-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero__plan-card-countdown {
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.hero__plan-card-countdown strong {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  color: #f97316;
+  margin-right: 0.3rem;
+}
+
+.hero__plan-card-link-chevron {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+}
+
+.hero__plan-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.hero__plan-card-link:hover {
+  color: #f97316;
+  border-color: #f97316;
+}
+
+.hero__acquire-plan-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  padding: 0 0 0px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #f97316;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(249, 115, 22, 0.65);
+  box-shadow: none;
+  transition: none;
+}
+
+.hero__acquire-plan-link:hover,
+.hero__acquire-plan-link:focus-visible {
+  color: #ea580c;
+  border-bottom-color: #ea580c;
+  background: none;
+  outline: none;
+}
+
+.hero__acquire-plan-link:active {
+  color: #c2410c;
+  border-bottom-color: #c2410c;
+}
+
+.hero__acquire-plan-link__chevron {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+/* === Estado sin plan === */
+
+.hero__no-plan {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1.4rem 1.6rem;
+  max-width: 480px;
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.hero__no-plan-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.hero__no-plan-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #d4d4d4;
+}
+
+/* === CTA === */
+
+.hero__cta-btn {
+  align-self: flex-start;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.9rem 1.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.35);
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.hero__cta-btn:hover {
+  background-color: #ea580c !important;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px rgba(234, 88, 12, 0.45);
+}
+
+.hero__cta-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.hero__info-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  align-self: flex-start;
+}
+
+.hero__info-cards .horarios-toggle {
+  margin-top: 0;
+}
+
+.hero__cta-btn--secondary {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.hero__cta-btn--secondary:hover {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.hero__cta-chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.hero__cta-btn:hover .hero__cta-chevron {
+  transform: translateX(3px);
+}
+
+@media (max-width: 768px) {
+  .hero__carousel {
+    margin-top: 0;
+    padding-top: 0.5rem;
+  }
+
+  .hero__content {
+    margin-top: 0;
+    padding: 1.5rem 1.5rem 3rem;
+  }
+
+  .hero--guest .hero__content {
+    margin-top: 0;
+    padding-top: 1.25rem;
+    padding-bottom: 3.75rem;
+  }
+
+  .hero--auth .hero__scroll {
+    padding-top: 0;
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+
+  .hero--guest .hero__scroll {
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+
+  .hero--auth .hero__content--top {
+    margin-top: 0;
+    padding: 1.25rem 1.5rem 3.75rem;
+  }
+
+  .hero__content--top {
+    gap: 1.4rem;
+  }
+
+  .hero__title {
+    margin-bottom: 2rem;
+  }
+
+  .hero__subtitle {
+    margin-bottom: 2.5rem;
+  }
+
+  .hero__plan-card,
+  .hero__no-plan {
+    max-width: 100%;
+  }
+
+  .hero__plan-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero__plan-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+}

@@ -1,0 +1,26 @@
+.plan-card-skeleton {
+  flex: 0 0 240px;
+  height: 300px;
+  border-radius: 14px;
+  border: 1px solid #2a2a2a;
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 0%,
+    #232323 40%,
+    #2c2c2c 50%,
+    #232323 60%,
+    #1a1a1a 100%
+  );
+  background-size: 200% 100%;
+  animation: plan-shimmer 1.6s linear infinite;
+  scroll-snap-align: start;
+}
+
+@keyframes plan-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

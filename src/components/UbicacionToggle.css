@@ -1,0 +1,42 @@
+.ubicacion-toggle__content {
+  padding: 0 1.15rem 1rem;
+}
+
+.ubicacion-toggle__sede {
+  margin: 0 0 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.ubicacion-toggle__direccion {
+  margin: 0 0 1rem;
+  font-style: normal;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #ffffff;
+}
+
+.ubicacion-toggle__maps {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f97316;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.ubicacion-toggle__maps:hover {
+  color: #fdba74;
+}
+
+@media (max-width: 768px) {
+  .ubicacion-toggle__content {
+    padding: 0 1rem 0.9rem;
+  }
+}

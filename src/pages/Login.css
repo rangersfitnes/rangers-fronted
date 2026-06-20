@@ -1,0 +1,334 @@
+.login-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  overflow: hidden;
+}
+
+.login-page__background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.login-page__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.login-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 400px;
+  max-height: 100%;
+  padding: 2.5rem 2rem;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 rgba(255, 255, 255, 0.08);
+}
+
+.login-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.login-card::-webkit-scrollbar-track {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  margin: 8px 0;
+}
+
+.login-card::-webkit-scrollbar-thumb {
+  background-color: #f97316;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.login-card::-webkit-scrollbar-thumb:hover {
+  background-color: #ea580c;
+}
+
+.login-card__home-link {
+  display: block;
+  text-decoration: none;
+}
+
+.login-card__logo {
+  display: block;
+  width: auto;
+  height: 70px;
+  margin: 0 auto 1.5rem;
+}
+
+.login-card__title {
+  margin: 0 0 0.5rem;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.login-card__subtitle {
+  margin: 0 0 2rem;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  text-align: center;
+  color: #a3a3a3;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.login-form__error {
+  margin: 0;
+  padding: 0.7rem 1rem;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: #fecaca;
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+}
+
+.login-form__row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.login-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.login-form__field--tipo {
+  flex: 0 0 90px;
+}
+
+.login-form__field--documento {
+  flex: 1;
+}
+
+.login-form__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d4d4d4;
+}
+
+.login-form__input {
+  width: 100%;
+  padding: 0.8rem 0.95rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: #121212;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-form__input::placeholder {
+  color: #525252;
+}
+
+.login-form__input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+.login-form__password-wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.login-form__input--password {
+  padding-right: 2.75rem;
+}
+
+.login-form__password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #737373;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.login-form__password-toggle:hover:not(:disabled) {
+  color: #d4d4d4;
+}
+
+.login-form__password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-form__password-toggle-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.login-form__password-wrap:focus-within .login-form__password-toggle {
+  color: #a3a3a3;
+}
+
+.login-form__select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23a3a3a3' stroke-width='1.5'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 10px 7px;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
+.login-form__remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: -0.2rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.login-form__remember-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.login-form__remember-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #404040;
+  border-radius: 5px;
+  background-color: #121212;
+  color: transparent;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.login-form__remember-box svg {
+  width: 12px;
+  height: 12px;
+}
+
+.login-form__remember-input:focus-visible + .login-form__remember-box {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+.login-form__remember-input:checked + .login-form__remember-box {
+  background-color: #f97316;
+  border-color: #f97316;
+  color: #ffffff;
+}
+
+.login-form__remember-input:disabled + .login-form__remember-box {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form__remember-label {
+  font-size: 0.83rem;
+  color: #d4d4d4;
+}
+
+.login-form__submit {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.login-form__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-form__submit:hover:not(:disabled) {
+  background-color: #ea580c !important;
+  transform: translateY(-1px);
+}
+
+.login-form__signup-link {
+  margin: 0.4rem auto 0;
+  padding: 0.25rem 0;
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: #d4d4d4;
+  background: transparent;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.login-form__signup-link:hover:not(:disabled) {
+  color: #f97316;
+}
+
+.login-form__signup-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .login-card__title {
+    font-size: 1.9rem;
+  }
+}
