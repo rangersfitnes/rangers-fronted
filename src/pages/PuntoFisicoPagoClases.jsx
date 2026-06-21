@@ -2,7 +2,68 @@ import { useState } from 'react'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { registrarPagoClaseDia } from '../services/pagosClasesService.js'
+import { formatearFechaCuenta } from './cuenta/cuentaUtils.js'
 import '../components/ActivarPlanModal.css'
+import './PuntoFisico.css'
+
+function etiquetaPlanEstado(planEstado) {
+  if (planEstado === 'vencido') return 'Plan vencido'
+  if (planEstado === 'sin_plan') return 'Sin plan activo'
+  return 'Sin membresía activa'
+}
+
+function PanelUsuarioRegistrado({ usuario, onCerrar }) {
+  const documentoCompleto = [usuario.tipoDocumento, usuario.documento]
+    .filter(Boolean)
+    .join(' ')
+  const vigencia = formatearFechaCuenta(usuario.vigenciaPlan)
+
+  return (
+    <aside
+      className="pf-pago-clase__usuario"
+      role="status"
+      aria-live="polite"
+    >
+      <p className="pf-pago-clase__usuario-etiqueta">Usuario registrado</p>
+      <h2 className="pf-pago-clase__usuario-nombre">{usuario.nombre || '—'}</h2>
+      <dl className="pf-pago-clase__usuario-datos">
+        {documentoCompleto ? (
+          <>
+            <dt>Documento</dt>
+            <dd>{documentoCompleto}</dd>
+          </>
+        ) : null}
+        {usuario.celular ? (
+          <>
+            <dt>Celular</dt>
+            <dd>{usuario.celular}</dd>
+          </>
+        ) : null}
+        <dt>Estado</dt>
+        <dd>{etiquetaPlanEstado(usuario.planEstado)}</dd>
+        {usuario.planEstado === 'vencido' && usuario.planNombre ? (
+          <>
+            <dt>Último plan</dt>
+            <dd>{usuario.planNombre}</dd>
+          </>
+        ) : null}
+        {usuario.planEstado === 'vencido' && usuario.vigenciaPlan ? (
+          <>
+            <dt>Venció</dt>
+            <dd>{vigencia}</dd>
+          </>
+        ) : null}
+      </dl>
+      <button
+        type="button"
+        className="pf-action-btn pf-pago-clase__anuncio-btn"
+        onClick={onCerrar}
+      >
+        Continuar
+      </button>
+    </aside>
+  )
+}
 
 function VistaPagoClases() {
   const toast = useToast()
@@ -12,6 +73,7 @@ function VistaPagoClases() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [recordatorioOpen, setRecordatorioOpen] = useState(false)
+  const [usuarioRegistradoOpen, setUsuarioRegistradoOpen] = useState(false)
   const [ultimoPago, setUltimoPago] = useState(null)
 
   const esCortesia = metodoPago === 'cortesia'
@@ -55,6 +117,7 @@ function VistaPagoClases() {
     setError('')
     setGuardando(true)
     let abrirRecordatorioWhatsapp = false
+    let abrirUsuarioRegistrado = false
 
     try {
       const fueTransferencia = metodoPago === 'transferencia'
@@ -71,7 +134,9 @@ function VistaPagoClases() {
       })
       limpiarFormulario()
 
-      if (fueTransferencia || pago?.requiereCapturaWhatsapp) {
+      if (pago?.usuario) {
+        abrirUsuarioRegistrado = true
+      } else if (fueTransferencia || pago?.requiereCapturaWhatsapp) {
         abrirRecordatorioWhatsapp = true
       } else {
         toast.success(
@@ -84,10 +149,31 @@ function VistaPagoClases() {
       setError(err.message || 'No se pudo guardar el pago')
     } finally {
       setGuardando(false)
-      if (abrirRecordatorioWhatsapp) {
+      if (abrirUsuarioRegistrado) {
+        setUsuarioRegistradoOpen(true)
+      } else if (abrirRecordatorioWhatsapp) {
         setRecordatorioOpen(true)
       }
     }
+  }
+
+  const cerrarUsuarioRegistrado = () => {
+    setUsuarioRegistradoOpen(false)
+    const pago = ultimoPago
+    const fueTransferencia =
+      pago?.metodoPago === 'transferencia' || pago?.requiereCapturaWhatsapp
+
+    if (fueTransferencia) {
+      setRecordatorioOpen(true)
+      return
+    }
+
+    toast.success(
+      pago?.metodoPago === 'cortesia'
+        ? 'Clase de cortesía registrada'
+        : 'Pago de la clase registrado',
+    )
+    setUltimoPago(null)
   }
 
   const handleKeyDown = (event) => {
@@ -105,6 +191,13 @@ function VistaPagoClases() {
           Registra el pago de la clase de hoy por cédula del cliente
         </p>
       </header>
+
+      {usuarioRegistradoOpen && ultimoPago?.usuario ? (
+        <PanelUsuarioRegistrado
+          usuario={ultimoPago.usuario}
+          onCerrar={cerrarUsuarioRegistrado}
+        />
+      ) : null}
 
       {recordatorioOpen ? (
         <aside
@@ -142,7 +235,10 @@ function VistaPagoClases() {
           <button
             type="button"
             className="pf-action-btn pf-pago-clase__anuncio-btn"
-            onClick={() => setRecordatorioOpen(false)}
+            onClick={() => {
+              setRecordatorioOpen(false)
+              setUltimoPago(null)
+            }}
           >
             Entendido
           </button>

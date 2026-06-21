@@ -23,12 +23,13 @@ import CuentaActividad from './pages/cuenta/CuentaActividad.jsx'
 
 function App() {
   const { pathname } = useLocation()
-  const { loading: usuarioLoading } = useUsuario()
+  const { loading: usuarioLoading, usuario } = useUsuario()
   const isAdminArea = pathname.startsWith('/admin')
   const isLoginArea = pathname === '/login'
   const isPaymentArea = pathname.startsWith('/payment-plan')
   const isHome = pathname === '/'
   const hideChrome = isAdminArea || isLoginArea || isPaymentArea
+  const showHomeAuthHeader = isHome && Boolean(usuario)
 
   if (usuarioLoading) {
     return (
@@ -47,6 +48,7 @@ function App() {
       style={{ backgroundColor: colors.page_background }}
     >
       {!hideChrome && !isHome && <Header />}
+      {showHomeAuthHeader && <Header />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/sobre-nosotros" element={<SobreNosotrosPage />} />

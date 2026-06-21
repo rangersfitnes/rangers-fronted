@@ -746,6 +746,109 @@
   margin-bottom: 1rem;
 }
 
+.ag-asistencias__historial-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ag-asistencias__historial-toggle input {
+  accent-color: #f97316;
+  cursor: pointer;
+}
+
+.pf-registro__field--checkbox {
+  min-width: 11rem;
+}
+
+.ag-asistencias__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.ag-asistencias__leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: #d4d4d4;
+}
+
+.ag-asistencias__leyenda-item::before {
+  content: '';
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.ag-asistencias__leyenda-item--membresia::before {
+  background-color: rgba(249, 115, 22, 0.55);
+}
+
+.ag-asistencias__leyenda-item--clase-dia::before {
+  background-color: rgba(56, 189, 248, 0.75);
+}
+
+.ag-asistencias__leyenda-item--clase-cortesia::before {
+  background-color: rgba(167, 139, 250, 0.75);
+}
+
+.asistencias-fila--membresia td {
+  background-color: rgba(249, 115, 22, 0.04);
+}
+
+.asistencias-fila--clase-dia td {
+  background-color: rgba(56, 189, 248, 0.1);
+}
+
+.asistencias-fila--clase-cortesia td {
+  background-color: rgba(167, 139, 250, 0.1);
+}
+
+.ag-asistencias__tipo {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.ag-asistencias__tipo--membresia {
+  color: #fdba74;
+  background-color: rgba(249, 115, 22, 0.15);
+}
+
+.ag-asistencias__tipo--clase-dia {
+  color: #7dd3fc;
+  background-color: rgba(56, 189, 248, 0.15);
+}
+
+.ag-asistencias__tipo--clase-cortesia {
+  color: #c4b5fd;
+  background-color: rgba(167, 139, 250, 0.15);
+}
+
+.ag-asistencias__sin-accion {
+  color: #737373;
+}
+
 .ag-finanzas__tabla-wrap {
   overflow-x: auto;
   background-color: rgba(0, 0, 0, 0.55);

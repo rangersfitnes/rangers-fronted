@@ -27,7 +27,9 @@ export async function registrarPagoClaseDia({
 
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || 'No se pudo registrar el pago')
+    const err = new Error(data.error || 'No se pudo registrar el pago')
+    err.codigo = data.codigo ?? null
+    throw err
   }
   return data.pago
 }

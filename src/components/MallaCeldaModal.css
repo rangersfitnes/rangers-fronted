@@ -1,0 +1,53 @@
+.malla-celda-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.malla-celda-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.malla-celda-modal__field select,
+.malla-celda-modal__field input[type='time'] {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.9rem;
+  color: #f5f5f5;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color-scheme: dark;
+}
+
+.malla-celda-modal__field input[type='time']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.85);
+}
+
+.malla-celda-modal__field input:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.55);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+.malla-celda-modal__horas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.malla-celda-modal__error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #f87171;
+}
+
+@media (max-width: 480px) {
+  .malla-celda-modal__horas {
+    grid-template-columns: 1fr;
+  }
+}

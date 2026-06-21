@@ -26,6 +26,7 @@ import {
 } from '../services/eventosService.js'
 import VistaFinanzas from './AdministracionGeneralFinanzas.jsx'
 import VistaGestionHumana from './AdministracionGeneralGestionHumana.jsx'
+import VistaAsistencias from './AdministracionGeneralAsistencias.jsx'
 import './AdministracionGeneral.css'
 
 const tabs = [
@@ -33,6 +34,7 @@ const tabs = [
   { id: 'horarios', label: 'Horarios' },
   { id: 'clases-grupales', label: 'Clases grupales' },
   { id: 'eventos', label: 'Eventos' },
+  { id: 'asistencias', label: 'Asistencias' },
   { id: 'finanzas', label: 'Finanzas' },
   { id: 'gestion-humana', label: 'Gestión humana' },
 ]
@@ -456,6 +458,7 @@ function AdministracionGeneral() {
         {activeTab === 'horarios' && <ConfiguracionHorarios />}
         {activeTab === 'clases-grupales' && <ConfiguracionClasesGrupales />}
         {activeTab === 'eventos' && <VistaEventos />}
+        {activeTab === 'asistencias' && <VistaAsistencias />}
         {activeTab === 'finanzas' && <VistaFinanzas />}
         {activeTab === 'gestion-humana' && <VistaGestionHumana />}
       </main>

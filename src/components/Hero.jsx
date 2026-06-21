@@ -68,8 +68,12 @@ function Hero() {
       />
       <div className="hero__overlay hero__overlay--user" />
 
-      <div className="hero__scroll">
-        <Header inScroll />
+      <div
+        className={`hero__scroll${
+          autenticado ? ' hero__scroll--auth' : ''
+        }`}
+      >
+        {!autenticado ? <Header inScroll /> : null}
 
         {!autenticado ? (
           <div className="hero__carousel">

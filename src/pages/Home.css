@@ -1,5 +1,6 @@
 .home {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -12,6 +13,7 @@
 
 /* Usuario autenticado: el scroll vive en .hero__scroll */
 .home--auth {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
 }
