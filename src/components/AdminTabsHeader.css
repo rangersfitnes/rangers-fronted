@@ -65,30 +65,117 @@
 
 .admin-tabs-header__actions {
   flex-shrink: 0;
-  width: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-tabs-header__logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+}
+
+.admin-tabs-header__logout:hover {
+  color: #f97316;
+  background-color: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
+.admin-tabs-header__logout-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .admin-tabs-header {
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+  }
+
+  .admin-tabs-header__logo {
+    height: 40px;
+  }
+
+  .admin-tabs-header__nav {
+    order: 0;
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .admin-tabs-header__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-tabs-header__nav-list {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    padding: 0.15rem 0.25rem 0.35rem;
+  }
+
+  .admin-tabs-header__nav-link {
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.72rem;
+    border-bottom: none;
+    border-radius: 9999px;
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+
+  .admin-tabs-header__nav-link--active {
+    background-color: rgba(249, 115, 22, 0.2);
+    border: 1px solid rgba(249, 115, 22, 0.45);
+  }
+
+  .admin-tabs-header__actions {
+    display: flex;
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .admin-tabs-header__logout {
+    min-height: 2.75rem;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .admin-tabs-header__logout-label {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
   .admin-tabs-header {
-    flex-wrap: wrap;
-    padding: 0.5rem 1rem;
+    padding: 0.45rem 0.65rem;
   }
 
   .admin-tabs-header__logo {
-    height: 44px;
+    height: 36px;
   }
 
-  .admin-tabs-header__nav {
-    order: 3;
-    width: 100%;
-  }
-
-  .admin-tabs-header__nav-list {
-    justify-content: center;
-    gap: 1rem;
-  }
-
-  .admin-tabs-header__actions {
-    width: auto;
+  .admin-tabs-header__nav-link {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 0.75rem;
   }
 }

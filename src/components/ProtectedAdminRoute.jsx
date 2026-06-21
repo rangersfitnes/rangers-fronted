@@ -1,12 +1,17 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import LoadingOverlay from './LoadingOverlay.jsx'
 import { ColaboradorTurnoProvider } from '../contexts/ColaboradorTurnoContext.jsx'
-import { getAdminToken } from '../services/authService.js'
+import { useAdminAuth } from '../contexts/AdminAuthContext.jsx'
 
 function ProtectedAdminRoute({ children }) {
   const location = useLocation()
-  const token = getAdminToken()
+  const { autenticado, initializing } = useAdminAuth()
 
-  if (!token) {
+  if (initializing) {
+    return <LoadingOverlay visible label="Verificando sesión" />
+  }
+
+  if (!autenticado) {
     return <Navigate to="/admin" replace state={{ from: location }} />
   }
 

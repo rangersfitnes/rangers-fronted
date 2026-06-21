@@ -1,0 +1,258 @@
+.ag-liquidez {
+  margin-bottom: 1.75rem;
+  padding: 1.25rem 1.35rem;
+  background: rgba(249, 115, 22, 0.06);
+  border: 1px solid rgba(251, 146, 60, 0.25);
+  border-radius: 12px;
+}
+
+.ag-liquidez__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.ag-liquidez__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.25rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.ag-liquidez__live {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #fb923c;
+  box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.6);
+  animation: ag-liquidez-pulse 1.8s ease-out infinite;
+}
+
+@keyframes ag-liquidez-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.55);
+  }
+
+  70% {
+    box-shadow: 0 0 0 0.55rem rgba(251, 146, 60, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0);
+  }
+}
+
+.ag-liquidez__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #a3a3a3;
+}
+
+.ag-liquidez__estado {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fdba74;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.28);
+  border-radius: 999px;
+}
+
+.ag-liquidez__error {
+  margin: 0 0 0.75rem;
+}
+
+.ag-liquidez__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+}
+
+.ag-liquidez__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+button.ag-liquidez__card {
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.ag-liquidez__card--clickable:hover,
+.ag-liquidez__card--clickable:focus-visible {
+  border-color: rgba(251, 146, 60, 0.55);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+}
+
+.ag-liquidez__card--ingreso {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: linear-gradient(
+    145deg,
+    rgba(34, 197, 94, 0.1),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+.ag-liquidez__card--egreso {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: linear-gradient(
+    145deg,
+    rgba(239, 68, 68, 0.1),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+.ag-liquidez__card--total {
+  border-color: rgba(249, 115, 22, 0.45);
+  background: linear-gradient(
+    145deg,
+    rgba(249, 115, 22, 0.16),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+.ag-liquidez__card-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.ag-liquidez__card-valor {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+}
+
+.ag-liquidez__card--total .ag-liquidez__card-valor {
+  color: #fdba74;
+}
+
+.ag-liquidez__card-hint {
+  font-size: 0.78rem;
+  color: #737373;
+}
+
+.ag-liquidez__card-action {
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fb923c;
+}
+
+.ag-liquidez-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ag-liquidez-modal__total {
+  padding: 1rem 1.1rem;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  border-radius: 10px;
+}
+
+.ag-liquidez-modal__total-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.ag-liquidez-modal__total-valor {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: #fdba74;
+}
+
+.ag-liquidez-modal__total-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: #737373;
+}
+
+.ag-liquidez-modal__bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ag-liquidez-modal__bloque:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ag-liquidez-modal__bloque-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.ag-liquidez-modal__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.88rem;
+}
+
+.ag-liquidez-modal__label {
+  color: #a3a3a3;
+}
+
+.ag-liquidez-modal__valor {
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.ag-liquidez-modal__valor--ingreso {
+  color: #86efac;
+}
+
+.ag-liquidez-modal__valor--egreso {
+  color: #fca5a5;
+}
+
+.ag-liquidez-modal__bloque--otro {
+  opacity: 0.9;
+}
+
+@media (max-width: 640px) {
+  .ag-liquidez__card-valor {
+    font-size: 1.5rem;
+  }
+}

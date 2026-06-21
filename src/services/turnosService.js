@@ -29,7 +29,10 @@ export async function obtenerPerfilColaborador({ signal } = {}) {
     response,
     'No se pudo obtener el perfil del colaborador',
   )
-  return data.colaborador ?? null
+  return {
+    colaborador: data.colaborador ?? null,
+    esquema: data.esquema ?? null,
+  }
 }
 
 export async function obtenerTurnoActivo({ signal } = {}) {
@@ -93,4 +96,27 @@ export async function finalizarTurnoLaboral({ turnoId }) {
 
   const data = await parseJsonResponse(response, 'No se pudo finalizar la jornada')
   return data.turno
+}
+
+export async function obtenerTurnosActivos({ signal } = {}) {
+  const token = getAdminToken()
+  if (!token) throw new Error('No hay sesión activa de administrador')
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/nominas/turnos/activos`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await parseJsonResponse(
+    response,
+    'No se pudieron cargar los turnos activos',
+  )
+  return data.turnos ?? []
 }

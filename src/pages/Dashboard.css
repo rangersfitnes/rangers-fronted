@@ -58,6 +58,26 @@
   transform: translateY(-1px);
 }
 
+.dashboard-page__logout {
+  margin-top: 2rem;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.dashboard-page__logout:hover {
+  color: #f97316;
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
 @media (min-width: 480px) {
   .dashboard-page__actions {
     flex-direction: row;

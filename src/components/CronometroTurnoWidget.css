@@ -36,6 +36,26 @@
   color: #ffffff;
 }
 
+.cronometro-turno__jornada {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #a3a3a3;
+}
+
+.cronometro-turno__extra {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.cronometro-turno__extra--pendiente {
+  color: #fbbf24;
+}
+
+.cronometro-turno__extra--activa {
+  color: #fb923c;
+}
+
 .cronometro-turno__btn {
   padding: 0.55rem 0.85rem;
   font-size: 0.72rem;

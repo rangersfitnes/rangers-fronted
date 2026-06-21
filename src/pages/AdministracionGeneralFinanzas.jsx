@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import FinanzasSubvistaHeader from '../components/FinanzasSubvistaHeader.jsx'
 import VistaReportesFinancieros from './AdministracionGeneralReportesFinancieros.jsx'
 import FinanzasResumenIngresosEgresos from './FinanzasResumenIngresosEgresos.jsx'
 import FinanzasRegistrarSalidas from './FinanzasRegistrarSalidas.jsx'
@@ -19,29 +18,12 @@ const FINANZAS_CARDS = [
     icono: '↘',
   },
   {
-    id: 'nominas',
-    titulo: 'Liquidar nóminas',
-    descripcion: 'Calcula y registra pagos de nómina al equipo.',
-    icono: '👥',
-  },
-  {
     id: 'resumen',
     titulo: 'Ingresos y egresos',
     descripcion: 'Detalle de ingresos y egresos por periodo con exportación PDF o Excel.',
     icono: '⚖',
   },
 ]
-
-function FinanzasPlaceholder({ titulo, subtitulo, onVolver, mensaje }) {
-  return (
-    <section className="ag-page__view">
-      <FinanzasSubvistaHeader titulo={titulo} subtitulo={subtitulo} onVolver={onVolver} />
-      <div className="ag-panel">
-        <p className="ag-panel__empty">{mensaje}</p>
-      </div>
-    </section>
-  )
-}
 
 function VistaFinanzasHub({ onSeleccionar }) {
   return (
@@ -84,17 +66,6 @@ function VistaFinanzas() {
 
   if (seccion === 'salidas') {
     return <FinanzasRegistrarSalidas onVolver={volver} />
-  }
-
-  if (seccion === 'nominas') {
-    return (
-      <FinanzasPlaceholder
-        titulo="Liquidar nóminas"
-        subtitulo="Pagos al equipo"
-        onVolver={volver}
-        mensaje="Próximamente podrás liquidar y registrar nóminas del personal desde aquí."
-      />
-    )
   }
 
   if (seccion === 'resumen') {

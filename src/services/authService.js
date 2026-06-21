@@ -30,22 +30,32 @@ export const ADMIN_TOKEN_KEY = 'adminToken'
 export const ADMIN_ROLE_KEY = 'adminRole'
 
 export function saveAdminToken(token) {
-  sessionStorage.setItem(ADMIN_TOKEN_KEY, token)
-}
-
-export function getAdminToken() {
-  return sessionStorage.getItem(ADMIN_TOKEN_KEY)
+  localStorage.setItem(ADMIN_TOKEN_KEY, token)
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY)
 }
 
 export function saveAdminRole(role) {
-  sessionStorage.setItem(ADMIN_ROLE_KEY, role)
+  localStorage.setItem(ADMIN_ROLE_KEY, role)
+  sessionStorage.removeItem(ADMIN_ROLE_KEY)
+}
+
+export function getAdminToken() {
+  return (
+    localStorage.getItem(ADMIN_TOKEN_KEY) ||
+    sessionStorage.getItem(ADMIN_TOKEN_KEY)
+  )
 }
 
 export function getAdminRole() {
-  return sessionStorage.getItem(ADMIN_ROLE_KEY)
+  return (
+    localStorage.getItem(ADMIN_ROLE_KEY) ||
+    sessionStorage.getItem(ADMIN_ROLE_KEY)
+  )
 }
 
 export function clearAdminSession() {
+  localStorage.removeItem(ADMIN_TOKEN_KEY)
+  localStorage.removeItem(ADMIN_ROLE_KEY)
   sessionStorage.removeItem(ADMIN_TOKEN_KEY)
   sessionStorage.removeItem(ADMIN_ROLE_KEY)
 }

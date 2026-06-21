@@ -9,8 +9,11 @@ import {
   crearColaborador,
   eliminarColaborador,
   obtenerColaboradores,
+  reestablecerDatosLaboralesColaborador,
 } from '../services/colaboradoresService.js'
 import { obtenerEsquemasPago } from '../services/esquemasPagoService.js'
+import { etiquetaMetodoPagoColaborador, requiereNumeroCuenta } from '../constants/metodosPagoColaborador.js'
+import { verificarColaboradorPagoGuardado } from '../utils/verificarColaboradorPago.js'
 import './AdministracionGeneral.css'
 
 function formatearFechaNacimiento(valor) {
@@ -37,6 +40,16 @@ function validarDatosColaborador(datos) {
   if (!datos.fechaNacimiento) return 'La fecha de nacimiento es obligatoria'
   if (!(datos.sede || SEDE_HORARIOS).trim()) return 'Debes seleccionar una sede'
   if (!datos.esquemaPago) return 'Debes seleccionar un esquema de pago'
+  if (!datos.metodoPago) return 'Debes seleccionar un método de pago'
+  if (datos.metodoPago.length < 2) {
+    return 'Especifica el otro método de pago (mínimo 2 caracteres)'
+  }
+  if (
+    requiereNumeroCuenta(datos.metodoPago) &&
+    (!datos.numeroCuenta || datos.numeroCuenta.length < 5)
+  ) {
+    return 'El número de cuenta es obligatorio para este método de pago'
+  }
   return ''
 }
 
@@ -49,8 +62,10 @@ function GestionHumanaColaboradores({ onVolver }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [colaboradorEditando, setColaboradorEditando] = useState(null)
   const [eliminarTarget, setEliminarTarget] = useState(null)
+  const [reestablecerTarget, setReestablecerTarget] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [eliminando, setEliminando] = useState(false)
+  const [reestableciendo, setReestableciendo] = useState(false)
   const [error, setError] = useState('')
 
   const cargarDatos = useCallback(async () => {
@@ -106,19 +121,41 @@ function GestionHumanaColaboradores({ onVolver }) {
     setError('')
     setSubmitting(true)
 
+    const payload = {
+      nombre: datos.nombre,
+      identificacion: datos.identificacion,
+      correo: datos.correo,
+      fechaNacimiento: datos.fechaNacimiento,
+      esquemaPago: datos.esquemaPago,
+      sede: datos.sede,
+      cronometrajeActivo: datos.cronometrajeActivo,
+      metodoPago: datos.metodoPago,
+      numeroCuenta: datos.numeroCuenta,
+    }
+
     try {
       if (colaboradorEditando?.uid) {
-        await actualizarColaborador({ uid: colaboradorEditando.uid, ...datos })
+        const actualizado = await actualizarColaborador({
+          uid: colaboradorEditando.uid,
+          ...payload,
+        })
+        verificarColaboradorPagoGuardado(payload, actualizado)
+        setColaboradores((prev) =>
+          prev.map((c) => (c.uid === actualizado.uid ? actualizado : c)),
+        )
         toast.success(`Colaborador "${datos.nombre}" actualizado correctamente`)
       } else {
-        await crearColaborador(datos)
+        const creado = await crearColaborador(payload)
+        verificarColaboradorPagoGuardado(payload, creado)
         toast.success(`Colaborador "${datos.nombre}" creado correctamente`)
+        await cargarDatos()
       }
       setModalOpen(false)
       setColaboradorEditando(null)
-      await cargarDatos()
     } catch (err) {
-      setError(err.message || 'No se pudo guardar el colaborador')
+      const mensaje = err.message || 'No se pudo guardar el colaborador'
+      setError(mensaje)
+      toast.error(mensaje)
     } finally {
       setSubmitting(false)
     }
@@ -140,7 +177,27 @@ function GestionHumanaColaboradores({ onVolver }) {
     }
   }
 
-  const accionesDeshabilitadas = loading || submitting || eliminando
+  const handleConfirmarReestablecer = async () => {
+    if (!reestablecerTarget?.uid) return
+
+    setReestableciendo(true)
+    try {
+      const resultado = await reestablecerDatosLaboralesColaborador({
+        uid: reestablecerTarget.uid,
+      })
+      toast.success(
+        `Datos laborales de "${reestablecerTarget.nombre}" reestablecidos (${resultado.totalDocumentosEliminados} registros eliminados)`,
+      )
+      setReestablecerTarget(null)
+    } catch (err) {
+      toast.error(err.message || 'No se pudieron reestablecer los datos')
+    } finally {
+      setReestableciendo(false)
+    }
+  }
+
+  const accionesDeshabilitadas =
+    loading || submitting || eliminando || reestableciendo
 
   return (
     <section className="ag-page__view">
@@ -201,6 +258,8 @@ function GestionHumanaColaboradores({ onVolver }) {
                 <th>Sede</th>
                 <th>Cronometraje</th>
                 <th>Esquema de pago</th>
+                <th>Método de pago</th>
+                <th>Número de cuenta</th>
                 <th aria-label="Acciones" />
               </tr>
             </thead>
@@ -213,6 +272,12 @@ function GestionHumanaColaboradores({ onVolver }) {
                   <td>{etiquetaSede(colaborador.sede)}</td>
                   <td>{colaborador.cronometrajeActivo ? 'Sí' : 'No'}</td>
                   <td>{colaborador.esquemaPago}</td>
+                  <td>
+                    {colaborador.metodoPago
+                      ? etiquetaMetodoPagoColaborador(colaborador.metodoPago)
+                      : '—'}
+                  </td>
+                  <td>{colaborador.numeroCuenta || '—'}</td>
                   <td className="ag-finanzas__tabla-acciones">
                     <div className="ag-esquema-pago__acciones">
                       <button
@@ -222,6 +287,14 @@ function GestionHumanaColaboradores({ onVolver }) {
                         disabled={accionesDeshabilitadas}
                       >
                         Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="ag-esquema-pago__accion ag-esquema-pago__accion--reestablecer"
+                        onClick={() => setReestablecerTarget(colaborador)}
+                        disabled={accionesDeshabilitadas}
+                      >
+                        Reestablecer
                       </button>
                       <button
                         type="button"
@@ -252,6 +325,24 @@ function GestionHumanaColaboradores({ onVolver }) {
       />
 
       <ConfirmModal
+        open={Boolean(reestablecerTarget)}
+        onClose={() => {
+          if (reestableciendo) return
+          setReestablecerTarget(null)
+        }}
+        onConfirm={handleConfirmarReestablecer}
+        title="Reestablecer datos laborales"
+        message={
+          reestablecerTarget
+            ? `¿Reestablecer los datos laborales de "${reestablecerTarget.nombre}"? Se eliminarán permanentemente todos sus turnos, horas extra, liquidaciones y desprendibles de nómina en Firestore. Se conservará su perfil, acceso y configuración (esquema, sede, método de pago).`
+            : ''
+        }
+        confirmLabel="Reestablecer"
+        variant="danger"
+        loading={reestableciendo}
+      />
+
+      <ConfirmModal
         open={Boolean(eliminarTarget)}
         onClose={() => {
           if (eliminando) return
@@ -270,13 +361,15 @@ function GestionHumanaColaboradores({ onVolver }) {
       />
 
       <LoadingOverlay
-        visible={loading || submitting || eliminando}
+        visible={loading || submitting || eliminando || reestableciendo}
         label={
           submitting
             ? 'Guardando colaborador'
-            : eliminando
-              ? 'Eliminando colaborador'
-              : 'Cargando colaboradores'
+            : reestableciendo
+              ? 'Reestableciendo datos laborales'
+              : eliminando
+                ? 'Eliminando colaborador'
+                : 'Cargando colaboradores'
         }
       />
     </section>

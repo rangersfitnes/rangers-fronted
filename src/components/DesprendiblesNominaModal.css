@@ -1,0 +1,105 @@
+.desprendibles-nomina__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #a3a3a3;
+}
+
+.desprendibles-nomina__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.desprendibles-nomina__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.desprendibles-nomina__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.desprendibles-nomina__item-info strong {
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.desprendibles-nomina__item-info span {
+  font-size: 0.82rem;
+  color: #a3a3a3;
+}
+
+.desprendibles-nomina__item-detalle {
+  font-size: 0.78rem !important;
+  color: #737373 !important;
+}
+
+.desprendibles-nomina__btn-pdf {
+  flex-shrink: 0;
+  padding: 0.55rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background-color: #f97316;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.desprendibles-nomina__btn-pdf:hover {
+  background-color: #ea580c;
+}
+
+.desprendibles-nomina__detalle-turnos {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #a3a3a3;
+}
+
+.desprendibles-nomina__detalle-turnos summary {
+  cursor: pointer;
+  color: #f97316;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.desprendibles-nomina__detalle-turnos ul {
+  margin: 0;
+  padding: 0 0 0 1rem;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.desprendibles-nomina__detalle-turnos li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+@media (max-width: 640px) {
+  .desprendibles-nomina__item {
+    flex-direction: column;
+  }
+
+  .desprendibles-nomina__btn-pdf {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+}

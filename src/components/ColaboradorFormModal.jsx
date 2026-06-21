@@ -1,6 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Modal from './Modal.jsx'
 import { SEDE_HORARIOS, SEDES } from '../services/horariosService.js'
+import {
+  METODO_PAGO_OTRO,
+  METODOS_PAGO_COLABORADOR,
+  metodoPagoParaFormulario,
+  resolverMetodoPagoParaGuardar,
+  requiereNumeroCuenta,
+} from '../constants/metodosPagoColaborador.js'
 import './CrearPlanModal.css'
 
 const estadoInicial = {
@@ -11,10 +18,14 @@ const estadoInicial = {
   esquemaPago: '',
   sede: SEDE_HORARIOS,
   cronometrajeActivo: true,
+  metodoPago: '',
+  metodoPagoOtro: '',
+  numeroCuenta: '',
 }
 
 function colaboradorToForm(colaborador) {
   if (!colaborador) return estadoInicial
+  const pago = metodoPagoParaFormulario(colaborador.metodoPago)
   return {
     nombre: colaborador.nombre ?? '',
     identificacion: colaborador.documento ?? '',
@@ -23,6 +34,9 @@ function colaboradorToForm(colaborador) {
     esquemaPago: colaborador.esquemaPago ?? '',
     sede: colaborador.sede || SEDE_HORARIOS,
     cronometrajeActivo: Boolean(colaborador.cronometrajeActivo),
+    metodoPago: pago.metodoPago,
+    metodoPagoOtro: pago.metodoPagoOtro,
+    numeroCuenta: colaborador.numeroCuenta ?? '',
   }
 }
 
@@ -37,7 +51,12 @@ function ColaboradorFormModal({
   colaborador = null,
 }) {
   const [form, setForm] = useState(estadoInicial)
+  const formRef = useRef(form)
   const editando = Boolean(colaborador?.uid)
+
+  useEffect(() => {
+    formRef.current = form
+  }, [form])
 
   useEffect(() => {
     if (open) setForm(colaboradorToForm(colaborador))
@@ -59,20 +78,43 @@ function ColaboradorFormModal({
     }))
   }
 
+  const handleMetodoPagoChange = (event) => {
+    const valor = event.target.value
+    setForm((prev) => ({
+      ...prev,
+      metodoPago: valor,
+      metodoPagoOtro: valor === METODO_PAGO_OTRO ? prev.metodoPagoOtro : '',
+    }))
+  }
+
   const handleSubmit = (event) => {
-    event.preventDefault()
+    event?.preventDefault?.()
+
+    const formActual = formRef.current
+    const metodoPago = resolverMetodoPagoParaGuardar(
+      formActual.metodoPago,
+      formActual.metodoPagoOtro,
+    )
+
     onSubmit?.({
-      nombre: form.nombre.trim(),
-      identificacion: form.identificacion.trim(),
-      correo: form.correo.trim(),
-      fechaNacimiento: form.fechaNacimiento,
-      esquemaPago: form.esquemaPago,
-      sede: form.sede || SEDE_HORARIOS,
-      cronometrajeActivo: form.cronometrajeActivo,
+      nombre: formActual.nombre.trim(),
+      identificacion: formActual.identificacion.trim(),
+      correo: formActual.correo.trim(),
+      fechaNacimiento: formActual.fechaNacimiento,
+      esquemaPago: formActual.esquemaPago,
+      sede: formActual.sede || SEDE_HORARIOS,
+      cronometrajeActivo: formActual.cronometrajeActivo,
+      metodoPago,
+      numeroCuenta: formActual.numeroCuenta.trim(),
     })
   }
 
   const sinEsquemas = !esquemasLoading && esquemas.length === 0
+  const metodoPagoGuardado = resolverMetodoPagoParaGuardar(
+    form.metodoPago,
+    form.metodoPagoOtro,
+  )
+  const cuentaRequerida = requiereNumeroCuenta(metodoPagoGuardado)
 
   const footer = (
     <>
@@ -85,10 +127,10 @@ function ColaboradorFormModal({
         Cancelar
       </button>
       <button
-        type="submit"
-        form="colaborador-form"
+        type="button"
         className="modal__btn modal__btn--primary"
         disabled={submitting || sinEsquemas}
+        onClick={handleSubmit}
       >
         {submitting
           ? 'Guardando…'
@@ -106,7 +148,12 @@ function ColaboradorFormModal({
       title={editando ? 'Editar colaborador' : 'Crear colaborador'}
       footer={footer}
     >
-      <form id="colaborador-form" className="crear-plan__form" onSubmit={handleSubmit}>
+      <form
+        id="colaborador-form"
+        className="crear-plan__form"
+        noValidate
+        onSubmit={handleSubmit}
+      >
         {error ? <p className="crear-plan__error">{error}</p> : null}
 
         {sinEsquemas ? (
@@ -124,7 +171,6 @@ function ColaboradorFormModal({
             onChange={handleChange('nombre')}
             placeholder="Ej. Juan Pérez Gómez"
             disabled={submitting}
-            required
           />
         </label>
 
@@ -138,8 +184,6 @@ function ColaboradorFormModal({
             placeholder="Ej. 1234567890"
             inputMode="numeric"
             disabled={submitting}
-            minLength={6}
-            required
           />
           <span className="ag-esquema-pago__hint">
             {editando
@@ -158,7 +202,6 @@ function ColaboradorFormModal({
             placeholder="Ej. colaborador@correo.com"
             autoComplete="email"
             disabled={submitting}
-            required
           />
         </label>
 
@@ -170,7 +213,6 @@ function ColaboradorFormModal({
             value={form.fechaNacimiento}
             onChange={handleChange('fechaNacimiento')}
             disabled={submitting}
-            required
           />
         </label>
 
@@ -181,7 +223,6 @@ function ColaboradorFormModal({
             value={form.sede}
             onChange={handleChange('sede')}
             disabled={submitting}
-            required
           >
             {SEDES.map((sede) => (
               <option key={sede.id} value={sede.id}>
@@ -198,7 +239,6 @@ function ColaboradorFormModal({
             value={form.esquemaPago}
             onChange={handleChange('esquemaPago')}
             disabled={submitting || esquemasLoading || sinEsquemas}
-            required
           >
             <option value="">
               {esquemasLoading ? 'Cargando esquemas…' : 'Selecciona un esquema'}
@@ -209,6 +249,56 @@ function ColaboradorFormModal({
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="crear-plan__field">
+          <span className="crear-plan__label">Método de pago *</span>
+          <select
+            className="crear-plan__input crear-plan__select"
+            value={form.metodoPago}
+            onChange={handleMetodoPagoChange}
+            disabled={submitting}
+          >
+            <option value="">Selecciona un método</option>
+            {METODOS_PAGO_COLABORADOR.map((metodo) => (
+              <option key={metodo.id} value={metodo.id}>
+                {metodo.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {form.metodoPago === METODO_PAGO_OTRO ? (
+          <label className="crear-plan__field">
+            <span className="crear-plan__label">Especifica el método de pago *</span>
+            <input
+              type="text"
+              className="crear-plan__input"
+              value={form.metodoPagoOtro}
+              onChange={handleChange('metodoPagoOtro')}
+              placeholder="Ej. Bre-B, Davivienda, RappiPay"
+              disabled={submitting}
+              maxLength={60}
+            />
+          </label>
+        ) : null}
+
+        <label className="crear-plan__field">
+          <span className="crear-plan__label">
+            Número de cuenta{cuentaRequerida ? ' *' : ''}
+          </span>
+          <input
+            type="text"
+            className="crear-plan__input"
+            value={form.numeroCuenta}
+            onChange={handleChange('numeroCuenta')}
+            placeholder={
+              form.metodoPago === 'efectivo'
+                ? 'Opcional para efectivo'
+                : 'Ej. 3001234567'
+            }
+            disabled={submitting}
+          />
         </label>
 
         <label className="crear-plan__switch">

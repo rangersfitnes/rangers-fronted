@@ -80,10 +80,16 @@ function CuentaActividad() {
                 <tbody>
                   {pagos.map((pago) => (
                     <tr key={pago.id}>
-                      <td className="cuenta-actividad-table__fecha">
+                      <td
+                        className="cuenta-actividad-table__fecha"
+                        data-label="Fecha"
+                      >
                         {formatearFechaHoraCuenta(pago.creadoEn)}
                       </td>
-                      <td className="cuenta-actividad-table__plan">
+                      <td
+                        className="cuenta-actividad-table__plan"
+                        data-label="Plan"
+                      >
                         <span className="cuenta-actividad-table__plan-nombre">
                           {pago.plan?.nombre || '—'}
                         </span>
@@ -93,19 +99,29 @@ function CuentaActividad() {
                           </span>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Monto">
                         {formatearPrecioCuenta(
                           pago.montoPagado ?? pago.montoEsperado,
                         )}
                       </td>
-                      <td>{etiquetaMetodoPago(pago.metodoPago)}</td>
-                      <td>{etiquetaOrigenPago(pago.origen)}</td>
-                      <td className="cuenta-actividad-table__vigencia">
+                      <td data-label="Método">
+                        {etiquetaMetodoPago(pago.metodoPago)}
+                      </td>
+                      <td data-label="Origen">
+                        {etiquetaOrigenPago(pago.origen)}
+                      </td>
+                      <td
+                        className="cuenta-actividad-table__vigencia"
+                        data-label="Vigencia"
+                      >
                         {formatearFechaCuenta(pago.plan?.fechaInicio)}
                         {' — '}
                         {formatearFechaCuenta(pago.plan?.vigencia)}
                       </td>
-                      <td className="cuenta-actividad-table__ref">
+                      <td
+                        className="cuenta-actividad-table__ref"
+                        data-label="Referencia"
+                      >
                         {pago.transaccion?.referencia || '—'}
                       </td>
                     </tr>

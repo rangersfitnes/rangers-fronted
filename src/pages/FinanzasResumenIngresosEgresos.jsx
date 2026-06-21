@@ -1,8 +1,12 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import CampoFechaCalendario from '../components/CampoFechaCalendario.jsx'
+import LiquidezHistoricaPanel from '../components/LiquidezHistoricaPanel.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { useToast } from '../components/Toast.jsx'
-import { obtenerReporteFinanciero } from '../services/reportesFinancierosService.js'
+import {
+  obtenerLiquidezHistorica,
+  obtenerReporteFinanciero,
+} from '../services/reportesFinancierosService.js'
 import {
   combinarMovimientosReporte,
   exportarReporteIngresosEgresosExcel,
@@ -50,6 +54,8 @@ function inicioMesColombiaInput() {
   return `${hoy.slice(0, 8)}01`
 }
 
+const INTERVALO_LIQUIDEZ_MS = 20_000
+
 function FinanzasResumenIngresosEgresos({ onVolver }) {
   const toast = useToast()
   const [desde, setDesde] = useState(inicioMesColombiaInput)
@@ -57,6 +63,37 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
   const [reporte, setReporte] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [liquidez, setLiquidez] = useState(null)
+  const [loadingLiquidez, setLoadingLiquidez] = useState(true)
+  const [errorLiquidez, setErrorLiquidez] = useState('')
+  const [ultimaActualizacionLiquidez, setUltimaActualizacionLiquidez] = useState(null)
+
+  const cargarLiquidez = useCallback(async (signal) => {
+    try {
+      const data = await obtenerLiquidezHistorica({ signal })
+      setLiquidez(data)
+      setErrorLiquidez('')
+      setUltimaActualizacionLiquidez(Date.now())
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      setErrorLiquidez(err.message || 'No se pudo cargar la liquidez histórica')
+    } finally {
+      if (!signal?.aborted) setLoadingLiquidez(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    cargarLiquidez(controller.signal)
+    const recarga = window.setInterval(
+      () => cargarLiquidez(controller.signal),
+      INTERVALO_LIQUIDEZ_MS,
+    )
+    return () => {
+      controller.abort()
+      window.clearInterval(recarga)
+    }
+  }, [cargarLiquidez])
 
   const cargar = useCallback(async () => {
     if (!desde || !hasta) {
@@ -155,6 +192,13 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
           </div>
         ) : null}
       </header>
+
+      <LiquidezHistoricaPanel
+        liquidez={liquidez}
+        loading={loadingLiquidez}
+        error={errorLiquidez}
+        ultimaActualizacion={ultimaActualizacionLiquidez}
+      />
 
       <div className="pf-registro__filtros">
         <div className="pf-registro__filtros-campos">

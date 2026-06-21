@@ -36,6 +36,37 @@ export function formatearPrecioCuenta(valor) {
   }).format(numero)
 }
 
+export function normalizarTimestampMs(valor) {
+  if (valor == null || valor === '') return null
+
+  if (typeof valor === 'number' && Number.isFinite(valor)) {
+    if (valor > 0 && valor < 10_000_000_000) return valor * 1000
+    return valor
+  }
+
+  if (typeof valor === 'string') {
+    const numerico = Number(valor)
+    if (Number.isFinite(numerico)) {
+      if (numerico > 0 && numerico < 10_000_000_000) return numerico * 1000
+      return numerico
+    }
+    const parsed = Date.parse(valor)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  if (typeof valor === 'object') {
+    if (typeof valor.toMillis === 'function') return valor.toMillis()
+
+    const seconds = valor._seconds ?? valor.seconds
+    if (seconds != null) {
+      const nanos = valor._nanoseconds ?? valor.nanoseconds ?? 0
+      return Number(seconds) * 1000 + Math.floor(Number(nanos) / 1e6)
+    }
+  }
+
+  return null
+}
+
 export function formatearDuracionMs(ms) {
   const totalSeg = Math.max(0, Math.floor(Number(ms) / 1000))
   const horas = Math.floor(totalSeg / 3600)

@@ -1,0 +1,138 @@
+.liquidar-colaborador__periodo {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #a3a3a3;
+}
+
+.liquidar-colaborador__loading,
+.liquidar-colaborador__sin-turnos {
+  margin: 0;
+  color: #a3a3a3;
+}
+
+.liquidar-colaborador__error {
+  margin: 0 0 1rem;
+  color: #f87171;
+}
+
+.liquidar-colaborador__pago,
+.liquidar-colaborador__desglose {
+  margin-bottom: 1rem;
+}
+
+.liquidar-colaborador__pago h3,
+.liquidar-colaborador__desglose h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #737373;
+}
+
+.liquidar-colaborador__pago dl {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.liquidar-colaborador__pago dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.liquidar-colaborador__pago dt {
+  margin: 0;
+  color: #a3a3a3;
+  font-size: 0.85rem;
+}
+
+.liquidar-colaborador__pago dd {
+  margin: 0;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: right;
+}
+
+.liquidar-colaborador__aviso {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: #fbbf24;
+}
+
+.liquidar-colaborador__aviso--bloqueo {
+  color: #f87171;
+}
+
+.liquidar-colaborador__aviso--info {
+  color: #93c5fd;
+}
+
+.liquidar-colaborador__conceptos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.liquidar-colaborador__conceptos li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 0.88rem;
+}
+
+.liquidar-colaborador__conceptos li span {
+  color: #a3a3a3;
+}
+
+.liquidar-colaborador__turnos {
+  margin-bottom: 1rem;
+}
+
+.liquidar-colaborador__turnos summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.liquidar-colaborador__turnos ul {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.liquidar-colaborador__turnos li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  font-size: 0.8rem;
+  color: #a3a3a3;
+  border-bottom: 1px solid #262626;
+}
+
+.liquidar-colaborador__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 8px;
+}
+
+.liquidar-colaborador__total span {
+  font-size: 0.85rem;
+  color: #a3a3a3;
+}
+
+.liquidar-colaborador__total strong {
+  font-size: 1.15rem;
+  color: #4ade80;
+}

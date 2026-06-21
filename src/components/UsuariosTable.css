@@ -231,3 +231,21 @@
   font-size: 0.72rem;
   color: #d4d4d4;
 }
+
+@media (max-width: 768px) {
+  .usuarios-table-wrapper {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    border-radius: 10px;
+  }
+
+  .usuarios-table {
+    min-width: 720px;
+    font-size: 0.84rem;
+  }
+
+  .usuarios-table thead th,
+  .usuarios-table tbody td {
+    padding: 0.85rem 0.75rem;
+  }
+}

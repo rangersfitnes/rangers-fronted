@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 import CronometroTurnoWidget from '../components/CronometroTurnoWidget.jsx'
+import FinJornadaTurnoModal from '../components/FinJornadaTurnoModal.jsx'
 import IniciarJornadaModal from '../components/IniciarJornadaModal.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { getAdminToken } from '../services/authService.js'
@@ -16,24 +17,29 @@ import {
   obtenerPerfilColaborador,
   obtenerTurnoActivo,
 } from '../services/turnosService.js'
+import { obtenerEstadoHorasExtra } from '../utils/calculoPagoTurnoUtils.js'
+import { normalizarTimestampMs } from '../pages/cuenta/cuentaUtils.js'
 
 const ColaboradorTurnoContext = createContext(null)
 
 export function ColaboradorTurnoProvider({ children }) {
   const toast = useToast()
   const [perfil, setPerfil] = useState(null)
+  const [esquemaLaboral, setEsquemaLaboral] = useState(null)
   const [turnoActivo, setTurnoActivo] = useState(null)
   const [modalInicioOpen, setModalInicioOpen] = useState(false)
   const [jornadaPospuesta, setJornadaPospuesta] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [iniciando, setIniciando] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
+  const [continuarTiempoExtra, setContinuarTiempoExtra] = useState(false)
   const [ahora, setAhora] = useState(Date.now())
 
   const cargarEstadoTurno = useCallback(async () => {
     const token = getAdminToken()
     if (!token) {
       setPerfil(null)
+      setEsquemaLaboral(null)
       setTurnoActivo(null)
       setModalInicioOpen(false)
       setJornadaPospuesta(false)
@@ -42,15 +48,17 @@ export function ColaboradorTurnoProvider({ children }) {
 
     setCargando(true)
     try {
-      const [perfilColaborador, turno] = await Promise.all([
+      const [perfilData, turno] = await Promise.all([
         obtenerPerfilColaborador(),
         obtenerTurnoActivo(),
       ])
 
-      setPerfil(perfilColaborador)
+      setPerfil(perfilData.colaborador)
+      setEsquemaLaboral(perfilData.esquema)
       setTurnoActivo(turno)
     } catch (err) {
       setPerfil(null)
+      setEsquemaLaboral(null)
       setTurnoActivo(null)
       setModalInicioOpen(false)
     } finally {
@@ -73,7 +81,8 @@ export function ColaboradorTurnoProvider({ children }) {
   }, [perfil, turnoActivo, jornadaPospuesta])
 
   useEffect(() => {
-    if (!turnoActivo?.inicioEn) return undefined
+    const inicioMs = normalizarTimestampMs(turnoActivo?.inicioEn)
+    if (!inicioMs) return undefined
 
     const intervalo = window.setInterval(() => {
       setAhora(Date.now())
@@ -82,10 +91,44 @@ export function ColaboradorTurnoProvider({ children }) {
     return () => window.clearInterval(intervalo)
   }, [turnoActivo?.id, turnoActivo?.inicioEn])
 
+  const inicioTurnoMs = useMemo(
+    () => normalizarTimestampMs(turnoActivo?.inicioEn),
+    [turnoActivo?.inicioEn],
+  )
+
   const tiempoTranscurridoMs = useMemo(() => {
-    if (!turnoActivo?.inicioEn) return 0
-    return Math.max(0, ahora - Number(turnoActivo.inicioEn))
-  }, [turnoActivo?.inicioEn, ahora])
+    if (!inicioTurnoMs) return 0
+    return Math.max(0, ahora - inicioTurnoMs)
+  }, [inicioTurnoMs, ahora])
+
+  const horasTurnoJornada = useMemo(() => {
+    const desdeEsquema = Number(esquemaLaboral?.horasTurno) || 0
+    const desdeTurno = Number(turnoActivo?.horasTurno) || 0
+    return desdeEsquema || desdeTurno
+  }, [esquemaLaboral?.horasTurno, turnoActivo?.horasTurno])
+
+  const estadoHorasExtra = useMemo(() => {
+    if (!horasTurnoJornada) {
+      return {
+        enJornada: true,
+        tiempoExtraMs: 0,
+        minutosExtra: 0,
+        horasExtraLiquidadas: 0,
+        minutosParaLiquidar: 0,
+      }
+    }
+    return obtenerEstadoHorasExtra(tiempoTranscurridoMs, horasTurnoJornada)
+  }, [horasTurnoJornada, tiempoTranscurridoMs])
+
+  const jornadaCompleta =
+    horasTurnoJornada > 0 && !estadoHorasExtra.enJornada
+
+  const modalFinJornadaOpen =
+    Boolean(turnoActivo) && jornadaCompleta && !continuarTiempoExtra
+
+  useEffect(() => {
+    setContinuarTiempoExtra(false)
+  }, [turnoActivo?.id])
 
   const handleCerrarModalInicio = () => {
     if (iniciando) return
@@ -98,7 +141,17 @@ export function ColaboradorTurnoProvider({ children }) {
     try {
       const turno = await iniciarTurnoLaboral()
       setTurnoActivo(turno)
+      setContinuarTiempoExtra(false)
       setModalInicioOpen(false)
+
+      try {
+        const perfilData = await obtenerPerfilColaborador()
+        setPerfil(perfilData.colaborador)
+        setEsquemaLaboral(perfilData.esquema)
+      } catch {
+        // El turno ya inició; el esquema se puede recargar después.
+      }
+
       toast.success('Jornada laboral iniciada')
     } catch (err) {
       toast.error(err.message || 'No se pudo iniciar la jornada')
@@ -114,6 +167,7 @@ export function ColaboradorTurnoProvider({ children }) {
     try {
       await finalizarTurnoLaboral({ turnoId: turnoActivo.id })
       setTurnoActivo(null)
+      setContinuarTiempoExtra(false)
       setJornadaPospuesta(false)
       toast.success('Turno finalizado correctamente')
     } catch (err) {
@@ -121,6 +175,10 @@ export function ColaboradorTurnoProvider({ children }) {
     } finally {
       setFinalizando(false)
     }
+  }
+
+  const handleContinuarTiempoExtra = () => {
+    setContinuarTiempoExtra(true)
   }
 
   const mostrarCronometraje =
@@ -147,11 +205,23 @@ export function ColaboradorTurnoProvider({ children }) {
             submitting={iniciando}
           />
           {mostrarCronometraje ? (
-            <CronometroTurnoWidget
+            <>
+              <FinJornadaTurnoModal
+                open={modalFinJornadaOpen}
+                horasTurno={horasTurnoJornada}
+                tiempoMs={tiempoTranscurridoMs}
+                onTerminarTurno={handleFinalizarTurno}
+                onContinuarTiempoExtra={handleContinuarTiempoExtra}
+                finalizando={finalizando}
+              />
+              <CronometroTurnoWidget
               tiempoMs={tiempoTranscurridoMs}
+              horasTurno={horasTurnoJornada}
+              estadoHorasExtra={estadoHorasExtra}
               onFinalizar={handleFinalizarTurno}
               finalizando={finalizando}
             />
+            </>
           ) : null}
         </>
       ) : null}

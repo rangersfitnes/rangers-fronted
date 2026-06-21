@@ -11,7 +11,53 @@ export function formatearTiempoLaborado(ms) {
     .join(':')
 }
 
-function CronometroTurnoWidget({ tiempoMs, onFinalizar, finalizando }) {
+function renderEstadoExtra({ horasTurno, estadoHorasExtra }) {
+  if (!horasTurno) {
+    return (
+      <span className="cronometro-turno__jornada">
+        Jornada no configurada
+      </span>
+    )
+  }
+
+  if (!estadoHorasExtra || estadoHorasExtra.enJornada) {
+    return (
+      <span className="cronometro-turno__jornada">
+        Jornada: {horasTurno} h
+      </span>
+    )
+  }
+
+  if (estadoHorasExtra.horasExtraLiquidadas > 0) {
+    const etiqueta =
+      estadoHorasExtra.horasExtraLiquidadas === 1
+        ? '1 hora extra liquidada'
+        : `${estadoHorasExtra.horasExtraLiquidadas} horas extra liquidadas`
+
+    return (
+      <span className="cronometro-turno__extra cronometro-turno__extra--activa">
+        {etiqueta}
+      </span>
+    )
+  }
+
+  return (
+    <span className="cronometro-turno__extra cronometro-turno__extra--pendiente">
+      Extra: {estadoHorasExtra.minutosExtra} min
+      {estadoHorasExtra.minutosParaLiquidar > 0
+        ? ` · faltan ${estadoHorasExtra.minutosParaLiquidar} min para liquidar 1 h`
+        : ''}
+    </span>
+  )
+}
+
+function CronometroTurnoWidget({
+  tiempoMs,
+  horasTurno = 0,
+  estadoHorasExtra,
+  onFinalizar,
+  finalizando,
+}) {
   return (
     <aside className="cronometro-turno" aria-live="polite">
       <div className="cronometro-turno__info">
@@ -19,6 +65,7 @@ function CronometroTurnoWidget({ tiempoMs, onFinalizar, finalizando }) {
         <span className="cronometro-turno__tiempo">
           {formatearTiempoLaborado(tiempoMs)}
         </span>
+        {renderEstadoExtra({ horasTurno, estadoHorasExtra })}
       </div>
       <button
         type="button"

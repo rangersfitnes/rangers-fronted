@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
+import DesprendiblesNominaModal from '../components/DesprendiblesNominaModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { useToast } from '../components/Toast.jsx'
+import { NOTA_LIQUIDACION_HASTA_DIA_ANTERIOR } from '../constants/nominaLaboral.js'
 import { SEDES } from '../services/horariosService.js'
 import { obtenerMiPerfilLaboral } from '../services/miPerfilService.js'
+import { MINUTOS_MINIMOS_HORA_EXTRA } from '../utils/calculoPagoTurnoUtils.js'
 import {
   formatearDuracionMs,
   formatearFechaTabla,
@@ -30,7 +33,67 @@ function formatearFechaNacimiento(valor) {
 
 function formatearHorasDecimal(horas) {
   const valor = Number(horas) || 0
+  if (Number.isInteger(valor)) {
+    return `${valor} h`
+  }
   return `${valor.toFixed(2).replace('.', ',')} h`
+}
+
+function formatearTiempoExtraTrabajado(turno) {
+  const tiempoExtraMs = Number(turno.tiempoExtraMs) || 0
+  const minutosExtra = Number(turno.minutosExtra) || 0
+
+  if (tiempoExtraMs > 0) {
+    return formatearDuracionMs(tiempoExtraMs)
+  }
+
+  if (minutosExtra > 0) {
+    const horas = Math.floor(minutosExtra / 60)
+    const minutos = minutosExtra % 60
+    if (horas > 0) {
+      return minutos > 0 ? `${horas} h ${minutos} min` : `${horas} h`
+    }
+    return `${minutos} min`
+  }
+
+  return '—'
+}
+
+function formatearPagoExtra(turno) {
+  const horasExtra = Number(turno.horasExtra) || 0
+  const minutosExtra = Number(turno.minutosExtra) || 0
+  const valorHoraExtra = Number(turno.valorHoraExtra) || 0
+  const estado = turno.horasExtraEstado
+
+  let pago = Number(turno.pagoExtra) || 0
+  if (pago <= 0 && horasExtra > 0 && valorHoraExtra > 0) {
+    pago = Math.round(horasExtra * valorHoraExtra)
+  }
+
+  if (pago > 0) {
+    const monto = formatearPrecioCuenta(pago)
+    if (estado === 'pendiente') {
+      return `${monto} · pendiente de aprobar`
+    }
+    if (estado === 'rechazada') {
+      return 'Rechazada'
+    }
+    return monto
+  }
+
+  if (minutosExtra > 0) {
+    return `Sin liquidar (< ${MINUTOS_MINIMOS_HORA_EXTRA} min)`
+  }
+
+  return '—'
+}
+
+function etiquetaEstadoExtra(estado) {
+  if (estado === 'pendiente') return 'Pendiente de aprobar'
+  if (estado === 'aprobada') return 'Aprobada'
+  if (estado === 'rechazada') return 'Rechazada'
+  if (estado === 'liquidada') return 'Liquidada'
+  return null
 }
 
 function CampoPerfil({ etiqueta, valor }) {
@@ -55,12 +118,94 @@ function ResumenCard({ etiqueta, valor, destacado = false }) {
   )
 }
 
+function FilasTurnosTabla({ turnos }) {
+  const tieneLiquidados = turnos.some((turno) => turno.liquidacionId)
+  const tienePendientes = turnos.some((turno) => !turno.liquidacionId)
+  const mostrarSeparador = tieneLiquidados && tienePendientes
+  let separadorInsertado = false
+  const columnas = 11
+
+  return turnos.flatMap((turno, index) => {
+    const esLiquidado = Boolean(turno.liquidacionId)
+    const filas = []
+
+    if (mostrarSeparador && index === 0 && !esLiquidado) {
+      filas.push(
+        <tr
+          key="turnos-separador-pendientes"
+          className="pf-mi-perfil__turnos-separador pf-mi-perfil__turnos-separador--pendiente"
+        >
+          <td colSpan={columnas}>Turnos pendientes de liquidación</td>
+        </tr>,
+      )
+    }
+
+    if (mostrarSeparador && !separadorInsertado && esLiquidado) {
+      separadorInsertado = true
+      filas.push(
+        <tr key="turnos-separador-liquidados" className="pf-mi-perfil__turnos-separador">
+          <td colSpan={columnas}>
+            Turnos ya liquidados en nómina
+          </td>
+        </tr>,
+      )
+    }
+
+    filas.push(
+      <tr
+        key={turno.id}
+        className={esLiquidado ? 'pf-mi-perfil__fila--liquidado' : undefined}
+      >
+        <td>{formatearFechaTabla(turno.inicioEn)}</td>
+        <td>
+          {esLiquidado ? (
+            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--liquidado">
+              Liquidado
+            </span>
+          ) : (
+            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--pendiente">
+              Pendiente
+            </span>
+          )}
+        </td>
+        <td>{formatearHoraCuenta(turno.inicioEn)}</td>
+        <td>{formatearHoraCuenta(turno.finEn)}</td>
+        <td>{formatearDuracionMs(turno.duracionMs)}</td>
+        <td>{formatearHorasDecimal(turno.horasOrdinarias)}</td>
+        <td>{formatearTiempoExtraTrabajado(turno)}</td>
+        <td>
+          {Number(turno.horasExtra) > 0 ? (
+            <span className="pf-mi-perfil__extra-celda">
+              {formatearHorasDecimal(turno.horasExtra)}
+              {etiquetaEstadoExtra(turno.horasExtraEstado) ? (
+                <small className="pf-mi-perfil__extra-estado">
+                  {etiquetaEstadoExtra(turno.horasExtraEstado)}
+                </small>
+              ) : null}
+            </span>
+          ) : (
+            '—'
+          )}
+        </td>
+        <td>{formatearPrecioCuenta(turno.pagoOrdinario)}</td>
+        <td>{formatearPagoExtra(turno)}</td>
+        <td className="pf-mi-perfil__total-celda">
+          {formatearPrecioCuenta(turno.pagoTotal)}
+        </td>
+      </tr>,
+    )
+
+    return filas
+  })
+}
+
 function PuntoFisicoMiPerfil() {
   const toast = useToast()
   const [datos, setDatos] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [noColaborador, setNoColaborador] = useState(false)
+  const [desprendiblesOpen, setDesprendiblesOpen] = useState(false)
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -89,10 +234,28 @@ function PuntoFisicoMiPerfil() {
     cargar()
   }, [cargar])
 
+  useEffect(() => {
+    const recargarSiVisible = () => {
+      if (document.visibilityState === 'visible') {
+        cargar()
+      }
+    }
+
+    window.addEventListener('focus', recargarSiVisible)
+    document.addEventListener('visibilitychange', recargarSiVisible)
+
+    return () => {
+      window.removeEventListener('focus', recargarSiVisible)
+      document.removeEventListener('visibilitychange', recargarSiVisible)
+    }
+  }, [cargar])
+
   const colaborador = datos?.colaborador
   const esquema = datos?.esquema
+  const esquemaClave = datos?.esquemaClave ?? colaborador?.esquemaPago ?? ''
   const turnos = datos?.turnos ?? []
   const resumen = datos?.resumen
+  const desprendibles = datos?.desprendibles ?? []
 
   return (
     <section className="pf-page__view pf-mi-perfil">
@@ -156,6 +319,7 @@ function PuntoFisicoMiPerfil() {
               <h2 className="pf-mi-perfil__panel-title">Esquema laboral</h2>
               {esquema ? (
                 <div className="pf-mi-perfil__campos">
+                  <CampoPerfil etiqueta="Esquema asignado" valor={esquemaClave || esquema.nombre} />
                   <CampoPerfil etiqueta="Esquema" valor={esquema.nombre} />
                   <CampoPerfil
                     etiqueta="Valor hora ordinaria"
@@ -204,8 +368,38 @@ function PuntoFisicoMiPerfil() {
             </div>
           ) : null}
 
+          <section className="pf-mi-perfil__nomina">
+            <div className="pf-mi-perfil__nomina-head">
+              <h2 className="pf-mi-perfil__panel-title">Nómina liquidada</h2>
+              <button
+                type="button"
+                className="pf-action-btn"
+                onClick={() => setDesprendiblesOpen(true)}
+                disabled={desprendibles.length === 0}
+              >
+                Ver desprendibles de nómina
+                {desprendibles.length > 0 ? ` (${desprendibles.length})` : ''}
+              </button>
+            </div>
+            {desprendibles.length === 0 ? (
+              <p className="pf-mi-perfil__hint">
+                Cuando se liquide tu nómina, aquí podrás consultar y descargar
+                tus desprendibles en PDF.
+              </p>
+            ) : (
+              <p className="pf-mi-perfil__hint">
+                Tienes {desprendibles.length} liquidación
+                {desprendibles.length === 1 ? '' : 'es'} disponible
+                {desprendibles.length === 1 ? '' : 's'} para descargar.
+              </p>
+            )}
+          </section>
+
           <section className="pf-mi-perfil__turnos">
             <h2 className="pf-mi-perfil__panel-title">Turnos laborados</h2>
+            <p className="pf-mi-perfil__nota pf-mi-perfil__nota--turnos">
+              {NOTA_LIQUIDACION_HASTA_DIA_ANTERIOR}
+            </p>
 
             {turnos.length === 0 ? (
               <div className="pf-panel">
@@ -219,40 +413,20 @@ function PuntoFisicoMiPerfil() {
                   <thead>
                     <tr>
                       <th>Fecha</th>
+                      <th>Nómina</th>
                       <th>Inicio</th>
                       <th>Fin</th>
                       <th>Tiempo laborado</th>
                       <th>H. ordinarias</th>
-                      <th>H. extra</th>
+                      <th>Tiempo extra</th>
+                      <th>H. extra liquidadas</th>
                       <th>Pago ordinario</th>
                       <th>Pago extra</th>
                       <th>Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {turnos.map((turno) => (
-                      <tr key={turno.id}>
-                        <td>{formatearFechaTabla(turno.inicioEn)}</td>
-                        <td>{formatearHoraCuenta(turno.inicioEn)}</td>
-                        <td>{formatearHoraCuenta(turno.finEn)}</td>
-                        <td>{formatearDuracionMs(turno.duracionMs)}</td>
-                        <td>{formatearHorasDecimal(turno.horasOrdinarias)}</td>
-                        <td>
-                          {turno.horasExtra > 0
-                            ? formatearHorasDecimal(turno.horasExtra)
-                            : '—'}
-                        </td>
-                        <td>{formatearPrecioCuenta(turno.pagoOrdinario)}</td>
-                        <td>
-                          {turno.pagoExtra > 0
-                            ? formatearPrecioCuenta(turno.pagoExtra)
-                            : '—'}
-                        </td>
-                        <td className="pf-mi-perfil__total-celda">
-                          {formatearPrecioCuenta(turno.pagoTotal)}
-                        </td>
-                      </tr>
-                    ))}
+                    <FilasTurnosTabla turnos={turnos} />
                   </tbody>
                 </table>
               </div>
@@ -262,9 +436,14 @@ function PuntoFisicoMiPerfil() {
               <p className="pf-mi-perfil__nota">
                 El pago se calcula con tu esquema actual: hasta{' '}
                 {formatearHorasDecimal(esquema.horasTurno)} se paga el valor del
-                turno ({formatearPrecioCuenta(esquema.valorTurno)}); el tiempo
-                adicional se liquida a{' '}
-                {formatearPrecioCuenta(esquema.valorHoraExtra)} por hora extra.
+                turno ({formatearPrecioCuenta(esquema.valorTurno)}). El tiempo
+                adicional solo liquida horas extra a partir de{' '}
+                {MINUTOS_MINIMOS_HORA_EXTRA} minutos continuos (por ejemplo,{' '}
+                {MINUTOS_MINIMOS_HORA_EXTRA - 1} min extra no generan pago;{' '}
+                {MINUTOS_MINIMOS_HORA_EXTRA} min o más cuentan como 1 hora extra). Cada hora extra se paga a{' '}
+                {formatearPrecioCuenta(esquema.valorHoraExtra)}. El tiempo extra
+                se muestra siempre en la tabla; la aprobación en Gestión humana
+                solo es necesaria para incluirlo en la liquidación de nómina.
               </p>
             ) : null}
           </section>
@@ -272,6 +451,12 @@ function PuntoFisicoMiPerfil() {
       ) : null}
 
       <LoadingOverlay visible={loading} label="Cargando perfil laboral" />
+
+      <DesprendiblesNominaModal
+        open={desprendiblesOpen}
+        onClose={() => setDesprendiblesOpen(false)}
+        desprendibles={desprendibles}
+      />
     </section>
   )
 }

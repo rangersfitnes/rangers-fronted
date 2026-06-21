@@ -6,14 +6,14 @@ import { auth } from '../variables/firebase.jsx'
 import logo from '../assets/images/logos/logo.webp'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import {
-  saveAdminRole,
-  saveAdminToken,
   verifyAdminAccess,
 } from '../services/authService.js'
+import { useAdminAuth } from '../contexts/AdminAuthContext.jsx'
 import './Admin.css'
 
 function Admin() {
   const navigate = useNavigate()
+  const { establecerSesion } = useAdminAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -29,8 +29,7 @@ function Admin() {
       const idToken = await credential.user.getIdToken()
       const result = await verifyAdminAccess(idToken)
 
-      saveAdminToken(result.token)
-      saveAdminRole(result.rol)
+      establecerSesion(result.token || idToken, result.rol)
       navigate('/admin/dashboard', { replace: true })
     } catch (err) {
       await signOut(auth).catch(() => {})

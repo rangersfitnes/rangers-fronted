@@ -474,6 +474,30 @@
   }
 }
 
+@media (max-width: 479px) {
+  .rutinas-week {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    gap: 0.35rem;
+    padding-bottom: 0.35rem;
+    scrollbar-width: none;
+  }
+
+  .rutinas-week::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rutinas-week__pill {
+    flex: 0 0 auto;
+    min-width: 2.85rem;
+    scroll-snap-align: start;
+    font-size: 0.7rem;
+    padding: 0.55rem 0.5rem;
+  }
+}
+
 @media (min-width: 768px) {
   .rutinas-page__inner {
     gap: 1.5rem;

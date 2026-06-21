@@ -143,3 +143,32 @@
 .eventos-table__delete:hover {
   color: #f87171;
 }
+
+@media (max-width: 768px) {
+  .eventos-table-wrapper {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .eventos-table {
+    min-width: 640px;
+  }
+
+  .eventos-table__actions {
+    gap: 0.5rem;
+  }
+
+  .eventos-table__edit,
+  .eventos-table__delete {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.68rem;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .eventos-table__delete {
+    background-color: rgba(239, 68, 68, 0.08);
+  }
+}

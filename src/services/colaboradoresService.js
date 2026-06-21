@@ -40,6 +40,8 @@ export async function crearColaborador({
   esquemaPago,
   sede,
   cronometrajeActivo,
+  metodoPago,
+  numeroCuenta,
 }) {
   const token = getAdminToken()
   if (!token) throw new Error('No hay sesión activa de administrador')
@@ -60,6 +62,8 @@ export async function crearColaborador({
         esquemaPago,
         sede,
         cronometrajeActivo,
+        metodoPago,
+        numeroCuenta,
       }),
     })
   } catch {
@@ -82,6 +86,8 @@ export async function actualizarColaborador({
   esquemaPago,
   sede,
   cronometrajeActivo,
+  metodoPago,
+  numeroCuenta,
 }) {
   const token = getAdminToken()
   if (!token) throw new Error('No hay sesión activa de administrador')
@@ -104,6 +110,8 @@ export async function actualizarColaborador({
           esquemaPago,
           sede,
           cronometrajeActivo,
+          metodoPago,
+          numeroCuenta,
         }),
       },
     )
@@ -140,4 +148,27 @@ export async function eliminarColaborador({ uid } = {}) {
     'No se pudo eliminar el colaborador',
   )
   return data.colaborador
+}
+
+export async function reestablecerDatosLaboralesColaborador({ uid } = {}) {
+  const token = getAdminToken()
+  if (!token) throw new Error('No hay sesión activa de administrador')
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nominas/colaboradores/${encodeURIComponent(uid)}/reestablecer-datos-laborales`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  return parseJsonResponse(
+    response,
+    'No se pudieron reestablecer los datos del colaborador',
+  )
 }

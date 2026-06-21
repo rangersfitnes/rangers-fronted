@@ -1,7 +1,18 @@
 .cuenta-page {
   min-height: 100vh;
-  padding: var(--page-padding-top) 1.5rem 3rem;
+  padding: var(--page-padding-top) clamp(1rem, 4vw, 1.5rem) 3rem;
+  padding-bottom: max(3rem, env(safe-area-inset-bottom));
   color: #e5e5e5;
+}
+
+@media (max-width: 640px) {
+  .cuenta-page__title {
+    font-size: 1.35rem;
+  }
+
+  .cuenta-page__card {
+    padding: 1rem 1.1rem;
+  }
 }
 
 .cuenta-page__inner {

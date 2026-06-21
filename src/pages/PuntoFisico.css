@@ -1394,4 +1394,19 @@
   .pf-registro__filtros .pf-action-btn {
     width: 100%;
   }
+
+  .pf-page__view-header--with-action {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pf-page__view-header--with-action .pf-action-btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .pf-entrenamientos__card-delete {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }

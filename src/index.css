@@ -53,7 +53,7 @@ body::-webkit-scrollbar,
   :root {
     --header-logo-height: 58px;
     --header-padding-y: 0.2rem;
-    --header-quick-nav-height: 2.35rem;
+    --header-quick-nav-height: 0px;
   }
 }
 
@@ -61,7 +61,7 @@ body::-webkit-scrollbar,
   :root {
     --header-logo-height: 54px;
     --header-below-gap: 1.75rem;
-    --header-quick-nav-height: 2.15rem;
+    --header-quick-nav-height: 0px;
   }
 }
 
@@ -83,7 +83,12 @@ body {
 
 input,
 textarea,
-[contenteditable='true'] {
+[contenteditable='true'],
+table,
+.cuenta-actividad-table__ref,
+.usuarios-table__doc,
+.usuarios-table__cel,
+.usuarios-table__id {
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;

@@ -1,10 +1,18 @@
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { colors } from '../variables/colors.jsx'
 import { getAdminRole } from '../services/authService.js'
+import { useAdminAuth } from '../contexts/AdminAuthContext.jsx'
 import './Dashboard.css'
 
 function Dashboard() {
+  const navigate = useNavigate()
+  const { logout } = useAdminAuth()
   const role = getAdminRole()
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/admin', { replace: true })
+  }
 
   if (role !== 'creador') {
     return <Navigate to="/admin/punto-fisico" replace />
@@ -29,6 +37,14 @@ function Dashboard() {
             Administracion general
           </Link>
         </div>
+
+        <button
+          type="button"
+          className="dashboard-page__logout"
+          onClick={handleLogout}
+        >
+          Cerrar sesión
+        </button>
       </div>
     </main>
   )

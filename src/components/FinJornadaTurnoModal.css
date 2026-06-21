@@ -1,0 +1,94 @@
+.modal--fin-jornada .modal__close {
+  display: none;
+}
+
+.modal--fin-jornada .modal__backdrop {
+  cursor: default;
+}
+
+.fin-jornada__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.fin-jornada__tiempo {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #d4d4d4;
+}
+
+.fin-jornada__tiempo strong {
+  color: #4ade80;
+  font-variant-numeric: tabular-nums;
+}
+
+.fin-jornada__texto {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #f5f5f5;
+}
+
+.fin-jornada__aviso {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 8px;
+}
+
+.fin-jornada__btn {
+  padding: 0.85rem 1.15rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: inherit;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.fin-jornada__btn--extra {
+  color: #fde68a;
+  background: transparent;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+}
+
+.fin-jornada__btn--extra:hover:not(:disabled) {
+  color: #ffffff;
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.65);
+}
+
+.fin-jornada__btn--terminar {
+  color: #ffffff;
+  background-color: #22c55e;
+  border: none;
+}
+
+.fin-jornada__btn--terminar:hover:not(:disabled) {
+  background-color: #16a34a;
+  transform: translateY(-1px);
+}
+
+.fin-jornada__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .modal--fin-jornada .modal__footer {
+    flex-direction: column-reverse;
+  }
+
+  .fin-jornada__btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+}

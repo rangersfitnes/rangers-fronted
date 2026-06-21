@@ -58,6 +58,7 @@ function FinanzasRegistrarSalidas({ onVolver }) {
   const [concepto, setConcepto] = useState('')
   const [valor, setValor] = useState('')
   const [metodoPago, setMetodoPago] = useState('')
+  const [cuentaOrigen, setCuentaOrigen] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [salidas, setSalidas] = useState([])
@@ -89,14 +90,18 @@ function FinanzasRegistrarSalidas({ onVolver }) {
     onEliminado: cargarSalidas,
   })
 
+  const requiereCuentaOrigen = metodoPago === 'transferencia'
+  const cuentaOrigenValida = !requiereCuentaOrigen || cuentaOrigen.trim().length > 0
   const montoValido = parseMonto(valor) > 0
   const puedeGuardar =
-    Boolean(fecha && concepto.trim() && metodoPago && montoValido) && !guardando
+    Boolean(fecha && concepto.trim() && metodoPago && montoValido && cuentaOrigenValida) &&
+    !guardando
 
   const limpiarFormulario = () => {
     setConcepto('')
     setValor('')
     setMetodoPago('')
+    setCuentaOrigen('')
     setFecha(fechaHoyColombiaInput())
   }
 
@@ -115,6 +120,10 @@ function FinanzasRegistrarSalidas({ onVolver }) {
       setError('Ingresa un valor mayor a cero')
       return
     }
+    if (requiereCuentaOrigen && !cuentaOrigen.trim()) {
+      setError('Indica desde qué cuenta salió la transferencia')
+      return
+    }
 
     setError('')
     setGuardando(true)
@@ -125,6 +134,7 @@ function FinanzasRegistrarSalidas({ onVolver }) {
         concepto: concepto.trim(),
         monto: parseMonto(valor),
         metodoPago,
+        cuentaOrigen: requiereCuentaOrigen ? cuentaOrigen.trim() : undefined,
       })
       toast.success('Salida registrada correctamente')
       limpiarFormulario()
@@ -214,6 +224,7 @@ function FinanzasRegistrarSalidas({ onVolver }) {
                   checked={metodoPago === metodo.id}
                   onChange={() => {
                     setMetodoPago(metodo.id)
+                    if (metodo.id !== 'transferencia') setCuentaOrigen('')
                     setError('')
                   }}
                   disabled={loadingVisible}
@@ -223,6 +234,25 @@ function FinanzasRegistrarSalidas({ onVolver }) {
             ))}
           </div>
         </div>
+
+        {requiereCuentaOrigen ? (
+          <label className="pf-usuarios-busqueda__field ag-finanzas__field">
+            <span className="pf-usuarios-busqueda__label">
+              Cuenta de origen <span className="pf-pago-clase__required">*</span>
+            </span>
+            <input
+              type="text"
+              className="pf-usuarios-busqueda__input"
+              value={cuentaOrigen}
+              onChange={(e) => {
+                setCuentaOrigen(e.target.value)
+                setError('')
+              }}
+              placeholder="Ej. Bancolombia ahorros · ****1234"
+              disabled={loadingVisible}
+            />
+          </label>
+        ) : null}
 
         {error ? (
           <p className="pf-entrenamientos__error" role="alert">
@@ -305,6 +335,7 @@ function FinanzasRegistrarSalidas({ onVolver }) {
                   <th>Registrado</th>
                   <th>Concepto</th>
                   <th>Método</th>
+                  <th>Cuenta</th>
                   <th>Valor</th>
                   <th aria-label="Acciones" />
                 </tr>
@@ -324,6 +355,7 @@ function FinanzasRegistrarSalidas({ onVolver }) {
                     <td>
                       {METODO_LABEL[salida.metodoPago] || salida.metodoPago || '—'}
                     </td>
+                    <td>{salida.cuentaOrigen || '—'}</td>
                     <td className="ag-finanzas__tabla-monto">
                       −{formatearPrecioCuenta(salida.monto)}
                     </td>

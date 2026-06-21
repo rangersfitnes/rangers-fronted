@@ -25,6 +25,11 @@ export function clearUserToken() {
   sessionStorage.removeItem(USER_TOKEN_KEY)
 }
 
+export function esUserTokenPersistente() {
+  if (typeof window === 'undefined') return true
+  return Boolean(localStorage.getItem(USER_TOKEN_KEY))
+}
+
 export async function registrarUsuarioPublico(datos) {
   let response
 

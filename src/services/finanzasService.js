@@ -7,6 +7,7 @@ export async function registrarSalida({
   concepto,
   monto,
   metodoPago,
+  cuentaOrigen,
   sede = SEDE_HORARIOS,
 }) {
   const token = getAdminToken()
@@ -20,7 +21,7 @@ export async function registrarSalida({
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ sede, fecha, concepto, monto, metodoPago }),
+      body: JSON.stringify({ sede, fecha, concepto, monto, metodoPago, cuentaOrigen }),
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')

@@ -39,6 +39,7 @@
 
 .cuenta-actividad-table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   background-color: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
@@ -121,5 +122,79 @@
   .cuenta-actividad-table thead th,
   .cuenta-actividad-table tbody td {
     padding: 0.7rem 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .cuenta-actividad-table-wrapper {
+    overflow-x: visible;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+
+  .cuenta-actividad-table {
+    display: block;
+    font-size: 0.88rem;
+  }
+
+  .cuenta-actividad-table thead {
+    display: none;
+  }
+
+  .cuenta-actividad-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .cuenta-actividad-table tbody tr {
+    display: block;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+  }
+
+  .cuenta-actividad-table tbody tr:hover td {
+    background-color: transparent;
+  }
+
+  .cuenta-actividad-table tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .cuenta-actividad-table tbody td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .cuenta-actividad-table tbody td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    min-width: 5.5rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #737373;
+  }
+
+  .cuenta-actividad-table__plan,
+  .cuenta-actividad-table__vigencia,
+  .cuenta-actividad-table__ref {
+    text-align: right;
+    white-space: normal;
+  }
+
+  .cuenta-actividad-table__plan {
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 0;
   }
 }

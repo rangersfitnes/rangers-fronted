@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { signOut } from 'firebase/auth'
-import { auth } from '../variables/firebase.jsx'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import logo from '../assets/images/logos/logo_header.webp'
 import UserIcon from './icons/UserIcon.jsx'
 import ChevronRightIcon from './icons/ChevronRightIcon.jsx'
@@ -214,15 +212,39 @@ function HeaderUserMenu({
 
 function Header({ inScroll = false }) {
   const [fotoCargando, setFotoCargando] = useState(false)
+  const [drawerAbierto, setDrawerAbierto] = useState(false)
   const fileInputRef = useRef(null)
   const activeSection = useActiveSection()
   const { usuario, logout, actualizarUsuario } = useUsuario()
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const cerrarDrawer = useCallback(() => setDrawerAbierto(false), [])
+
+  useEffect(() => {
+    cerrarDrawer()
+  }, [location.pathname, location.hash, cerrarDrawer])
+
+  useEffect(() => {
+    if (!drawerAbierto) return undefined
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') cerrarDrawer()
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [drawerAbierto, cerrarDrawer])
 
   const handleLogout = async () => {
-    await signOut(auth).catch(() => {})
-    logout()
+    await logout()
     navigate('/', { replace: true })
   }
 
@@ -266,12 +288,12 @@ function Header({ inScroll = false }) {
   const getNavClassName = (item, baseClass) =>
     `${baseClass}${isItemActive(item) ? ` ${baseClass}--active` : ''}`
 
-  const renderNavItem = (item, linkClass) => {
+  const renderNavItem = (item, linkClass, onNavigate) => {
     const className = getNavClassName(item, linkClass)
     const content = (
       <>
         {item.label}
-        {item.hasDropdown && (
+        {item.hasDropdown && linkClass !== 'header__drawer-link' && (
           <span className="header__nav-chevron" aria-hidden="true">
             ▾
           </span>
@@ -286,6 +308,7 @@ function Header({ inScroll = false }) {
           className={({ isActive }) =>
             `${linkClass}${isActive ? ` ${linkClass}--active` : ''}`
           }
+          onClick={() => onNavigate?.()}
         >
           {content}
         </NavLink>
@@ -293,7 +316,7 @@ function Header({ inScroll = false }) {
     }
 
     return (
-      <Link to={item.to} className={className}>
+      <Link to={item.to} className={className} onClick={() => onNavigate?.()}>
         {content}
       </Link>
     )
@@ -322,6 +345,17 @@ function Header({ inScroll = false }) {
         </nav>
 
         <div className="header__actions">
+          <button
+            type="button"
+            className="header__menu-btn"
+            onClick={() => setDrawerAbierto(true)}
+            aria-label="Abrir menú de navegación"
+            aria-expanded={drawerAbierto}
+            aria-controls="header-mobile-drawer"
+          >
+            <span className="header__menu-icon" aria-hidden="true" />
+          </button>
+
           {usuario ? (
             <HeaderUserMenu
               usuario={usuario}
@@ -352,6 +386,107 @@ function Header({ inScroll = false }) {
         </ul>
       </nav>
     </div>
+
+    <div
+      className={`header__backdrop${drawerAbierto ? ' header__backdrop--open' : ''}`}
+      onClick={cerrarDrawer}
+      aria-hidden="true"
+    />
+
+    <aside
+      id="header-mobile-drawer"
+      className={`header__drawer${drawerAbierto ? ' header__drawer--open' : ''}`}
+      aria-hidden={!drawerAbierto}
+      aria-label="Menú de navegación"
+    >
+      <div className="header__drawer-header">
+        <span className="header__drawer-title">Menú</span>
+        <button
+          type="button"
+          className="header__drawer-close"
+          onClick={cerrarDrawer}
+          aria-label="Cerrar menú"
+        >
+          ×
+        </button>
+      </div>
+
+      {usuario && (
+        <div className="header__drawer-profile">
+          <span className="header__drawer-avatar-wrap">
+            <span className="header__drawer-avatar-inner header__drawer-avatar">
+              {usuario.profileImage ? (
+                <img
+                  src={usuario.profileImage}
+                  alt=""
+                  className="header__drawer-avatar-img"
+                />
+              ) : (
+                <UserIcon className="header__drawer-avatar-placeholder" />
+              )}
+            </span>
+          </span>
+          <div className="header__drawer-profile-text">
+            <span className="header__drawer-profile-eyebrow">Atleta</span>
+            <span className="header__drawer-profile-name">{usuario.nombre}</span>
+          </div>
+        </div>
+      )}
+
+      <nav className="header__drawer-nav" aria-label="Navegación móvil">
+        <ul className="header__drawer-list">
+          {navItems.map((item) => (
+            <li key={item.label}>
+              {renderNavItem(item, 'header__drawer-link', cerrarDrawer)}
+            </li>
+          ))}
+        </ul>
+
+        {usuario ? (
+          <ul className="header__account-actions">
+            {accountActions.map((action) => (
+              <li key={action.to}>
+                <Link
+                  to={action.to}
+                  className="header__account-action"
+                  onClick={cerrarDrawer}
+                >
+                  <span className="header__account-action-label">
+                    {action.label}
+                  </span>
+                  <ChevronRightIcon className="header__account-action-arrow" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Link
+            to="/login"
+            className="header__drawer-login"
+            onClick={cerrarDrawer}
+          >
+            <UserIcon className="header__drawer-login-icon" />
+            Iniciar sesión
+          </Link>
+        )}
+      </nav>
+
+      {usuario && (
+        <div className="header__drawer-footer">
+          <button
+            type="button"
+            className="header__drawer-logout"
+            onClick={() => {
+              cerrarDrawer()
+              handleLogout()
+            }}
+          >
+            <IconoSalir />
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+    </aside>
 
     {usuario && (
         <input
