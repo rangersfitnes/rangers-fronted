@@ -1,6 +1,7 @@
 .hero {
   position: relative;
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -8,8 +9,8 @@
 
 .hero--auth,
 .hero--guest {
-  min-height: 100%;
-  min-height: 100dvh;
+  flex: 1;
+  min-height: 0;
   height: 100%;
   overflow: hidden;
 }
@@ -17,7 +18,8 @@
 .hero__scroll {
   position: relative;
   z-index: 10;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

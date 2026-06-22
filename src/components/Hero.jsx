@@ -7,6 +7,7 @@ import UbicacionToggle from './UbicacionToggle.jsx'
 import ClasesHoy from './ClasesHoy.jsx'
 import Header from './Header.jsx'
 import EventosCarousel from './EventosCarousel.jsx'
+import InicioVideoYoutube from './InicioVideoYoutube.jsx'
 import heroBg from '../assets/images/hero/bk_home_user.webp'
 import trainingIcon from '../assets/images/icons/training.svg'
 import ChevronRightIcon from './icons/ChevronRightIcon.jsx'
@@ -270,6 +271,8 @@ function Hero() {
           </>
         )}
         </div>
+
+        <InicioVideoYoutube />
 
         <ClasesHoy />
       </div>
