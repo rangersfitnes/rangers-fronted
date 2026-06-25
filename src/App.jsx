@@ -3,9 +3,11 @@ import './App.css'
 import { colors } from './variables/colors.jsx'
 import Header from './components/Header.jsx'
 import LoadingOverlay from './components/LoadingOverlay.jsx'
+import CompletarPerfilModal from './components/CompletarPerfilModal.jsx'
 import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx'
 import ProtectedCuentaRoute from './components/ProtectedCuentaRoute.jsx'
 import { useUsuario } from './contexts/UsuarioContext.jsx'
+import { esUsuarioCliente } from './utils/usuarioRol.js'
 import Home from './pages/Home.jsx'
 import SobreNosotrosPage from './pages/SobreNosotrosPage.jsx'
 import ClasesPage from './pages/ClasesPage.jsx'
@@ -23,13 +25,16 @@ import CuentaActividad from './pages/cuenta/CuentaActividad.jsx'
 
 function App() {
   const { pathname } = useLocation()
-  const { loading: usuarioLoading, usuario } = useUsuario()
+  const { loading: usuarioLoading, usuario, actualizarUsuario } = useUsuario()
   const isAdminArea = pathname.startsWith('/admin')
   const isLoginArea = pathname === '/login'
   const isPaymentArea = pathname.startsWith('/payment-plan')
   const isHome = pathname === '/'
   const hideChrome = isAdminArea || isLoginArea || isPaymentArea
   const showHomeAuthHeader = isHome && Boolean(usuario)
+  const mostrarCompletarPerfil = Boolean(
+    usuario?.perfilIncompleto && esUsuarioCliente(usuario),
+  )
 
   if (usuarioLoading) {
     return (
@@ -114,6 +119,11 @@ function App() {
           }
         />
       </Routes>
+      <CompletarPerfilModal
+        open={mostrarCompletarPerfil}
+        nombre={usuario?.nombre}
+        onCompletado={(datos) => actualizarUsuario(datos)}
+      />
     </div>
   )
 }

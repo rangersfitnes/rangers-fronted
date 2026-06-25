@@ -9,8 +9,17 @@ import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import logo from '../assets/images/logos/logo.webp'
 import CrearCuentaModal from '../components/CrearCuentaModal.jsx'
 import BienvenidaModal from '../components/BienvenidaModal.jsx'
+import RecordarSesionCheckbox from '../components/RecordarSesionCheckbox.jsx'
 import EyeIcon from '../components/icons/EyeIcon.jsx'
 import loginBg from '../assets/images/hero/bk_login.webp'
+import {
+  aplicarPersistenciaFirebase,
+  guardarCredencialesRecordadas,
+  guardarPreferenciaRecordarSesion,
+  leerCredencialesRecordadas,
+  leerPreferenciaRecordarSesion,
+  limpiarCredencialesRecordadas,
+} from '../utils/recordarSesion.js'
 import './Login.css'
 
 function obtenerPrimerNombre(nombre) {
@@ -42,12 +51,15 @@ function Login() {
   const location = useLocation()
   const { login } = useUsuario()
   const autoSignupOpenedRef = useRef(false)
+  const credencialesGuardadas = leerCredencialesRecordadas('user')
 
-  const [tipoDocumento, setTipoDocumento] = useState('CC')
-  const [documento, setDocumento] = useState('')
+  const [tipoDocumento, setTipoDocumento] = useState(
+    credencialesGuardadas?.tipoDocumento || 'CC',
+  )
+  const [documento, setDocumento] = useState(credencialesGuardadas?.documento || '')
   const [password, setPassword] = useState('')
   const [mostrarPassword, setMostrarPassword] = useState(false)
-  const [recordar, setRecordar] = useState(false)
+  const [recordar, setRecordar] = useState(() => leerPreferenciaRecordarSesion('user'))
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [signupOpen, setSignupOpen] = useState(false)
@@ -58,6 +70,22 @@ function Login() {
   const handleDocumentoChange = (event) => {
     const valor = event.target.value.replace(/\s/g, '')
     setDocumento(valor)
+  }
+
+  const handleRecordarChange = (valor) => {
+    setRecordar(valor)
+    guardarPreferenciaRecordarSesion('user', valor)
+    if (!valor) {
+      limpiarCredencialesRecordadas('user')
+    }
+  }
+
+  const persistirCredencialesSiAplica = (datos) => {
+    if (recordar) {
+      guardarCredencialesRecordadas('user', datos)
+      return
+    }
+    limpiarCredencialesRecordadas('user')
   }
 
   const handleSubmit = async (event) => {
@@ -74,12 +102,18 @@ function Login() {
     setLoading(true)
 
     try {
+      await aplicarPersistenciaFirebase(auth, recordar)
       const email = `${documentoLimpio}@gmail.com`
       const credential = await signInWithEmailAndPassword(auth, email, password)
       const idToken = await credential.user.getIdToken()
 
       await login(idToken, {
         persistente: recordar,
+        tipoDocumento,
+        documento: documentoLimpio,
+      })
+
+      persistirCredencialesSiAplica({
         tipoDocumento,
         documento: documentoLimpio,
       })
@@ -116,6 +150,7 @@ function Login() {
     try {
       await registrarUsuarioPublico(datos)
 
+      await aplicarPersistenciaFirebase(auth, recordar)
       const email = `${datos.documento}@gmail.com`
       const credential = await signInWithEmailAndPassword(
         auth,
@@ -125,7 +160,12 @@ function Login() {
       const idToken = await credential.user.getIdToken()
 
       await login(idToken, {
-        persistente: true,
+        persistente: recordar,
+        tipoDocumento: datos.tipoDocumento,
+        documento: datos.documento,
+      })
+
+      persistirCredencialesSiAplica({
         tipoDocumento: datos.tipoDocumento,
         documento: datos.documento,
       })
@@ -257,21 +297,12 @@ function Login() {
               </div>
             </label>
 
-            <label className="login-form__remember">
-              <input
-                type="checkbox"
-                className="login-form__remember-input"
-                checked={recordar}
-                onChange={(e) => setRecordar(e.target.checked)}
-                disabled={loading}
-              />
-              <span className="login-form__remember-box" aria-hidden="true">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 8.5l3 3 7-7" />
-                </svg>
-              </span>
-              <span className="login-form__remember-label">Recordar sesión</span>
-            </label>
+            <RecordarSesionCheckbox
+              id="recordar-sesion-user"
+              checked={recordar}
+              onChange={handleRecordarChange}
+              disabled={loading}
+            />
 
             <button
               type="submit"

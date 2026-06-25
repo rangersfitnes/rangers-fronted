@@ -214,65 +214,6 @@
   cursor: pointer;
 }
 
-.login-form__remember {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-top: -0.2rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.login-form__remember-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-.login-form__remember-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border: 1px solid #404040;
-  border-radius: 5px;
-  background-color: #121212;
-  color: transparent;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.login-form__remember-box svg {
-  width: 12px;
-  height: 12px;
-}
-
-.login-form__remember-input:focus-visible + .login-form__remember-box {
-  border-color: #f97316;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
-}
-
-.login-form__remember-input:checked + .login-form__remember-box {
-  background-color: #f97316;
-  border-color: #f97316;
-  color: #ffffff;
-}
-
-.login-form__remember-input:disabled + .login-form__remember-box {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.login-form__remember-label {
-  font-size: 0.83rem;
-  color: #d4d4d4;
-}
-
 .login-form__submit {
   margin-top: 0.5rem;
   width: 100%;

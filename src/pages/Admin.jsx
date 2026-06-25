@@ -5,19 +5,38 @@ import { colors } from '../variables/colors.jsx'
 import { auth } from '../variables/firebase.jsx'
 import logo from '../assets/images/logos/logo.webp'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
+import RecordarSesionCheckbox from '../components/RecordarSesionCheckbox.jsx'
 import {
   verifyAdminAccess,
 } from '../services/authService.js'
 import { useAdminAuth } from '../contexts/AdminAuthContext.jsx'
+import {
+  aplicarPersistenciaFirebase,
+  guardarCredencialesRecordadas,
+  guardarPreferenciaRecordarSesion,
+  leerCredencialesRecordadas,
+  leerPreferenciaRecordarSesion,
+  limpiarCredencialesRecordadas,
+} from '../utils/recordarSesion.js'
 import './Admin.css'
 
 function Admin() {
   const navigate = useNavigate()
   const { establecerSesion } = useAdminAuth()
-  const [email, setEmail] = useState('')
+  const credencialesGuardadas = leerCredencialesRecordadas('admin')
+  const [email, setEmail] = useState(credencialesGuardadas?.email || '')
   const [password, setPassword] = useState('')
+  const [recordar, setRecordar] = useState(() => leerPreferenciaRecordarSesion('admin'))
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleRecordarChange = (valor) => {
+    setRecordar(valor)
+    guardarPreferenciaRecordarSesion('admin', valor)
+    if (!valor) {
+      limpiarCredencialesRecordadas('admin')
+    }
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -25,11 +44,19 @@ function Admin() {
     setLoading(true)
 
     try {
+      await aplicarPersistenciaFirebase(auth, recordar)
       const credential = await signInWithEmailAndPassword(auth, email, password)
       const idToken = await credential.user.getIdToken()
       const result = await verifyAdminAccess(idToken)
 
-      establecerSesion(result.token || idToken, result.rol)
+      establecerSesion(result.token || idToken, result.rol, { persistente: recordar })
+
+      if (recordar) {
+        guardarCredencialesRecordadas('admin', { email: email.trim() })
+      } else {
+        limpiarCredencialesRecordadas('admin')
+      }
+
       navigate('/admin/dashboard', { replace: true })
     } catch (err) {
       await signOut(auth).catch(() => {})
@@ -101,6 +128,13 @@ function Admin() {
               required
             />
           </label>
+
+          <RecordarSesionCheckbox
+            id="recordar-sesion-admin"
+            checked={recordar}
+            onChange={handleRecordarChange}
+            disabled={loading}
+          />
 
           <button
             type="submit"

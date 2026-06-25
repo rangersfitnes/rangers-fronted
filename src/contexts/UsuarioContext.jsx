@@ -17,6 +17,11 @@ import {
   obtenerDatosUsuario,
   saveUserToken,
 } from '../services/userService.js'
+import {
+  inicializarPersistenciaFirebase,
+  resolverPersistenciaSesion,
+} from '../utils/recordarSesion.js'
+import { esUsuarioCliente } from '../utils/usuarioRol.js'
 
 const REFRESH_INTERVAL_MS = 50 * 60 * 1000
 
@@ -36,6 +41,11 @@ export function UsuarioProvider({ children }) {
     if (!silent) setLoading(true)
     try {
       const datos = await obtenerDatosUsuario({ signal })
+      if (!datos || !esUsuarioCliente(datos)) {
+        clearUserToken()
+        setUsuario(null)
+        return null
+      }
       setUsuario(datos)
       return datos
     } catch (err) {
@@ -64,55 +74,90 @@ export function UsuarioProvider({ children }) {
       return
     }
 
-    if (!getUserToken()) return
-
     try {
       const idToken = await user.getIdToken()
-      saveUserToken(idToken, { persistente: esUserTokenPersistente() })
+      const persistente = resolverPersistenciaSesion('user', esUserTokenPersistente())
+      saveUserToken(idToken, { persistente })
     } catch {
       clearUserToken()
       setUsuario(null)
     }
   }, [])
 
+  const cargarUsuarioDesdeSesion = useCallback(async (user) => {
+    if (!user || getAdminToken()) return null
+
+    try {
+      const idToken = await user.getIdToken()
+      const persistente = resolverPersistenciaSesion('user', esUserTokenPersistente())
+      saveUserToken(idToken, { persistente })
+
+      const datos = await obtenerDatosUsuario()
+      if (!datos || !esUsuarioCliente(datos)) {
+        clearUserToken()
+        setUsuario(null)
+        return null
+      }
+      setUsuario(datos)
+      return datos
+    } catch (err) {
+      console.warn('[usuario] No se pudo restaurar la sesión:', err.message)
+      clearUserToken()
+      setUsuario(null)
+      return null
+    }
+  }, [])
+
   useEffect(() => {
     let activo = true
 
-    const unsubscribe = onIdTokenChanged(auth, async (user) => {
+    const iniciar = async () => {
+      try {
+        await inicializarPersistenciaFirebase(auth, 'user')
+        await auth.authStateReady()
+      } catch {
+        // Si falla la persistencia, onIdTokenChanged intentará recuperar la sesión.
+      }
+
       if (!activo) return
 
-      if (getAdminToken()) {
-        clearUserToken()
-        setUsuario(null)
-        setLoading(false)
-        return
-      }
+      const unsubscribe = onIdTokenChanged(auth, async (user) => {
+        if (!activo) return
 
-      await syncUserToken(user)
-
-      if (user && getUserToken()) {
-        try {
-          const datos = await obtenerDatosUsuario()
-          if (activo) setUsuario(datos)
-        } catch (err) {
-          if (activo) {
-            console.warn('[usuario] No se pudo cargar el usuario:', err.message)
-            clearUserToken()
-            setUsuario(null)
-          }
+        if (getAdminToken()) {
+          clearUserToken()
+          setUsuario(null)
+          setLoading(false)
+          return
         }
-      } else if (!user) {
-        setUsuario(null)
-      }
 
-      if (activo) setLoading(false)
+        await syncUserToken(user)
+
+        if (user) {
+          await cargarUsuarioDesdeSesion(user)
+        } else {
+          setUsuario(null)
+        }
+
+        if (activo) setLoading(false)
+      })
+
+      return unsubscribe
+    }
+
+    let unsubscribe = () => {}
+
+    iniciar().then((unsub) => {
+      if (typeof unsub === 'function') {
+        unsubscribe = unsub
+      }
     })
 
     return () => {
       activo = false
       unsubscribe()
     }
-  }, [syncUserToken])
+  }, [syncUserToken, cargarUsuarioDesdeSesion])
 
   useEffect(() => {
     if (!usuario || getAdminToken()) return undefined
@@ -123,7 +168,9 @@ export function UsuarioProvider({ children }) {
 
       try {
         const idToken = await user.getIdToken(true)
-        saveUserToken(idToken, { persistente: esUserTokenPersistente() })
+        saveUserToken(idToken, {
+          persistente: resolverPersistenciaSesion('user', esUserTokenPersistente()),
+        })
       } catch {
         // onIdTokenChanged gestionará la sesión inválida.
       }

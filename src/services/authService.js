@@ -29,14 +29,24 @@ export async function verifyAdminAccess(idToken) {
 export const ADMIN_TOKEN_KEY = 'adminToken'
 export const ADMIN_ROLE_KEY = 'adminRole'
 
-export function saveAdminToken(token) {
-  localStorage.setItem(ADMIN_TOKEN_KEY, token)
-  sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+export function saveAdminToken(token, { persistente = true } = {}) {
+  if (persistente) {
+    localStorage.setItem(ADMIN_TOKEN_KEY, token)
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY)
+  } else {
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, token)
+    localStorage.removeItem(ADMIN_TOKEN_KEY)
+  }
 }
 
-export function saveAdminRole(role) {
-  localStorage.setItem(ADMIN_ROLE_KEY, role)
-  sessionStorage.removeItem(ADMIN_ROLE_KEY)
+export function saveAdminRole(role, { persistente = true } = {}) {
+  if (persistente) {
+    localStorage.setItem(ADMIN_ROLE_KEY, role)
+    sessionStorage.removeItem(ADMIN_ROLE_KEY)
+  } else {
+    sessionStorage.setItem(ADMIN_ROLE_KEY, role)
+    localStorage.removeItem(ADMIN_ROLE_KEY)
+  }
 }
 
 export function getAdminToken() {
@@ -51,6 +61,11 @@ export function getAdminRole() {
     localStorage.getItem(ADMIN_ROLE_KEY) ||
     sessionStorage.getItem(ADMIN_ROLE_KEY)
   )
+}
+
+export function esAdminTokenPersistente() {
+  if (typeof window === 'undefined') return true
+  return Boolean(localStorage.getItem(ADMIN_TOKEN_KEY))
 }
 
 export function clearAdminSession() {

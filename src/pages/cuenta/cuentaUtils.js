@@ -11,6 +11,28 @@ export function formatearFechaCuenta(ms) {
   }
 }
 
+export function formatearFechaNacimiento(valor) {
+  if (!valor) return '—'
+  const fecha = new Date(`${valor}T12:00:00`)
+  if (Number.isNaN(fecha.getTime())) return valor
+  return fecha.toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+export function celularSinPrefijo(celular) {
+  if (!celular) return ''
+  return celular.replace(/^\+57/, '').replace(/\D/g, '').slice(0, 10)
+}
+
+export function inicialesNombre(nombre) {
+  const texto = (nombre || '').trim()
+  if (!texto) return '?'
+  return texto.charAt(0).toUpperCase()
+}
+
 export function formatearFechaHoraCuenta(ms) {
   if (!ms) return '—'
   try {

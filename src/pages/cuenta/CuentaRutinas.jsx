@@ -4,7 +4,7 @@ import trainingIcon from '../../assets/images/icons/training.svg'
 import AnadirCronogramaModal from '../../components/AnadirCronogramaModal.jsx'
 import ChevronRightIcon from '../../components/icons/ChevronRightIcon.jsx'
 import LoadingOverlay from '../../components/LoadingOverlay.jsx'
-import { DIAS_SEMANA } from '../../constants/diasSemana.js'
+import { DIAS_SEMANA, diaSemanaHoyColombia, etiquetaDiaSemana } from '../../constants/diasSemana.js'
 import { colors } from '../../variables/colors.jsx'
 import {
   guardarEntrenamiento,
@@ -66,6 +66,12 @@ function CuentaRutinas() {
 
   const diasReservados = entrenamientos.map((e) => e.dia)
   const diasReservadosSet = new Set(diasReservados)
+  const diaHoy = diaSemanaHoyColombia()
+  const diaHoyLabel = etiquetaDiaSemana(diaHoy)
+  const rutinaHoy = entrenamientos.find((item) => item.dia === diaHoy) ?? null
+  const entrenamientosResto = rutinaHoy
+    ? entrenamientos.filter((item) => item.dia !== diaHoy)
+    : entrenamientos
   const puedeAnadirCronograma = diasReservados.length < 7
   const tieneCards = entrenamientos.length > 0
   const progresoSemana = Math.round((entrenamientos.length / 7) * 100)
@@ -166,14 +172,18 @@ function CuentaRutinas() {
           >
             {DIAS_SEMANA.map((d) => {
               const activo = diasReservadosSet.has(d.value)
+              const esHoy = d.value === diaHoy
               return (
                 <span
                   key={d.value}
                   role="listitem"
                   className={`rutinas-week__pill${
                     activo ? ' rutinas-week__pill--active' : ''
+                  }${esHoy ? ' rutinas-week__pill--today' : ''}${
+                    esHoy && activo ? ' rutinas-week__pill--today-active' : ''
                   }`}
                   title={d.label}
+                  aria-current={esHoy ? 'date' : undefined}
                 >
                   {ABREV_DIA[d.value]}
                 </span>
@@ -181,6 +191,46 @@ function CuentaRutinas() {
             })}
           </div>
         )}
+
+        {mostrarContenido && rutinaHoy ? (
+          <section
+            className="rutinas-hoy"
+            aria-labelledby="rutinas-hoy-title"
+          >
+            <div className="rutinas-hoy__head">
+              <p className="rutinas-hoy__eyebrow">Día en curso</p>
+              <h2 id="rutinas-hoy-title" className="rutinas-hoy__title">
+                Rutina de hoy · {diaHoyLabel}
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              className="rutinas-hoy__card"
+              onClick={() => abrirEdicion(rutinaHoy)}
+              aria-label={`Ver rutina de hoy: ${rutinaHoy.titulo}`}
+            >
+              <div className="rutinas-hoy__card-glow" aria-hidden="true" />
+              <div className="rutinas-hoy__card-body">
+                <div className="rutinas-hoy__badges">
+                  <span className="rutinas-hoy__badge rutinas-hoy__badge--hoy">
+                    Hoy
+                  </span>
+                  {rutinaHoy.origen === 'admin' ? (
+                    <span className="rutinas-hoy__badge rutinas-hoy__badge--asignada">
+                      Asignada
+                    </span>
+                  ) : null}
+                </div>
+                <h3 className="rutinas-hoy__card-titulo">{rutinaHoy.titulo}</h3>
+                <p className="rutinas-hoy__card-actividad">{rutinaHoy.actividad}</p>
+              </div>
+              <span className="rutinas-hoy__card-action" aria-hidden="true">
+                <ChevronRightIcon className="rutinas-hoy__card-chevron" />
+              </span>
+            </button>
+          </section>
+        ) : null}
 
         {mostrarContenido && !tieneCards && puedeAnadirCronograma && (
           <section className="rutinas-empty" aria-labelledby="rutinas-empty-title">
@@ -204,9 +254,15 @@ function CuentaRutinas() {
           </section>
         )}
 
-        {mostrarContenido && tieneCards && (
-          <ul className="rutinas-list">
-            {entrenamientos.map((item, index) => (
+        {mostrarContenido && tieneCards && entrenamientosResto.length > 0 ? (
+          <section aria-labelledby="rutinas-resto-title">
+            {rutinaHoy ? (
+              <h2 id="rutinas-resto-title" className="rutinas-list__heading">
+                Resto de la semana
+              </h2>
+            ) : null}
+            <ul className="rutinas-list">
+              {entrenamientosResto.map((item, index) => (
               <li key={item.id || item.dia}>
                 <button
                   type="button"
@@ -217,9 +273,14 @@ function CuentaRutinas() {
                 >
                   <span className="rutinas-card__accent" aria-hidden="true" />
                   <div className="rutinas-card__main">
-                    <span className="rutinas-card__dia">
-                      {item.diaLabel || item.dia}
-                    </span>
+                    <div className="rutinas-card__meta">
+                      <span className="rutinas-card__dia">
+                        {item.diaLabel || item.dia}
+                      </span>
+                      {item.origen === 'admin' ? (
+                        <span className="rutinas-card__asignada">Asignada</span>
+                      ) : null}
+                    </div>
                     <h2 className="rutinas-card__titulo">{item.titulo}</h2>
                     <p className="rutinas-card__actividad">{item.actividad}</p>
                   </div>
@@ -229,8 +290,9 @@ function CuentaRutinas() {
                 </button>
               </li>
             ))}
-          </ul>
-        )}
+            </ul>
+          </section>
+        ) : null}
 
         {mostrarContenido && !puedeAnadirCronograma && (
           <p className="rutinas-page__badge" role="status">

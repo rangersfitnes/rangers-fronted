@@ -253,14 +253,10 @@ function Hero() {
                 className="hero__cta-btn"
                 style={{ backgroundColor: colors.primary_orange }}
               >
-                ¡Estoy listo!
+                Ver planes
               </Link>
-              <Link
-                to="/login"
-                state={{ openSignup: true }}
-                className="hero__cta-btn hero__cta-btn--secondary"
-              >
-                Registrate gratis
+              <Link to="/login" className="hero__cta-btn hero__cta-btn--secondary">
+                Iniciar sesión
               </Link>
             </div>
 

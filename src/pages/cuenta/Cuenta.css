@@ -43,6 +43,161 @@
   border-radius: 12px;
 }
 
+.cuenta-page__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.15rem;
+}
+
+.cuenta-page__card-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.cuenta-page__edit-btn {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.cuenta-page__edit-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.cuenta-page__edit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cuenta-perfil-foto {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.15rem 1.25rem;
+  background-color: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.cuenta-perfil-foto__avatar-wrap {
+  flex-shrink: 0;
+}
+
+.cuenta-perfil-foto__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #262626, #171717);
+  border: 2px solid rgba(249, 115, 22, 0.45);
+}
+
+.cuenta-perfil-foto__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cuenta-perfil-foto__avatar-iniciales {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f97316;
+}
+
+.cuenta-perfil-foto__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cuenta-perfil-foto__title {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.cuenta-perfil-foto__hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #a3a3a3;
+}
+
+.cuenta-perfil-foto__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cuenta-perfil-foto__btn {
+  padding: 0.5rem 0.95rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: inherit;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.cuenta-perfil-foto__btn--primary {
+  color: #ffffff;
+  background-color: #f97316;
+}
+
+.cuenta-perfil-foto__btn--primary:hover:not(:disabled) {
+  background-color: #ea580c;
+}
+
+.cuenta-perfil-foto__btn--ghost {
+  color: #d4d4d4;
+  background: transparent;
+  border-color: #404040;
+}
+
+.cuenta-perfil-foto__btn--ghost:hover:not(:disabled) {
+  color: #ffffff;
+  border-color: #6a6a6a;
+}
+
+.cuenta-perfil-foto__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cuenta-perfil-foto__input {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .cuenta-perfil-foto {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .cuenta-page__row {
   display: flex;
   flex-direction: column;

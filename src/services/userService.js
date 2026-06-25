@@ -313,3 +313,39 @@ export async function obtenerDatosUsuario({ signal } = {}) {
 
   return data.usuario || null
 }
+
+export async function completarPerfilUsuario({ fechaNacimiento }, { signal } = {}) {
+  return actualizarMiPerfil({ fechaNacimiento }, { signal })
+}
+
+export async function actualizarMiPerfil(datos, { signal } = {}) {
+  const token = getUserToken()
+  if (!token) {
+    throw new Error('No hay sesión activa')
+  }
+
+  let response
+
+  try {
+    response = await fetch(`${API_BASE_URL}/api/usuarios/me/perfil`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(datos),
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo actualizar el perfil')
+  }
+
+  return data.usuario
+}

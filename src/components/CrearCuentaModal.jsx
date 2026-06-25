@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
+import CampoFechaCalendario from './CampoFechaCalendario.jsx'
 import AutorizacionDatosModal from './AutorizacionDatosModal.jsx'
 import {
   AUTORIZACION_DATOS_CASILLA_ENLACE,
@@ -19,6 +20,7 @@ const estadoInicial = {
   tipoDocumento: 'CC',
   documento: '',
   celular: '',
+  fechaNacimiento: '',
   password: '',
   confirmar: '',
 }
@@ -73,11 +75,17 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
       return
     }
 
+    if (!form.fechaNacimiento) {
+      setLocalError('La fecha de nacimiento es obligatoria')
+      return
+    }
+
     onSubmit?.({
       nombre: form.nombre.trim(),
       tipoDocumento: form.tipoDocumento,
       documento: form.documento.trim(),
       celular: `+57${form.celular}`,
+      fechaNacimiento: form.fechaNacimiento,
       password: form.password,
       autorizacionDatos: true,
     })
@@ -89,6 +97,7 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
     form.nombre.trim().length > 0 &&
     form.documento.trim().length > 0 &&
     form.celular.length === 10 &&
+    form.fechaNacimiento &&
     form.password.length >= 6 &&
     form.confirmar.length >= 6 &&
     form.password === form.confirmar &&
@@ -193,6 +202,16 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
             />
           </div>
         </label>
+
+        <CampoFechaCalendario
+          label="Fecha de nacimiento"
+          value={form.fechaNacimiento}
+          onChange={(valor) => {
+            setForm((prev) => ({ ...prev, fechaNacimiento: valor }))
+            setLocalError('')
+          }}
+          disabled={submitting}
+        />
 
         <label className="crear-usuario__field">
           <span className="crear-usuario__label">Contraseña</span>

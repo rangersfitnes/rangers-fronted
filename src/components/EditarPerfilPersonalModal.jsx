@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
-import CampoFechaCalendario from './CampoFechaCalendario.jsx'
 import './CrearUsuarioModal.css'
 
 const tiposDocumento = [
@@ -12,14 +11,24 @@ const tiposDocumento = [
 
 const estadoInicial = {
   nombre: '',
-  celular: '',
   tipoDocumento: 'CC',
   documento: '',
-  fechaNacimiento: '',
-  password: '',
+  celular: '',
 }
 
-function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
+function celularSinPrefijo(celular) {
+  if (!celular) return ''
+  return celular.replace(/^\+57/, '').replace(/\D/g, '').slice(0, 10)
+}
+
+function EditarPerfilPersonalModal({
+  open,
+  onClose,
+  onSubmit,
+  submitting,
+  error,
+  usuario,
+}) {
   const [form, setForm] = useState(estadoInicial)
   const [localError, setLocalError] = useState('')
 
@@ -27,34 +36,52 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
     if (!open) {
       setForm(estadoInicial)
       setLocalError('')
+      return
     }
-  }, [open])
+
+    if (usuario) {
+      setForm({
+        nombre: usuario.nombre || '',
+        tipoDocumento: usuario.tipoDocumento || 'CC',
+        documento: usuario.documento || '',
+        celular: celularSinPrefijo(usuario.celular),
+      })
+    }
+  }, [open, usuario])
 
   const handleChange = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }))
+    setLocalError('')
   }
 
   const handleCelularChange = (event) => {
     const soloDigitos = event.target.value.replace(/\D/g, '').slice(0, 10)
     setForm((prev) => ({ ...prev, celular: soloDigitos }))
+    setLocalError('')
   }
 
   const handleDocumentoChange = (event) => {
     const valor = event.target.value.replace(/\s/g, '')
     setForm((prev) => ({ ...prev, documento: valor }))
+    setLocalError('')
   }
 
   const handleSubmit = (event) => {
     event.preventDefault()
     setLocalError('')
 
-    if (form.password.length < 6) {
-      setLocalError('La contraseña debe tener al menos 6 caracteres')
+    if (!form.nombre.trim()) {
+      setLocalError('El nombre es obligatorio')
       return
     }
 
-    if (!form.fechaNacimiento) {
-      setLocalError('La fecha de nacimiento es obligatoria')
+    if (!form.documento.trim()) {
+      setLocalError('El documento es obligatorio')
+      return
+    }
+
+    if (form.celular.length !== 10) {
+      setLocalError('El número de celular debe tener 10 dígitos')
       return
     }
 
@@ -63,8 +90,6 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
       tipoDocumento: form.tipoDocumento,
       documento: form.documento.trim(),
       celular: `+57${form.celular}`,
-      fechaNacimiento: form.fechaNacimiento,
-      password: form.password,
     })
   }
 
@@ -74,7 +99,7 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
     <Modal
       open={open}
       onClose={submitting ? undefined : onClose}
-      title="Crear usuario"
+      title="Editar información personal"
       footer={
         <>
           <button
@@ -87,32 +112,31 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
           </button>
           <button
             type="submit"
-            form="crear-usuario-form"
+            form="editar-perfil-personal-form"
             className="crear-usuario__btn crear-usuario__btn--primary"
             disabled={submitting}
           >
-            {submitting ? 'Creando…' : 'Crear usuario'}
+            {submitting ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </>
       }
     >
       <form
-        id="crear-usuario-form"
+        id="editar-perfil-personal-form"
         className="crear-usuario__form"
         onSubmit={handleSubmit}
       >
-        {mensajeError && (
+        {mensajeError ? (
           <p className="crear-usuario__error" role="alert">
             {mensajeError}
           </p>
-        )}
+        ) : null}
 
         <label className="crear-usuario__field">
           <span className="crear-usuario__label">Nombre completo</span>
           <input
             type="text"
             className="crear-usuario__input"
-            placeholder="Ej. Juan Pérez Gómez"
             value={form.nombre}
             onChange={handleChange('nombre')}
             autoComplete="name"
@@ -131,23 +155,23 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
               disabled={submitting}
               required
             >
-              {tiposDocumento.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.value} — {t.label}
+              {tiposDocumento.map((tipo) => (
+                <option key={tipo.value} value={tipo.value}>
+                  {tipo.value}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="crear-usuario__field crear-usuario__field--documento">
-            <span className="crear-usuario__label">Documento de identidad</span>
+            <span className="crear-usuario__label">Documento</span>
             <input
               type="text"
               className="crear-usuario__input"
-              placeholder="Número del documento"
               value={form.documento}
               onChange={handleDocumentoChange}
               inputMode="numeric"
+              autoComplete="username"
               disabled={submitting}
               required
             />
@@ -161,7 +185,6 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
             <input
               type="tel"
               className="crear-usuario__input crear-usuario__phone-input"
-              placeholder="Ej. 3001234567"
               value={form.celular}
               onChange={handleCelularChange}
               inputMode="numeric"
@@ -174,34 +197,9 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
             />
           </div>
         </label>
-
-        <CampoFechaCalendario
-          label="Fecha de nacimiento"
-          value={form.fechaNacimiento}
-          onChange={(valor) => {
-            setForm((prev) => ({ ...prev, fechaNacimiento: valor }))
-            setLocalError('')
-          }}
-          disabled={submitting}
-        />
-
-        <label className="crear-usuario__field">
-          <span className="crear-usuario__label">Contraseña</span>
-          <input
-            type="password"
-            className="crear-usuario__input"
-            placeholder="Mínimo 6 caracteres"
-            value={form.password}
-            onChange={handleChange('password')}
-            autoComplete="new-password"
-            disabled={submitting}
-            minLength={6}
-            required
-          />
-        </label>
       </form>
     </Modal>
   )
 }
 
-export default CrearUsuarioModal
+export default EditarPerfilPersonalModal

@@ -1,0 +1,58 @@
+.recordar-sesion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: -0.2rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.recordar-sesion__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.recordar-sesion__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #404040;
+  border-radius: 5px;
+  background-color: #121212;
+  color: transparent;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.recordar-sesion__box svg {
+  width: 12px;
+  height: 12px;
+}
+
+.recordar-sesion__input:focus-visible + .recordar-sesion__box {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+.recordar-sesion__input:checked + .recordar-sesion__box {
+  background-color: #f97316;
+  border-color: #f97316;
+  color: #ffffff;
+}
+
+.recordar-sesion__input:disabled + .recordar-sesion__box {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.recordar-sesion__label {
+  font-size: 0.83rem;
+  color: #d4d4d4;
+}

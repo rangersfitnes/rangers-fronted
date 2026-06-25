@@ -10,6 +10,7 @@ import { onIdTokenChanged, signOut } from 'firebase/auth'
 import { auth } from '../variables/firebase.jsx'
 import {
   clearAdminSession,
+  esAdminTokenPersistente,
   getAdminToken,
   saveAdminRole,
   saveAdminToken,
@@ -19,6 +20,10 @@ import {
   clearUserToken,
   getUserToken,
 } from '../services/userService.js'
+import {
+  inicializarPersistenciaFirebase,
+  resolverPersistenciaSesion,
+} from '../utils/recordarSesion.js'
 
 const REFRESH_INTERVAL_MS = 50 * 60 * 1000
 
@@ -37,6 +42,12 @@ export function AdminAuthProvider({ children }) {
       return
     }
 
+    // Sesión de cliente activa: no intentar verificar admin.
+    if (getUserToken()) {
+      setAutenticado(false)
+      return
+    }
+
     if (!getAdminToken()) {
       setAutenticado(false)
       return
@@ -45,8 +56,12 @@ export function AdminAuthProvider({ children }) {
     try {
       const idToken = await user.getIdToken()
       const result = await verifyAdminAccess(idToken)
-      saveAdminToken(result.token || idToken)
-      saveAdminRole(result.rol)
+      const persistente = resolverPersistenciaSesion(
+        'admin',
+        esAdminTokenPersistente(),
+      )
+      saveAdminToken(result.token || idToken, { persistente })
+      saveAdminRole(result.rol, { persistente })
       clearUserToken()
       setAutenticado(true)
     } catch {
@@ -58,11 +73,32 @@ export function AdminAuthProvider({ children }) {
   useEffect(() => {
     let activo = true
 
-    const unsubscribe = onIdTokenChanged(auth, async (user) => {
+    const iniciar = async () => {
+      try {
+        await inicializarPersistenciaFirebase(auth, 'admin')
+        await auth.authStateReady()
+      } catch {
+        // onIdTokenChanged intentará recuperar la sesión.
+      }
+
       if (!activo) return
 
-      await syncToken(user)
-      setInitializing(false)
+      const unsubscribe = onIdTokenChanged(auth, async (user) => {
+        if (!activo) return
+
+        await syncToken(user)
+        setInitializing(false)
+      })
+
+      return unsubscribe
+    }
+
+    let unsubscribe = () => {}
+
+    iniciar().then((unsub) => {
+      if (typeof unsub === 'function') {
+        unsubscribe = unsub
+      }
     })
 
     return () => {
@@ -80,7 +116,12 @@ export function AdminAuthProvider({ children }) {
 
       try {
         const idToken = await user.getIdToken(true)
-        saveAdminToken(idToken)
+        saveAdminToken(idToken, {
+          persistente: resolverPersistenciaSesion(
+            'admin',
+            esAdminTokenPersistente(),
+          ),
+        })
       } catch {
         // onIdTokenChanged gestionará la sesión inválida.
       }
@@ -89,10 +130,10 @@ export function AdminAuthProvider({ children }) {
     return () => window.clearInterval(intervalo)
   }, [autenticado])
 
-  const establecerSesion = useCallback((token, rol) => {
+  const establecerSesion = useCallback((token, rol, { persistente = true } = {}) => {
     clearUserToken()
-    saveAdminToken(token)
-    saveAdminRole(rol)
+    saveAdminToken(token, { persistente })
+    saveAdminRole(rol, { persistente })
     setAutenticado(true)
     setInitializing(false)
   }, [])

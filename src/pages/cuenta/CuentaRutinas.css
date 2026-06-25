@@ -165,6 +165,197 @@
   box-shadow: 0 0 14px rgba(249, 115, 22, 0.25);
 }
 
+.rutinas-week__pill--today {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.rutinas-week__pill--today-active {
+  border-color: rgba(251, 191, 36, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.35),
+    0 0 18px rgba(249, 115, 22, 0.35);
+}
+
+/* —— Rutina de hoy —— */
+.rutinas-hoy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.rutinas-hoy__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.rutinas-hoy__eyebrow {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.rutinas-hoy__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.rutinas-hoy__card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  background: linear-gradient(
+    125deg,
+    rgba(249, 115, 22, 0.22) 0%,
+    rgba(18, 18, 18, 0.98) 48%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.4),
+    0 0 32px rgba(249, 115, 22, 0.18);
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+  animation: rutinas-hoy-in 0.45s ease both;
+}
+
+@keyframes rutinas-hoy-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.rutinas-hoy__card-glow {
+  position: absolute;
+  inset: -30% -10%;
+  background: radial-gradient(
+    circle at 20% 20%,
+    rgba(251, 191, 36, 0.28),
+    transparent 55%
+  );
+  pointer-events: none;
+  animation: rutinas-hoy-glow 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes rutinas-hoy-glow {
+  from {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.rutinas-hoy__card:hover,
+.rutinas-hoy__card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(251, 191, 36, 0.7);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(249, 115, 22, 0.28);
+  outline: none;
+}
+
+.rutinas-hoy__card-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.15rem 0.85rem 1.15rem 1.15rem;
+}
+
+.rutinas-hoy__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.rutinas-hoy__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 6px;
+}
+
+.rutinas-hoy__badge--hoy {
+  color: #111111;
+  background: linear-gradient(90deg, #fbbf24, #f97316);
+}
+
+.rutinas-hoy__badge--asignada {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.rutinas-hoy__card-titulo {
+  margin: 0;
+  font-size: clamp(1.2rem, 4vw, 1.45rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #ffffff;
+}
+
+.rutinas-hoy__card-actividad {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+}
+
+.rutinas-hoy__card-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.85rem 0 0.35rem;
+  color: #fbbf24;
+}
+
+.rutinas-hoy__card-chevron {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.rutinas-list__heading {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #737373;
+}
+
 /* —— Empty —— */
 .rutinas-empty {
   margin-top: 0.5rem;
@@ -322,6 +513,13 @@
   padding: 1.1rem 0.85rem 1.1rem 1rem;
 }
 
+.rutinas-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .rutinas-card__dia {
   display: inline-flex;
   align-self: flex-start;
@@ -333,6 +531,20 @@
   color: #f97316;
   background-color: rgba(249, 115, 22, 0.14);
   border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 6px;
+}
+
+.rutinas-card__asignada {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.5rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fde68a;
+  background-color: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.32);
   border-radius: 6px;
 }
 

@@ -6,6 +6,97 @@ import { formatearFechaCuenta } from './cuenta/cuentaUtils.js'
 import './PuntoFisico.css'
 
 const PANTALLA_MS = 3000
+const PANTALLA_CUMPLE_MS = 5500
+
+const CONFETTI_PARTICULAS = Array.from({ length: 28 }, (_, indice) => ({
+  id: indice,
+  left: `${(indice * 13 + 7) % 100}%`,
+  delay: `${(indice % 7) * 0.12}s`,
+  duration: `${2.6 + (indice % 6) * 0.4}s`,
+  size: `${6 + (indice % 4) * 2}px`,
+  color: ['#f97316', '#fbbf24', '#22c55e', '#38bdf8', '#f472b6', '#a78bfa'][
+    indice % 6
+  ],
+}))
+
+function obtenerPrimerNombre(nombre) {
+  if (!nombre) return 'atleta'
+  return nombre.trim().split(/\s+/)[0]
+}
+
+function BloqueRutinaHoy({ rutinaHoy }) {
+  if (!rutinaHoy?.titulo) return null
+
+  return (
+    <div className="pf-control-acceso__rutina">
+      <p className="pf-control-acceso__rutina-etiqueta">Te toca entrenar hoy</p>
+      <h2 className="pf-control-acceso__rutina-titulo">{rutinaHoy.titulo}</h2>
+      {rutinaHoy.actividad ? (
+        <p className="pf-control-acceso__rutina-actividad">{rutinaHoy.actividad}</p>
+      ) : null}
+      {rutinaHoy.origen === 'admin' ? (
+        <span className="pf-control-acceso__rutina-badge">Rutina asignada</span>
+      ) : null}
+    </div>
+  )
+}
+
+function PantallaCumpleanos({ nombre, planNombre, rutinaHoy }) {
+  const primerNombre = obtenerPrimerNombre(nombre)
+
+  return (
+    <section
+      className="pf-control-acceso pf-control-acceso--cumpleanos"
+      aria-live="polite"
+    >
+      <div className="pf-control-acceso__cumple-confetti" aria-hidden="true">
+        {CONFETTI_PARTICULAS.map((particula) => (
+          <span
+            key={particula.id}
+            className="pf-control-acceso__cumple-confetti-item"
+            style={{
+              left: particula.left,
+              animationDelay: particula.delay,
+              animationDuration: particula.duration,
+              width: particula.size,
+              height: particula.size,
+              backgroundColor: particula.color,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="pf-control-acceso__cumple-glow" aria-hidden="true" />
+
+      <div className="pf-control-acceso__cumple-contenido">
+        <div className="pf-control-acceso__cumple-iconos" aria-hidden="true">
+          <span className="pf-control-acceso__cumple-emoji pf-control-acceso__cumple-emoji--left">
+            🎈
+          </span>
+          <span className="pf-control-acceso__cumple-emoji pf-control-acceso__cumple-emoji--cake">
+            🎂
+          </span>
+          <span className="pf-control-acceso__cumple-emoji pf-control-acceso__cumple-emoji--right">
+            🎉
+          </span>
+        </div>
+
+        <p className="pf-control-acceso__cumple-etiqueta">¡Hoy es un día especial!</p>
+        <h1 className="pf-control-acceso__cumple-titulo">¡Feliz cumpleaños!</h1>
+        <p className="pf-control-acceso__cumple-nombre">{primerNombre}</p>
+        <p className="pf-control-acceso__cumple-mensaje">
+          Rangers Box te desea un día lleno de energía, metas cumplidas y buenos
+          entrenamientos.
+        </p>
+        <p className="pf-control-acceso__cumple-plan">
+          Ingreso admitido · Plan{' '}
+          <strong>{planNombre || 'Membresía'}</strong>
+        </p>
+        <BloqueRutinaHoy rutinaHoy={rutinaHoy} />
+      </div>
+    </section>
+  )
+}
 
 function BotonFullscreen({ fullscreen, onToggle }) {
   return (
@@ -77,7 +168,9 @@ function VistaControlAcceso({ fullscreen = false, onToggleFullscreen }) {
     (datos) => {
       setResultado(datos)
       if (timerRef.current) clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(reiniciar, PANTALLA_MS)
+      const duracion =
+        datos.esCumpleanos || datos.rutinaHoy ? PANTALLA_CUMPLE_MS : PANTALLA_MS
+      timerRef.current = setTimeout(reiniciar, duracion)
     },
     [reiniciar],
   )
@@ -119,7 +212,15 @@ function VistaControlAcceso({ fullscreen = false, onToggleFullscreen }) {
 
   let contenido = null
 
-  if (resultado?.tipo === 'admitido') {
+  if (resultado?.tipo === 'admitido' && resultado.esCumpleanos) {
+    contenido = (
+      <PantallaCumpleanos
+        nombre={resultado.nombre}
+        planNombre={resultado.planNombre}
+        rutinaHoy={resultado.rutinaHoy}
+      />
+    )
+  } else if (resultado?.tipo === 'admitido') {
     contenido = (
       <section
         className="pf-control-acceso pf-control-acceso--bienvenida"
@@ -137,6 +238,7 @@ function VistaControlAcceso({ fullscreen = false, onToggleFullscreen }) {
             Plan activo:{' '}
             <strong>{resultado.planNombre || 'Membresía'}</strong>
           </p>
+          <BloqueRutinaHoy rutinaHoy={resultado.rutinaHoy} />
         </div>
       </section>
     )
