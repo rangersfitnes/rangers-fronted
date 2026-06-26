@@ -112,6 +112,114 @@
   flex-wrap: wrap;
 }
 
+.pf-usuarios-resumen {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.pf-usuarios-resumen__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.95rem 1rem;
+  font-family: inherit;
+  text-align: left;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s, transform 0.15s;
+}
+
+.pf-usuarios-resumen__card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.pf-usuarios-resumen__card:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.pf-usuarios-resumen__card--seleccionado {
+  border-color: rgba(249, 115, 22, 0.55);
+  background-color: rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.15);
+}
+
+.pf-usuarios-resumen__card--total.pf-usuarios-resumen__card--seleccionado {
+  border-color: rgba(255, 255, 255, 0.35);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.pf-usuarios-resumen__card--estado-activo.pf-usuarios-resumen__card--seleccionado {
+  border-color: rgba(34, 197, 94, 0.55);
+  background-color: rgba(22, 163, 74, 0.12);
+}
+
+.pf-usuarios-resumen__card--estado-vencido.pf-usuarios-resumen__card--seleccionado {
+  border-color: rgba(239, 68, 68, 0.55);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.pf-usuarios-resumen__card--estado-sin-plan.pf-usuarios-resumen__card--seleccionado {
+  border-color: rgba(163, 163, 163, 0.55);
+  background-color: rgba(163, 163, 163, 0.1);
+}
+
+.pf-usuarios-resumen__valor {
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pf-usuarios-resumen__card--estado-activo .pf-usuarios-resumen__valor {
+  color: #4ade80;
+}
+
+.pf-usuarios-resumen__card--estado-vencido .pf-usuarios-resumen__valor {
+  color: #fca5a5;
+}
+
+.pf-usuarios-resumen__card--estado-sin-plan .pf-usuarios-resumen__valor {
+  color: #d4d4d4;
+}
+
+.pf-usuarios-resumen__card--estado-activo.pf-usuarios-resumen__card--seleccionado
+  .pf-usuarios-resumen__valor {
+  color: #4ade80;
+}
+
+.pf-usuarios-resumen__card--estado-vencido.pf-usuarios-resumen__card--seleccionado
+  .pf-usuarios-resumen__valor {
+  color: #f87171;
+}
+
+.pf-usuarios-resumen__etiqueta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+@media (max-width: 900px) {
+  .pf-usuarios-resumen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .pf-usuarios-resumen {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pf-usuarios-busqueda {
   display: flex;
   flex-wrap: wrap;
@@ -1114,6 +1222,58 @@
   padding: 1.5rem 2rem;
 }
 
+.pf-page__main--control-acceso .pf-control-acceso__shell {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.pf-page--kiosco .pf-page__main--control-acceso {
+  flex: 1;
+  max-width: none;
+  width: 100%;
+  padding: 0;
+}
+
+.pf-control-acceso__admin-bar {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 960px;
+  flex-shrink: 0;
+  padding: 0 0 0.75rem;
+}
+
+.pf-control-acceso__hdmi-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: inherit;
+  color: #e5e5e5;
+  background-color: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.pf-control-acceso__hdmi-btn:hover {
+  color: #ffffff;
+  background-color: rgba(249, 115, 22, 0.22);
+  border-color: #f97316;
+}
+
+.pf-control-acceso__hdmi-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
 .pf-page--fullscreen,
 .pf-page:fullscreen,
 .pf-page:-webkit-full-screen {
@@ -1134,10 +1294,114 @@
   position: relative;
   display: flex;
   flex: 1;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 0;
+  gap: 1.25rem;
+}
+
+.pf-control-acceso__shell--fullscreen {
+  justify-content: flex-start;
+  padding-top: clamp(1.25rem, 3vh, 2.5rem);
+  gap: clamp(1.5rem, 4vh, 3rem);
+}
+
+.pf-control-acceso__banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 960px;
+  padding: 0 1.25rem;
+  text-align: center;
+}
+
+.pf-control-acceso__banner-eyebrow {
+  margin: 0;
+  font-size: clamp(0.72rem, 1.6vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.pf-control-acceso__banner-titulo {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-wrap: balance;
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__banner {
+  max-width: none;
+  padding: clamp(1rem, 2.5vh, 2rem) clamp(2rem, 5vw, 4rem);
+  background: linear-gradient(
+    180deg,
+    rgba(249, 115, 22, 0.2) 0%,
+    rgba(249, 115, 22, 0.04) 72%,
+    transparent 100%
+  );
+  border-bottom: 1px solid rgba(249, 115, 22, 0.28);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__banner-eyebrow {
+  font-size: clamp(1rem, 2.2vw, 1.45rem);
+  letter-spacing: 0.24em;
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__banner-titulo {
+  font-size: clamp(2.75rem, 7.5vw, 5.5rem);
+  line-height: 0.92;
+  text-shadow: 0 8px 32px rgba(249, 115, 22, 0.28);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso {
+  flex: 1;
+  min-height: 0;
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__contenido {
+  max-width: min(960px, 94vw);
+  gap: clamp(1.25rem, 3vh, 2rem);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__entrada {
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__logo {
+  width: min(240px, 28vw);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__input {
+  padding: clamp(1rem, 2vh, 1.35rem) clamp(1.1rem, 2.5vw, 1.5rem);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__label {
+  font-size: clamp(0.8rem, 1.6vw, 1rem);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__hint {
+  font-size: clamp(0.9rem, 1.8vw, 1.15rem);
+}
+
+.pf-page--fullscreen .pf-control-acceso__fullscreen-btn,
+.pf-page:fullscreen .pf-control-acceso__fullscreen-btn,
+.pf-page:-webkit-full-screen .pf-control-acceso__fullscreen-btn {
+  top: 1rem;
+  right: 1.25rem;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.8rem;
 }
 
 .pf-control-acceso__fullscreen-btn {
@@ -1168,6 +1432,16 @@
   background-color: rgba(26, 26, 26, 1);
 }
 
+.pf-control-acceso__fullscreen-btn--kiosco {
+  opacity: 0.3;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.65rem;
+}
+
+.pf-control-acceso__fullscreen-btn--kiosco:hover {
+  opacity: 1;
+}
+
 .pf-control-acceso__fullscreen-icon {
   width: 1rem;
   height: 1rem;
@@ -1186,24 +1460,35 @@
 .pf-control-acceso__contenido {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
+  align-items: stretch;
+  gap: 1.25rem;
   width: 100%;
-  max-width: 420px;
+  max-width: min(720px, 94vw);
   text-align: center;
 }
 
+.pf-control-acceso__entrada {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  width: 100%;
+}
+
 .pf-control-acceso__logo {
-  width: min(220px, 70vw);
+  flex-shrink: 0;
+  width: min(180px, 26vw);
   height: auto;
   object-fit: contain;
 }
 
 .pf-control-acceso__field {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.65rem;
-  width: 100%;
+  min-width: 0;
+  text-align: left;
 }
 
 .pf-control-acceso__label {
@@ -1220,7 +1505,7 @@
   font-size: 1.35rem;
   font-family: inherit;
   font-weight: 600;
-  text-align: center;
+  text-align: left;
   letter-spacing: 0.04em;
   color: #ffffff;
   background-color: #1a1a1a;
@@ -1256,6 +1541,27 @@
   margin: 0;
   font-size: 0.82rem;
   color: #737373;
+}
+
+@media (max-width: 520px) {
+  .pf-control-acceso__entrada {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .pf-control-acceso__logo {
+    width: min(200px, 60vw);
+  }
+
+  .pf-control-acceso__field {
+    width: 100%;
+    text-align: center;
+  }
+
+  .pf-control-acceso__input {
+    text-align: center;
+  }
 }
 
 .pf-control-acceso--bienvenida {

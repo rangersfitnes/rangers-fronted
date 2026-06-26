@@ -17,6 +17,7 @@ import PaymentPlan from './pages/PaymentPlan.jsx'
 import Admin from './pages/Admin.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import PuntoFisico from './pages/PuntoFisico.jsx'
+import PuntoFisicoKiosco from './pages/PuntoFisicoKiosco.jsx'
 import AdministracionGeneral from './pages/AdministracionGeneral.jsx'
 import CuentaPerfil from './pages/cuenta/CuentaPerfil.jsx'
 import CuentaAsistencias from './pages/cuenta/CuentaAsistencias.jsx'
@@ -107,6 +108,14 @@ function App() {
           element={
             <ProtectedAdminRoute>
               <PuntoFisico />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin/punto-fisico/kiosco"
+          element={
+            <ProtectedAdminRoute>
+              <PuntoFisicoKiosco />
             </ProtectedAdminRoute>
           }
         />

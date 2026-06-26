@@ -1,10 +1,49 @@
 import { API_BASE_URL } from '../variables/api.jsx'
 import { getAdminToken } from './authService.js'
 
+export async function obtenerEstadisticasUsuarios({ signal } = {}) {
+  const token = getAdminToken()
+
+  if (!token) {
+    throw new Error('No hay sesión activa de administrador')
+  }
+
+  let response
+
+  try {
+    response = await fetch(`${API_BASE_URL}/api/usuarios/estadisticas`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error(
+      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+    )
+  }
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudieron obtener las estadísticas')
+  }
+
+  return data.estadisticas || {
+    total: 0,
+    activos: 0,
+    vencidos: 0,
+    sinPlan: 0,
+  }
+}
+
 export async function obtenerUsuarios({
   page = 1,
   limit = 25,
   documento,
+  estadoPlan,
   signal,
 } = {}) {
   const token = getAdminToken()
@@ -23,6 +62,10 @@ export async function obtenerUsuarios({
   } else {
     params.set('page', String(page))
     params.set('limit', String(limit))
+    const estadoLimpio = String(estadoPlan || '').trim().toLowerCase()
+    if (['activo', 'vencido', 'sin_plan'].includes(estadoLimpio)) {
+      params.set('estadoPlan', estadoLimpio)
+    }
   }
 
   let response
@@ -55,6 +98,7 @@ export async function obtenerUsuarios({
     hasMore: Boolean(data.hasMore),
     busqueda: data.busqueda || null,
     total: data.total ?? (data.usuarios || []).length,
+    estadoPlan: data.estadoPlan ?? null,
   }
 }
 

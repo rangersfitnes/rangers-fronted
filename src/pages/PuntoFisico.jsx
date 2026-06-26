@@ -11,9 +11,11 @@ import { useToast } from '../components/Toast.jsx'
 import {
   actualizarUsuario,
   eliminarUsuario,
+  obtenerEstadisticasUsuarios,
   obtenerUsuarios,
   registrarUsuario,
 } from '../services/usuariosService.js'
+import { abrirKioscoAcceso } from '../utils/abrirKioscoAcceso.js'
 import UsuarioDetalleGestion from './UsuarioDetalleGestion.jsx'
 import VistaPagoClases from './PuntoFisicoPagoClases.jsx'
 import VistaCierreDiario from './PuntoFisicoCierreDiario.jsx'
@@ -22,6 +24,34 @@ import VistaMiPerfil from './PuntoFisicoMiPerfil.jsx'
 import './PuntoFisico.css'
 
 const PAGE_SIZE = 25
+
+const CONTADORES_USUARIOS = [
+  { id: null, etiqueta: 'Registrados', clave: 'total', tono: 'total' },
+  {
+    id: 'activo',
+    etiqueta: 'Activos',
+    clave: 'activos',
+    tono: 'estado-activo',
+  },
+  {
+    id: 'vencido',
+    etiqueta: 'Vencidos',
+    clave: 'vencidos',
+    tono: 'estado-vencido',
+  },
+  {
+    id: 'sin_plan',
+    etiqueta: 'Sin plan',
+    clave: 'sinPlan',
+    tono: 'estado-sin-plan',
+  },
+]
+
+const ETIQUETA_FILTRO_USUARIO = {
+  activo: 'usuarios activos',
+  vencido: 'usuarios vencidos',
+  sin_plan: 'usuarios sin plan',
+}
 
 const tabs = [
   { id: 'control-acceso', label: 'Control de acceso' },
@@ -48,21 +78,45 @@ function VistaUsuarios() {
   const [loading, setLoading] = useState(true)
   const [busquedaDocumento, setBusquedaDocumento] = useState('')
   const [documentoActivo, setDocumentoActivo] = useState('')
+  const [filtroEstadoPlan, setFiltroEstadoPlan] = useState(null)
+  const [estadisticas, setEstadisticas] = useState({
+    total: 0,
+    activos: 0,
+    vencidos: 0,
+    sinPlan: 0,
+  })
+
+  const cargarEstadisticas = useCallback(
+    async ({ signal } = {}) => {
+      try {
+        const res = await obtenerEstadisticasUsuarios({ signal })
+        setEstadisticas(res)
+      } catch (err) {
+        if (err?.name === 'AbortError') return
+        toast.error(err.message || 'No se pudieron cargar las estadísticas')
+      }
+    },
+    [toast],
+  )
 
   const cargarUsuarios = useCallback(
-    async (pagina, { signal, documento } = {}) => {
+    async (pagina, { signal, documento, estadoPlan = null } = {}) => {
       setLoading(true)
       try {
         const res = await obtenerUsuarios({
           page: pagina,
           limit: PAGE_SIZE,
           documento,
+          estadoPlan: documento ? undefined : estadoPlan,
           signal,
         })
         setUsuarios(res.usuarios)
         setHasMore(res.hasMore)
         setPage(res.page)
         setDocumentoActivo(res.busqueda || '')
+        if (!res.busqueda) {
+          setFiltroEstadoPlan(res.estadoPlan || null)
+        }
       } catch (err) {
         if (err?.name === 'AbortError') return
         toast.error(err.message || 'No se pudieron cargar los usuarios')
@@ -73,11 +127,29 @@ function VistaUsuarios() {
     [toast],
   )
 
+  const recargarListado = useCallback(
+    (pagina = page) => {
+      cargarUsuarios(pagina, {
+        documento: documentoActivo || undefined,
+        estadoPlan: documentoActivo ? null : filtroEstadoPlan,
+      })
+      cargarEstadisticas()
+    },
+    [
+      cargarEstadisticas,
+      cargarUsuarios,
+      documentoActivo,
+      filtroEstadoPlan,
+      page,
+    ],
+  )
+
   useEffect(() => {
     const controller = new AbortController()
     cargarUsuarios(1, { signal: controller.signal })
+    cargarEstadisticas({ signal: controller.signal })
     return () => controller.abort()
-  }, [cargarUsuarios])
+  }, [cargarEstadisticas, cargarUsuarios])
 
   const handleBusquedaDocumento = (event) => {
     const valor = event.target.value.replace(/\s/g, '')
@@ -88,16 +160,25 @@ function VistaUsuarios() {
     const termino = busquedaDocumento.trim()
     if (!termino) {
       setDocumentoActivo('')
-      cargarUsuarios(1)
+      cargarUsuarios(1, { estadoPlan: filtroEstadoPlan })
       return
     }
+    setFiltroEstadoPlan(null)
     cargarUsuarios(1, { documento: termino })
   }
 
   const limpiarBusqueda = () => {
     setBusquedaDocumento('')
     setDocumentoActivo('')
-    cargarUsuarios(1)
+    cargarUsuarios(1, { estadoPlan: filtroEstadoPlan })
+  }
+
+  const seleccionarFiltro = (estadoPlan) => {
+    const siguiente = filtroEstadoPlan === estadoPlan ? null : estadoPlan
+    setBusquedaDocumento('')
+    setDocumentoActivo('')
+    setFiltroEstadoPlan(siguiente)
+    cargarUsuarios(1, { estadoPlan: siguiente })
   }
 
   const handleBusquedaKeyDown = (event) => {
@@ -133,7 +214,7 @@ function VistaUsuarios() {
         `Usuario "${res.usuario?.nombre || datos.nombre}" creado correctamente`,
       )
       setCrearOpen(false)
-      cargarUsuarios(1)
+      recargarListado(1)
     } catch (err) {
       setError(err.message || 'No se pudo crear el usuario')
     } finally {
@@ -153,7 +234,7 @@ function VistaUsuarios() {
       if (usuarioGestion?.uid === editarUsuario.uid) {
         setUsuarioGestion((prev) => (prev ? { ...prev, ...datos } : prev))
       }
-      cargarUsuarios(page, { documento: documentoActivo || undefined })
+      recargarListado(page)
     } catch (err) {
       setError(err.message || 'No se pudo actualizar el usuario')
     } finally {
@@ -172,7 +253,7 @@ function VistaUsuarios() {
         setUsuarioGestion(null)
       }
       setEliminarTarget(null)
-      cargarUsuarios(page, { documento: documentoActivo || undefined })
+      recargarListado(page)
     } catch (err) {
       toast.error(err.message || 'No se pudo eliminar el usuario')
     } finally {
@@ -182,12 +263,12 @@ function VistaUsuarios() {
 
   const irAnterior = () => {
     if (page <= 1 || loading || documentoActivo) return
-    cargarUsuarios(page - 1)
+    cargarUsuarios(page - 1, { estadoPlan: filtroEstadoPlan })
   }
 
   const irSiguiente = () => {
     if (!hasMore || loading || documentoActivo) return
-    cargarUsuarios(page + 1)
+    cargarUsuarios(page + 1, { estadoPlan: filtroEstadoPlan })
   }
 
   const enModoBusqueda = Boolean(documentoActivo)
@@ -251,11 +332,7 @@ function VistaUsuarios() {
           <button
             type="button"
             className="pf-action-btn pf-action-btn--ghost"
-            onClick={() =>
-              cargarUsuarios(page, {
-                documento: documentoActivo || undefined,
-              })
-            }
+            onClick={() => recargarListado(page)}
             disabled={loading}
           >
             Actualizar
@@ -269,6 +346,31 @@ function VistaUsuarios() {
           </button>
         </div>
       </header>
+
+      <div className="pf-usuarios-resumen" aria-label="Resumen de usuarios">
+        {CONTADORES_USUARIOS.map((contador) => {
+          const seleccionado = filtroEstadoPlan === contador.id
+          return (
+            <button
+              key={contador.etiqueta}
+              type="button"
+              className={`pf-usuarios-resumen__card pf-usuarios-resumen__card--${contador.tono}${
+                seleccionado ? ' pf-usuarios-resumen__card--seleccionado' : ''
+              }`}
+              onClick={() => seleccionarFiltro(contador.id)}
+              disabled={loading}
+              aria-pressed={seleccionado}
+            >
+              <span className="pf-usuarios-resumen__valor">
+                {estadisticas[contador.clave] ?? 0}
+              </span>
+              <span className="pf-usuarios-resumen__etiqueta">
+                {contador.etiqueta}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
       <div className="pf-usuarios-busqueda">
         <label className="pf-usuarios-busqueda__field">
@@ -313,12 +415,21 @@ function VistaUsuarios() {
         </p>
       ) : null}
 
+      {!enModoBusqueda && filtroEstadoPlan && !loading ? (
+        <p className="pf-usuarios-busqueda__hint">
+          Mostrando {ETIQUETA_FILTRO_USUARIO[filtroEstadoPlan]}
+          {usuarios.length === 0 ? ' — sin coincidencias' : ''}
+        </p>
+      ) : null}
+
       {!loading && usuarios.length === 0 && (
         <div className="pf-panel">
           <p className="pf-panel__empty">
             {enModoBusqueda
               ? 'No se encontró ningún usuario con ese documento.'
-              : 'Aún no hay usuarios registrados. Crea el primero con el botón «+ Crear usuario».'}
+              : filtroEstadoPlan
+                ? `No hay ${ETIQUETA_FILTRO_USUARIO[filtroEstadoPlan]}.`
+                : 'Aún no hay usuarios registrados. Crea el primero con el botón «+ Crear usuario».'}
           </p>
         </div>
       )}
@@ -401,6 +512,7 @@ function VistaUsuarios() {
 }
 
 function PuntoFisico() {
+  const toast = useToast()
   const [activeTab, setActiveTab] = useState('control-acceso')
   const [fullscreen, setFullscreen] = useState(false)
   const pageRef = useRef(null)
@@ -456,6 +568,17 @@ function PuntoFisico() {
     }
   }, [])
 
+  const abrirPantallaExterna = useCallback(async () => {
+    const resultado = await abrirKioscoAcceso()
+    if (!resultado.ok) {
+      toast.error(
+        resultado.reason === 'blocked'
+          ? 'Permite ventanas emergentes para abrir la pantalla externa.'
+          : 'No se pudo abrir la pantalla de acceso externa.',
+      )
+    }
+  }, [toast])
+
   const enControlAcceso = activeTab === 'control-acceso'
   const ocultarTabs = enControlAcceso && fullscreen
 
@@ -480,10 +603,34 @@ function PuntoFisico() {
         }`}
       >
         {enControlAcceso ? (
-          <VistaControlAcceso
-            fullscreen={fullscreen}
-            onToggleFullscreen={toggleFullscreen}
-          />
+          <>
+            {!fullscreen ? (
+              <div className="pf-control-acceso__admin-bar">
+                <button
+                  type="button"
+                  className="pf-control-acceso__hdmi-btn"
+                  onClick={abrirPantallaExterna}
+                >
+                  <svg
+                    className="pf-control-acceso__hdmi-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <rect x="2" y="4" width="20" height="14" rx="2" />
+                    <path d="M8 22h8M12 18v4" />
+                  </svg>
+                  Pantalla externa (HDMI)
+                </button>
+              </div>
+            ) : null}
+            <VistaControlAcceso
+              fullscreen={fullscreen}
+              onToggleFullscreen={toggleFullscreen}
+            />
+          </>
         ) : null}
         {activeTab === 'pago-clases' && <VistaPagoClases />}
         {activeTab === 'cierre-diario' && <VistaCierreDiario />}

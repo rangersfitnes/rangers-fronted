@@ -98,16 +98,28 @@ function PantallaCumpleanos({ nombre, planNombre, rutinaHoy }) {
   )
 }
 
-function BotonFullscreen({ fullscreen, onToggle }) {
+function BotonFullscreen({ fullscreen, onToggle, modoKiosco = false }) {
   return (
     <button
       type="button"
-      className="pf-control-acceso__fullscreen-btn"
+      className={`pf-control-acceso__fullscreen-btn${
+        modoKiosco ? ' pf-control-acceso__fullscreen-btn--kiosco' : ''
+      }`}
       onClick={onToggle}
       aria-label={
-        fullscreen ? 'Salir de pantalla completa' : 'Activar pantalla completa'
+        modoKiosco
+          ? 'Salir de pantalla completa (staff)'
+          : fullscreen
+            ? 'Salir de pantalla completa'
+            : 'Activar pantalla completa'
       }
-      title={fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+      title={
+        modoKiosco
+          ? 'Salir de pantalla completa (staff)'
+          : fullscreen
+            ? 'Salir de pantalla completa'
+            : 'Pantalla completa'
+      }
     >
       {fullscreen ? (
         <svg
@@ -132,12 +144,18 @@ function BotonFullscreen({ fullscreen, onToggle }) {
           <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3" />
         </svg>
       )}
-      <span>{fullscreen ? 'Salir' : 'Pantalla completa'}</span>
+      <span>
+        {modoKiosco ? 'Staff' : fullscreen ? 'Salir' : 'Pantalla completa'}
+      </span>
     </button>
   )
 }
 
-function VistaControlAcceso({ fullscreen = false, onToggleFullscreen }) {
+function VistaControlAcceso({
+  fullscreen = false,
+  modoKiosco = false,
+  onToggleFullscreen,
+}) {
   const inputRef = useRef(null)
   const timerRef = useRef(null)
 
@@ -309,30 +327,32 @@ function VistaControlAcceso({ fullscreen = false, onToggleFullscreen }) {
     contenido = (
       <section className="pf-control-acceso">
         <div className="pf-control-acceso__contenido">
-          <img
-            src={logo}
-            alt="Rangers Box"
-            className="pf-control-acceso__logo"
-          />
-
-          <label className="pf-control-acceso__field">
-            <span className="pf-control-acceso__label">Número de cédula</span>
-            <input
-              ref={inputRef}
-              type="text"
-              className="pf-control-acceso__input"
-              value={cedula}
-              onChange={(e) => {
-                setCedula(e.target.value.replace(/\s/g, ''))
-                setError('')
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Digita tu cédula y presiona Enter"
-              inputMode="numeric"
-              autoComplete="off"
-              disabled={validando}
+          <div className="pf-control-acceso__entrada">
+            <img
+              src={logo}
+              alt="Rangers Box"
+              className="pf-control-acceso__logo"
             />
-          </label>
+
+            <label className="pf-control-acceso__field">
+              <span className="pf-control-acceso__label">Número de cédula</span>
+              <input
+                ref={inputRef}
+                type="text"
+                className="pf-control-acceso__input"
+                value={cedula}
+                onChange={(e) => {
+                  setCedula(e.target.value.replace(/\s/g, ''))
+                  setError('')
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Digita tu cédula y presiona Enter"
+                inputMode="numeric"
+                autoComplete="off"
+                disabled={validando}
+              />
+            </label>
+          </div>
 
           {error ? (
             <p className="pf-control-acceso__error" role="alert">
@@ -349,10 +369,24 @@ function VistaControlAcceso({ fullscreen = false, onToggleFullscreen }) {
   }
 
   return (
-    <div className="pf-control-acceso__shell">
+    <div
+      className={`pf-control-acceso__shell${
+        fullscreen || modoKiosco ? ' pf-control-acceso__shell--fullscreen' : ''
+      }${modoKiosco ? ' pf-control-acceso__shell--kiosco' : ''}`}
+    >
+      {!resultado ? (
+        <header className="pf-control-acceso__banner" aria-label="Bienvenida">
+          <p className="pf-control-acceso__banner-eyebrow">Bienvenido</p>
+          <h1 className="pf-control-acceso__banner-titulo">
+            Registra aquí tu asistencia
+          </h1>
+        </header>
+      ) : null}
+
       {onToggleFullscreen ? (
         <BotonFullscreen
           fullscreen={fullscreen}
+          modoKiosco={modoKiosco}
           onToggle={onToggleFullscreen}
         />
       ) : null}
