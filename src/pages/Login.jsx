@@ -178,9 +178,11 @@ function Login() {
     } catch (err) {
       await signOut(auth).catch(() => {})
       const mensaje =
-        ERRORES_FIREBASE[err.code] ||
-        err.message ||
-        'No se pudo crear la cuenta'
+        err.code === 'auth/email-already-in-use'
+          ? 'Ya existe una cuenta con ese documento'
+          : ERRORES_FIREBASE[err.code] ||
+            err.message ||
+            'No se pudo crear la cuenta'
       setSignupError(mensaje)
     } finally {
       setSignupSubmitting(false)
@@ -215,8 +217,7 @@ function Login() {
         style={{ backgroundColor: colors.overlay_dark }}
       />
 
-      {!signupOpen ? (
-        <div className="login-card">
+      <div className="login-card">
           <Link to="/" className="login-card__home-link" aria-label="Volver al inicio">
             <img src={logo} alt="Rangers Box" className="login-card__logo" />
           </Link>
@@ -323,7 +324,6 @@ function Login() {
             </button>
           </form>
         </div>
-      ) : null}
 
       <CrearCuentaModal
         open={signupOpen}

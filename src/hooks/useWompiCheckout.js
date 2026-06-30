@@ -36,7 +36,7 @@ export function useWompiCheckout({ sede } = {}) {
   }, [refresh])
 
   const pagar = useCallback(
-    async ({ planId, beneficiarios = [] }) => {
+    async ({ planId, beneficiarios = [], codigoCupon = '' }) => {
       if (procesando || confirmando) return
 
       if (!planId) {
@@ -56,6 +56,7 @@ export function useWompiCheckout({ sede } = {}) {
           planId,
           beneficiarios,
           sede,
+          codigoCupon: codigoCupon || undefined,
         })
 
         const checkout = new window.WidgetCheckout({

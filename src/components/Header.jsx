@@ -460,14 +460,24 @@ function Header({ inScroll = false }) {
             ))}
           </ul>
         ) : (
-          <Link
-            to="/login"
-            className="header__drawer-login"
-            onClick={cerrarDrawer}
-          >
-            <UserIcon className="header__drawer-login-icon" />
-            Iniciar sesión
-          </Link>
+          <div className="header__drawer-auth">
+            <Link
+              to="/login"
+              className="header__drawer-login"
+              onClick={cerrarDrawer}
+            >
+              <UserIcon className="header__drawer-login-icon" />
+              Iniciar sesión
+            </Link>
+            <Link
+              to="/login"
+              state={{ openSignup: true }}
+              className="header__drawer-signup"
+              onClick={cerrarDrawer}
+            >
+              Crear cuenta
+            </Link>
+          </div>
         )}
       </nav>
 

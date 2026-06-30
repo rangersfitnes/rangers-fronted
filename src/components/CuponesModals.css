@@ -1,0 +1,131 @@
+.cupones-modal__codigo {
+  text-transform: uppercase;
+}
+
+.cupones-modal__porcentaje {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cupones-modal__porcentaje input {
+  width: 5.5rem;
+}
+
+.cupones-modal__planes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.cupones-modal__planes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cupones-modal__planes-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cupones-modal__link-btn {
+  border: none;
+  background: transparent;
+  color: #f97316;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cupones-modal__link-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cupones-modal__planes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.cupones-modal__plan-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cupones-modal__plan-option--checked {
+  border-color: rgba(249, 115, 22, 0.45);
+  background: rgba(249, 115, 22, 0.08);
+}
+
+.cupones-modal__plan-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cupones-modal__plan-option small {
+  color: #a3a3a3;
+  font-size: 0.75rem;
+}
+
+.cupones-modal__empty {
+  margin: 0;
+  color: #a3a3a3;
+  font-size: 0.88rem;
+}
+
+.cupones-list-modal .modal__dialog {
+  max-width: 920px;
+}
+
+.cupones-list-modal__table-wrap {
+  overflow: auto;
+}
+
+.cupones-list-modal__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.cupones-list-modal__table th,
+.cupones-list-modal__table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.cupones-list-modal__table th {
+  color: #a3a3a3;
+  font-weight: 600;
+}
+
+.cupones-list-modal__planes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cupones-list-modal__table code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  color: #fbbf24;
+}

@@ -43,6 +43,8 @@ export async function obtenerUsuarios({
   page = 1,
   limit = 25,
   documento,
+  nombre,
+  celular,
   estadoPlan,
   signal,
 } = {}) {
@@ -56,9 +58,15 @@ export async function obtenerUsuarios({
   const documentoLimpio = String(documento || '')
     .trim()
     .replace(/\s/g, '')
+  const nombreLimpio = String(nombre || '').trim()
+  const celularLimpio = String(celular || '').trim()
 
   if (documentoLimpio) {
     params.set('documento', documentoLimpio)
+  } else if (nombreLimpio) {
+    params.set('nombre', nombreLimpio)
+  } else if (celularLimpio) {
+    params.set('celular', celularLimpio)
   } else {
     params.set('page', String(page))
     params.set('limit', String(limit))
@@ -97,6 +105,7 @@ export async function obtenerUsuarios({
     limit: data.limit || limit,
     hasMore: Boolean(data.hasMore),
     busqueda: data.busqueda || null,
+    tipoBusqueda: data.tipoBusqueda || null,
     total: data.total ?? (data.usuarios || []).length,
     estadoPlan: data.estadoPlan ?? null,
   }

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { colors } from '../variables/colors.jsx'
 import AdminTabsHeader from '../components/AdminTabsHeader.jsx'
 import PlanFormModal from '../components/PlanFormModal.jsx'
+import CuponFormModal from '../components/CuponFormModal.jsx'
+import CuponesListModal from '../components/CuponesListModal.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import PlanesTable from '../components/PlanesTable.jsx'
@@ -22,6 +24,7 @@ import {
   eliminarPlan,
   obtenerPlanes,
 } from '../services/planesService.js'
+import { crearCupon, obtenerCupones } from '../services/cuponesService.js'
 import {
   actualizarEvento,
   crearEvento,
@@ -57,6 +60,11 @@ function VistaPlanes() {
   const [loading, setLoading] = useState(true)
 
   const [crearOpen, setCrearOpen] = useState(false)
+  const [cuponOpen, setCuponOpen] = useState(false)
+  const [cuponesListOpen, setCuponesListOpen] = useState(false)
+  const [cupones, setCupones] = useState([])
+  const [cuponError, setCuponError] = useState('')
+  const [guardandoCupon, setGuardandoCupon] = useState(false)
   const [editarPlan, setEditarPlan] = useState(null)
   const [eliminarTarget, setEliminarTarget] = useState(null)
   const [menuPlan, setMenuPlan] = useState(null)
@@ -87,6 +95,40 @@ function VistaPlanes() {
     cargarPlanes({ signal: controller.signal })
     return () => controller.abort()
   }, [cargarPlanes])
+
+  const cargarCupones = useCallback(
+    async ({ signal } = {}) => {
+      try {
+        const data = await obtenerCupones({ signal })
+        setCupones(data)
+      } catch (err) {
+        if (err?.name === 'AbortError') return
+        toast.error(err.message || 'No se pudieron cargar los cupones')
+      }
+    },
+    [toast],
+  )
+
+  useEffect(() => {
+    const controller = new AbortController()
+    cargarCupones({ signal: controller.signal })
+    return () => controller.abort()
+  }, [cargarCupones])
+
+  const handleCrearCupon = async (datos) => {
+    setCuponError('')
+    setGuardandoCupon(true)
+    try {
+      const cupon = await crearCupon(datos)
+      toast.success(`Cupón "${cupon.nombre}" creado correctamente`)
+      setCuponOpen(false)
+      cargarCupones({ force: true })
+    } catch (err) {
+      setCuponError(err.message || 'No se pudo crear el cupón')
+    } finally {
+      setGuardandoCupon(false)
+    }
+  }
 
   const handleRowClick = (plan, position) => {
     setMenuPlan(plan)
@@ -218,6 +260,27 @@ function VistaPlanes() {
           </button>
           <button
             type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => {
+              setCuponError('')
+              setCuponesListOpen(true)
+              cargarCupones()
+            }}
+          >
+            Ver cupones
+          </button>
+          <button
+            type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => {
+              setCuponError('')
+              setCuponOpen(true)
+            }}
+          >
+            Generar cupón
+          </button>
+          <button
+            type="button"
             className="ag-action-btn"
             onClick={() => setCrearOpen(true)}
           >
@@ -268,6 +331,26 @@ function VistaPlanes() {
         disableNombre
       />
 
+      <CuponFormModal
+        open={cuponOpen}
+        onClose={() => {
+          if (guardandoCupon) return
+          setCuponError('')
+          setCuponOpen(false)
+        }}
+        onSubmit={handleCrearCupon}
+        submitting={guardandoCupon}
+        error={cuponError}
+        planes={planes}
+      />
+
+      <CuponesListModal
+        open={cuponesListOpen}
+        onClose={() => setCuponesListOpen(false)}
+        cupones={cupones}
+        planes={planes}
+      />
+
       <ConfirmModal
         open={Boolean(eliminarTarget)}
         onClose={() => setEliminarTarget(null)}
@@ -284,9 +367,11 @@ function VistaPlanes() {
       />
 
       <LoadingOverlay
-        visible={loading || submitting || actionLoading}
+        visible={loading || submitting || actionLoading || guardandoCupon}
         label={
-          submitting
+          guardandoCupon
+            ? 'Generando cupón'
+            : submitting
             ? editarPlan
               ? 'Guardando cambios'
               : 'Creando plan'

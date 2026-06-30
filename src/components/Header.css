@@ -573,8 +573,14 @@
   color: #525252;
 }
 
-.header__drawer-login {
+.header__drawer-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
   margin-top: 1.5rem;
+}
+
+.header__drawer-login {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -592,6 +598,28 @@
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+}
+
+.header__drawer-signup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #111111;
+  background-color: #f97316;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.header__drawer-signup:hover {
+  background-color: #ea580c;
 }
 
 .header__drawer-login:hover {

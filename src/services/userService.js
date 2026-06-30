@@ -281,8 +281,8 @@ export async function guardarEntrenamiento(datos) {
   return data.entrenamiento
 }
 
-export async function obtenerDatosUsuario({ signal } = {}) {
-  const token = getUserToken()
+export async function obtenerDatosUsuario({ signal, token: tokenOverride } = {}) {
+  const token = tokenOverride || getUserToken()
   if (!token) return null
 
   let response
@@ -302,7 +302,7 @@ export async function obtenerDatosUsuario({ signal } = {}) {
 
   const data = await response.json().catch(() => ({}))
 
-  if (response.status === 401) {
+  if (response.status === 401 || response.status === 403) {
     clearUserToken()
     return null
   }

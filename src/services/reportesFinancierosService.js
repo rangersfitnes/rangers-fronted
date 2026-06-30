@@ -5,13 +5,20 @@ import { SEDE_HORARIOS } from './horariosService.js'
 export async function obtenerReporteFinanciero({
   desde,
   hasta,
+  todoHistorial = false,
   sede = SEDE_HORARIOS,
   signal,
 } = {}) {
   const token = getAdminToken()
   if (!token) throw new Error('No hay sesión activa de administrador')
 
-  const params = new URLSearchParams({ sede, desde, hasta })
+  const params = new URLSearchParams({ sede })
+  if (todoHistorial) {
+    params.set('todo', 'true')
+  } else {
+    params.set('desde', desde)
+    params.set('hasta', hasta)
+  }
 
   let response
   try {

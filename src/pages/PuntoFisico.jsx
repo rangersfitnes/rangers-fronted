@@ -53,6 +53,38 @@ const ETIQUETA_FILTRO_USUARIO = {
   sin_plan: 'usuarios sin plan',
 }
 
+const TIPOS_BUSQUEDA_USUARIO = [
+  {
+    id: 'documento',
+    label: 'Documento',
+    placeholder: 'Ej. 1234567890',
+    inputMode: 'numeric',
+  },
+  {
+    id: 'nombre',
+    label: 'Nombre',
+    placeholder: 'Ej. Juan Pérez',
+    inputMode: 'text',
+  },
+  {
+    id: 'celular',
+    label: 'Celular',
+    placeholder: 'Ej. 3001234567',
+    inputMode: 'tel',
+  },
+]
+
+const ETIQUETA_TIPO_BUSQUEDA = {
+  documento: 'documento',
+  nombre: 'nombre',
+  celular: 'celular',
+}
+
+function parametrosBusquedaUsuarios(busqueda) {
+  if (!busqueda?.tipo || !busqueda?.termino) return {}
+  return { [busqueda.tipo]: busqueda.termino }
+}
+
 const tabs = [
   { id: 'control-acceso', label: 'Control de acceso' },
   { id: 'pago-clases', label: 'Pago del día' },
@@ -76,8 +108,9 @@ function VistaUsuarios() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [busquedaDocumento, setBusquedaDocumento] = useState('')
-  const [documentoActivo, setDocumentoActivo] = useState('')
+  const [tipoBusqueda, setTipoBusqueda] = useState('documento')
+  const [busquedaTexto, setBusquedaTexto] = useState('')
+  const [busquedaActiva, setBusquedaActiva] = useState(null)
   const [filtroEstadoPlan, setFiltroEstadoPlan] = useState(null)
   const [estadisticas, setEstadisticas] = useState({
     total: 0,
@@ -100,20 +133,27 @@ function VistaUsuarios() {
   )
 
   const cargarUsuarios = useCallback(
-    async (pagina, { signal, documento, estadoPlan = null } = {}) => {
+    async (pagina, { signal, busqueda, estadoPlan = null } = {}) => {
       setLoading(true)
       try {
         const res = await obtenerUsuarios({
           page: pagina,
           limit: PAGE_SIZE,
-          documento,
-          estadoPlan: documento ? undefined : estadoPlan,
+          ...parametrosBusquedaUsuarios(busqueda),
+          estadoPlan: busqueda ? undefined : estadoPlan,
           signal,
         })
         setUsuarios(res.usuarios)
         setHasMore(res.hasMore)
         setPage(res.page)
-        setDocumentoActivo(res.busqueda || '')
+        if (res.busqueda && res.tipoBusqueda) {
+          setBusquedaActiva({
+            tipo: res.tipoBusqueda,
+            termino: res.busqueda,
+          })
+        } else {
+          setBusquedaActiva(null)
+        }
         if (!res.busqueda) {
           setFiltroEstadoPlan(res.estadoPlan || null)
         }
@@ -130,15 +170,15 @@ function VistaUsuarios() {
   const recargarListado = useCallback(
     (pagina = page) => {
       cargarUsuarios(pagina, {
-        documento: documentoActivo || undefined,
-        estadoPlan: documentoActivo ? null : filtroEstadoPlan,
+        busqueda: busquedaActiva,
+        estadoPlan: busquedaActiva ? null : filtroEstadoPlan,
       })
       cargarEstadisticas()
     },
     [
+      busquedaActiva,
       cargarEstadisticas,
       cargarUsuarios,
-      documentoActivo,
       filtroEstadoPlan,
       page,
     ],
@@ -151,32 +191,61 @@ function VistaUsuarios() {
     return () => controller.abort()
   }, [cargarEstadisticas, cargarUsuarios])
 
-  const handleBusquedaDocumento = (event) => {
-    const valor = event.target.value.replace(/\s/g, '')
-    setBusquedaDocumento(valor)
+  const opcionBusquedaActual = TIPOS_BUSQUEDA_USUARIO.find(
+    (opcion) => opcion.id === tipoBusqueda,
+  )
+
+  const handleBusquedaInput = (event) => {
+    let valor = event.target.value
+    if (tipoBusqueda === 'documento') {
+      valor = valor.replace(/\s/g, '')
+    } else if (tipoBusqueda === 'celular') {
+      valor = valor.replace(/[^\d+]/g, '')
+    }
+    setBusquedaTexto(valor)
+  }
+
+  const handleCambioTipoBusqueda = (event) => {
+    setTipoBusqueda(event.target.value)
+    setBusquedaTexto('')
   }
 
   const ejecutarBusqueda = () => {
-    const termino = busquedaDocumento.trim()
+    const termino = busquedaTexto.trim()
     if (!termino) {
-      setDocumentoActivo('')
+      setBusquedaActiva(null)
       cargarUsuarios(1, { estadoPlan: filtroEstadoPlan })
       return
     }
+
+    if (tipoBusqueda === 'nombre' && termino.length < 2) {
+      toast.error('Escribe al menos 2 caracteres del nombre')
+      return
+    }
+
+    if (
+      tipoBusqueda === 'celular' &&
+      termino.replace(/\D/g, '').length < 3
+    ) {
+      toast.error('Escribe al menos 3 dígitos del celular')
+      return
+    }
+
+    const busqueda = { tipo: tipoBusqueda, termino }
     setFiltroEstadoPlan(null)
-    cargarUsuarios(1, { documento: termino })
+    cargarUsuarios(1, { busqueda })
   }
 
   const limpiarBusqueda = () => {
-    setBusquedaDocumento('')
-    setDocumentoActivo('')
+    setBusquedaTexto('')
+    setBusquedaActiva(null)
     cargarUsuarios(1, { estadoPlan: filtroEstadoPlan })
   }
 
   const seleccionarFiltro = (estadoPlan) => {
     const siguiente = filtroEstadoPlan === estadoPlan ? null : estadoPlan
-    setBusquedaDocumento('')
-    setDocumentoActivo('')
+    setBusquedaTexto('')
+    setBusquedaActiva(null)
     setFiltroEstadoPlan(siguiente)
     cargarUsuarios(1, { estadoPlan: siguiente })
   }
@@ -262,16 +331,16 @@ function VistaUsuarios() {
   }
 
   const irAnterior = () => {
-    if (page <= 1 || loading || documentoActivo) return
+    if (page <= 1 || loading || busquedaActiva) return
     cargarUsuarios(page - 1, { estadoPlan: filtroEstadoPlan })
   }
 
   const irSiguiente = () => {
-    if (!hasMore || loading || documentoActivo) return
+    if (!hasMore || loading || busquedaActiva) return
     cargarUsuarios(page + 1, { estadoPlan: filtroEstadoPlan })
   }
 
-  const enModoBusqueda = Boolean(documentoActivo)
+  const enModoBusqueda = Boolean(busquedaActiva)
 
   if (usuarioGestion) {
     return (
@@ -373,16 +442,33 @@ function VistaUsuarios() {
       </div>
 
       <div className="pf-usuarios-busqueda">
+        <label className="pf-usuarios-busqueda__field pf-usuarios-busqueda__field--tipo">
+          <span className="pf-usuarios-busqueda__label">Buscar por</span>
+          <select
+            className="pf-usuarios-busqueda__select"
+            value={tipoBusqueda}
+            onChange={handleCambioTipoBusqueda}
+            disabled={loading}
+          >
+            {TIPOS_BUSQUEDA_USUARIO.map((opcion) => (
+              <option key={opcion.id} value={opcion.id}>
+                {opcion.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="pf-usuarios-busqueda__field">
-          <span className="pf-usuarios-busqueda__label">Buscar por documento</span>
+          <span className="pf-usuarios-busqueda__label">
+            {opcionBusquedaActual?.label || 'Buscar'}
+          </span>
           <input
             type="text"
             className="pf-usuarios-busqueda__input"
-            value={busquedaDocumento}
-            onChange={handleBusquedaDocumento}
+            value={busquedaTexto}
+            onChange={handleBusquedaInput}
             onKeyDown={handleBusquedaKeyDown}
-            placeholder="Ej. 1234567890"
-            inputMode="numeric"
+            placeholder={opcionBusquedaActual?.placeholder || 'Buscar…'}
+            inputMode={opcionBusquedaActual?.inputMode || 'text'}
             disabled={loading}
           />
         </label>
@@ -410,7 +496,8 @@ function VistaUsuarios() {
 
       {enModoBusqueda && !loading ? (
         <p className="pf-usuarios-busqueda__hint">
-          Resultados para el documento «{documentoActivo}»
+          Resultados para el {ETIQUETA_TIPO_BUSQUEDA[busquedaActiva.tipo]} «
+          {busquedaActiva.termino}»
           {usuarios.length === 0 ? ' — sin coincidencias' : ''}
         </p>
       ) : null}
@@ -426,7 +513,7 @@ function VistaUsuarios() {
         <div className="pf-panel">
           <p className="pf-panel__empty">
             {enModoBusqueda
-              ? 'No se encontró ningún usuario con ese documento.'
+              ? `No se encontró ningún usuario con ese ${ETIQUETA_TIPO_BUSQUEDA[busquedaActiva?.tipo] || 'criterio'}.`
               : filtroEstadoPlan
                 ? `No hay ${ETIQUETA_FILTRO_USUARIO[filtroEstadoPlan]}.`
                 : 'Aún no hay usuarios registrados. Crea el primero con el botón «+ Crear usuario».'}

@@ -29,6 +29,12 @@ export function UsuarioProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const invalidarSesionNoCliente = useCallback(async () => {
+    clearUserToken()
+    setUsuario(null)
+    await signOut(auth).catch(() => {})
+  }, [])
+
   const cargarUsuario = useCallback(async ({ signal, silent = false } = {}) => {
     if (getAdminToken() || !getUserToken()) {
       setUsuario(null)
@@ -40,8 +46,12 @@ export function UsuarioProvider({ children }) {
     try {
       const datos = await obtenerDatosUsuario({ signal })
       if (!datos || !esUsuarioCliente(datos)) {
-        clearUserToken()
-        setUsuario(null)
+        if (auth.currentUser) {
+          await invalidarSesionNoCliente()
+        } else {
+          clearUserToken()
+          setUsuario(null)
+        }
         return null
       }
       setUsuario(datos)
@@ -55,7 +65,7 @@ export function UsuarioProvider({ children }) {
     } finally {
       if (!signal?.aborted && !silent) setLoading(false)
     }
-  }, [])
+  }, [invalidarSesionNoCliente])
 
   const syncUserToken = useCallback(async (user) => {
     if (getAdminToken()) {
@@ -69,16 +79,6 @@ export function UsuarioProvider({ children }) {
         clearUserToken()
         setUsuario(null)
       }
-      return
-    }
-
-    try {
-      const idToken = await user.getIdToken()
-      const persistente = resolverPersistenciaSesion('user', esUserTokenPersistente())
-      saveUserToken(idToken, { persistente })
-    } catch {
-      clearUserToken()
-      setUsuario(null)
     }
   }, [])
 
@@ -87,15 +87,15 @@ export function UsuarioProvider({ children }) {
 
     try {
       const idToken = await user.getIdToken()
-      const persistente = resolverPersistenciaSesion('user', esUserTokenPersistente())
-      saveUserToken(idToken, { persistente })
+      const datos = await obtenerDatosUsuario({ token: idToken })
 
-      const datos = await obtenerDatosUsuario()
       if (!datos || !esUsuarioCliente(datos)) {
-        clearUserToken()
-        setUsuario(null)
+        await invalidarSesionNoCliente()
         return null
       }
+
+      const persistente = resolverPersistenciaSesion('user', esUserTokenPersistente())
+      saveUserToken(idToken, { persistente })
       setUsuario(datos)
       return datos
     } catch (err) {
@@ -104,7 +104,7 @@ export function UsuarioProvider({ children }) {
       setUsuario(null)
       return null
     }
-  }, [])
+  }, [invalidarSesionNoCliente])
 
   useEffect(() => {
     let activo = true

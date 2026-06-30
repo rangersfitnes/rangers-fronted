@@ -59,24 +59,32 @@ function VistaReportesFinancieros({ onVolver }) {
   const [reporte, setReporte] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [verTodoHistorial, setVerTodoHistorial] = useState(false)
   const recargarRef = useRef(null)
 
   const cargar = useCallback(
     async (signal) => {
-      if (!desde || !hasta) {
-        setError('Selecciona fecha inicial y final')
-        return
-      }
+      if (!verTodoHistorial) {
+        if (!desde || !hasta) {
+          setError('Selecciona fecha inicial y final')
+          return
+        }
 
-      if (desde > hasta) {
-        setError('La fecha inicial no puede ser posterior a la final')
-        return
+        if (desde > hasta) {
+          setError('La fecha inicial no puede ser posterior a la final')
+          return
+        }
       }
 
       setLoading(true)
       setError('')
       try {
-        const data = await obtenerReporteFinanciero({ desde, hasta, signal })
+        const data = await obtenerReporteFinanciero({
+          desde,
+          hasta,
+          todoHistorial: verTodoHistorial,
+          signal,
+        })
         setReporte(data)
       } catch (err) {
         if (err?.name === 'AbortError') return
@@ -86,7 +94,7 @@ function VistaReportesFinancieros({ onVolver }) {
         if (!signal?.aborted) setLoading(false)
       }
     },
-    [desde, hasta],
+    [desde, hasta, verTodoHistorial],
   )
 
   recargarRef.current = () => {
@@ -104,11 +112,12 @@ function VistaReportesFinancieros({ onVolver }) {
   }
 
   const rangoLabel = useMemo(() => {
+    if (reporte?.historialCompleto) return 'Historial completo'
     if (!reporte?.desde || !reporte?.hasta) return '—'
     const desdeMs = new Date(`${reporte.desde}T12:00:00-05:00`).getTime()
     const hastaMs = new Date(`${reporte.hasta}T12:00:00-05:00`).getTime()
     return `${formatearFechaCuenta(desdeMs)} – ${formatearFechaCuenta(hastaMs)}`
-  }, [reporte?.desde, reporte?.hasta])
+  }, [reporte?.desde, reporte?.hasta, reporte?.historialCompleto])
 
   const handleExportarPdf = () => {
     if (!reporte) return
@@ -178,17 +187,29 @@ function VistaReportesFinancieros({ onVolver }) {
 
       <div className="pf-registro__filtros">
         <div className="pf-registro__filtros-campos">
+          <label className="pf-registro__field pf-registro__field--checkbox">
+            <span className="pf-registro__field-label">Periodo</span>
+            <span className="ag-asistencias__historial-toggle">
+              <input
+                type="checkbox"
+                checked={verTodoHistorial}
+                onChange={(e) => setVerTodoHistorial(e.target.checked)}
+                disabled={loading}
+              />
+              Todo el historial
+            </span>
+          </label>
           <CampoFechaCalendario
             label="Desde"
             value={desde}
             onChange={setDesde}
-            disabled={loading}
+            disabled={loading || verTodoHistorial}
           />
           <CampoFechaCalendario
             label="Hasta"
             value={hasta}
             onChange={setHasta}
-            disabled={loading}
+            disabled={loading || verTodoHistorial}
           />
         </div>
         <button
@@ -255,10 +276,20 @@ function VistaReportesFinancieros({ onVolver }) {
 
       <div className="pf-cierre__lista-wrap">
         <h2 className="pf-cierre__lista-title">Detalle de ingresos</h2>
+        {reporte ? (
+          <p className="ag-finanzas__salidas-meta">
+            {resumen?.movimientosConIngreso ?? 0} ingreso(s)
+            {reporte.historialCompleto
+              ? ' en el historial completo'
+              : ' en el periodo seleccionado'}
+          </p>
+        ) : null}
 
         {!loading && reporte && movimientos.length === 0 && (
           <p className="pf-panel__empty">
-            No hay ingresos registrados en el intervalo seleccionado.
+            {verTodoHistorial
+              ? 'No hay ingresos registrados en el sistema.'
+              : 'No hay ingresos registrados en el intervalo seleccionado.'}
           </p>
         )}
 

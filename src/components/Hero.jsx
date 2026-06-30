@@ -258,6 +258,13 @@ function Hero() {
               <Link to="/login" className="hero__cta-btn hero__cta-btn--secondary">
                 Iniciar sesión
               </Link>
+              <Link
+                to="/login"
+                state={{ openSignup: true }}
+                className="hero__cta-btn hero__cta-btn--secondary"
+              >
+                Crear cuenta
+              </Link>
             </div>
 
             <div className="hero__info-cards">

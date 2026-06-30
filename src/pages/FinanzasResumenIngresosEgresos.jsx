@@ -67,6 +67,7 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
   const [loadingLiquidez, setLoadingLiquidez] = useState(true)
   const [errorLiquidez, setErrorLiquidez] = useState('')
   const [ultimaActualizacionLiquidez, setUltimaActualizacionLiquidez] = useState(null)
+  const [verTodoHistorial, setVerTodoHistorial] = useState(false)
 
   const cargarLiquidez = useCallback(async (signal) => {
     try {
@@ -96,19 +97,25 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
   }, [cargarLiquidez])
 
   const cargar = useCallback(async () => {
-    if (!desde || !hasta) {
-      setError('Selecciona fecha inicial y final')
-      return
-    }
-    if (desde > hasta) {
-      setError('La fecha inicial no puede ser posterior a la final')
-      return
+    if (!verTodoHistorial) {
+      if (!desde || !hasta) {
+        setError('Selecciona fecha inicial y final')
+        return
+      }
+      if (desde > hasta) {
+        setError('La fecha inicial no puede ser posterior a la final')
+        return
+      }
     }
 
     setLoading(true)
     setError('')
     try {
-      const data = await obtenerReporteFinanciero({ desde, hasta })
+      const data = await obtenerReporteFinanciero({
+        desde,
+        hasta,
+        todoHistorial: verTodoHistorial,
+      })
       setReporte(data)
     } catch (err) {
       setError(err.message || 'No se pudo cargar el resumen')
@@ -116,7 +123,7 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
     } finally {
       setLoading(false)
     }
-  }, [desde, hasta])
+  }, [desde, hasta, verTodoHistorial])
 
   const movimientos = useMemo(
     () => (reporte ? combinarMovimientosReporte(reporte) : []),
@@ -127,8 +134,9 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
   const totalEgresos = reporte?.resumen?.totalEgresos ?? 0
   const balance = reporte?.resumen?.balanceNeto ?? totalIngresos - totalEgresos
 
-  const rangoLabel =
-    reporte?.desde && reporte?.hasta
+  const rangoLabel = reporte?.historialCompleto
+    ? 'Historial completo'
+    : reporte?.desde && reporte?.hasta
       ? `${formatearFechaCuenta(new Date(`${reporte.desde}T12:00:00-05:00`).getTime())} – ${formatearFechaCuenta(new Date(`${reporte.hasta}T12:00:00-05:00`).getTime())}`
       : 'Selecciona un periodo'
 
@@ -202,17 +210,29 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
 
       <div className="pf-registro__filtros">
         <div className="pf-registro__filtros-campos">
+          <label className="pf-registro__field pf-registro__field--checkbox">
+            <span className="pf-registro__field-label">Periodo</span>
+            <span className="ag-asistencias__historial-toggle">
+              <input
+                type="checkbox"
+                checked={verTodoHistorial}
+                onChange={(e) => setVerTodoHistorial(e.target.checked)}
+                disabled={loading}
+              />
+              Todo el historial
+            </span>
+          </label>
           <CampoFechaCalendario
             label="Desde"
             value={desde}
             onChange={setDesde}
-            disabled={loading}
+            disabled={loading || verTodoHistorial}
           />
           <CampoFechaCalendario
             label="Hasta"
             value={hasta}
             onChange={setHasta}
-            disabled={loading}
+            disabled={loading || verTodoHistorial}
           />
         </div>
         <button
@@ -266,10 +286,18 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
       {reporte && (
         <div className="pf-cierre__lista-wrap">
           <h2 className="pf-cierre__lista-title">Detalle de movimientos</h2>
+          <p className="ag-finanzas__salidas-meta">
+            {movimientos.length} movimiento(s)
+            {reporte.historialCompleto
+              ? ' en el historial completo'
+              : ' en el periodo seleccionado'}
+          </p>
 
           {movimientos.length === 0 && !loading && (
             <p className="pf-panel__empty">
-              No hay movimientos registrados en el intervalo seleccionado.
+              {verTodoHistorial
+                ? 'No hay movimientos registrados en el sistema.'
+                : 'No hay movimientos registrados en el intervalo seleccionado.'}
             </p>
           )}
 
@@ -339,7 +367,9 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
       {!loading && !reporte && (
         <div className="ag-panel">
           <p className="ag-panel__empty">
-            Elige un rango de fechas y pulsa «Consultar» para ver el detalle.
+            {verTodoHistorial
+              ? 'Marca «Todo el historial» y pulsa «Consultar» para ver todos los movimientos.'
+              : 'Elige un rango de fechas y pulsa «Consultar» para ver el detalle.'}
           </p>
         </div>
       )}

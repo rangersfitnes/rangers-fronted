@@ -104,191 +104,194 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
     autorizaDatos
 
   return (
-    <Modal
-      open={open}
-      onClose={submitting ? undefined : onClose}
-      title="Crear cuenta"
-      footer={
-        <>
-          <button
-            type="button"
-            className="crear-usuario__btn crear-usuario__btn--ghost"
-            onClick={onClose}
-            disabled={submitting}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            form="crear-cuenta-form"
-            className="crear-usuario__btn crear-usuario__btn--primary"
-            disabled={submitting || !formularioListo}
-          >
-            {submitting ? 'Creando…' : 'Crear cuenta'}
-          </button>
-        </>
-      }
-    >
-      <form
-        id="crear-cuenta-form"
-        className="crear-usuario__form"
-        onSubmit={handleSubmit}
-      >
-        {mensajeError && (
-          <p className="crear-usuario__error" role="alert">
-            {mensajeError}
-          </p>
-        )}
-
-        <label className="crear-usuario__field">
-          <span className="crear-usuario__label">Nombre completo</span>
-          <input
-            type="text"
-            className="crear-usuario__input"
-            value={form.nombre}
-            onChange={handleChange('nombre')}
-            autoComplete="name"
-            disabled={submitting}
-            required
-          />
-        </label>
-
-        <label className="crear-usuario__field">
-          <span className="crear-usuario__label">Documento de identidad</span>
-          <div className="crear-usuario__document">
-            <select
-              className="crear-usuario__document-type crear-usuario__select"
-              value={form.tipoDocumento}
-              onChange={handleChange('tipoDocumento')}
+    <>
+      <Modal
+        open={open}
+        onClose={submitting ? undefined : onClose}
+        title="Crear cuenta"
+        footer={
+          <>
+            <button
+              type="button"
+              className="crear-usuario__btn crear-usuario__btn--ghost"
+              onClick={onClose}
               disabled={submitting}
-              required
-              aria-label="Tipo de documento"
             >
-              {tiposDocumento.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.value}
-                </option>
-              ))}
-            </select>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              form="crear-cuenta-form"
+              className="crear-usuario__btn crear-usuario__btn--primary"
+              disabled={submitting || !formularioListo}
+            >
+              {submitting ? 'Creando…' : 'Crear cuenta'}
+            </button>
+          </>
+        }
+      >
+        <form
+          id="crear-cuenta-form"
+          className="crear-usuario__form"
+          onSubmit={handleSubmit}
+        >
+          {mensajeError && (
+            <p className="crear-usuario__error" role="alert">
+              {mensajeError}
+            </p>
+          )}
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">Nombre completo</span>
             <input
               type="text"
-              className="crear-usuario__input crear-usuario__document-input"
-              value={form.documento}
-              onChange={handleDocumentoChange}
-              inputMode="numeric"
-              autoComplete="username"
+              className="crear-usuario__input"
+              value={form.nombre}
+              onChange={handleChange('nombre')}
+              autoComplete="name"
               disabled={submitting}
               required
             />
-          </div>
-        </label>
-
-        <label className="crear-usuario__field">
-          <span className="crear-usuario__label">Número de celular</span>
-          <div className="crear-usuario__phone">
-            <span className="crear-usuario__phone-prefix">+57</span>
-            <input
-              type="tel"
-              className="crear-usuario__input crear-usuario__phone-input"
-              value={form.celular}
-              onChange={handleCelularChange}
-              inputMode="numeric"
-              pattern="[0-9]{10}"
-              minLength={10}
-              maxLength={10}
-              autoComplete="tel"
-              disabled={submitting}
-              required
-            />
-          </div>
-        </label>
-
-        <CampoFechaCalendario
-          label="Fecha de nacimiento"
-          value={form.fechaNacimiento}
-          onChange={(valor) => {
-            setForm((prev) => ({ ...prev, fechaNacimiento: valor }))
-            setLocalError('')
-          }}
-          disabled={submitting}
-        />
-
-        <label className="crear-usuario__field">
-          <span className="crear-usuario__label">Contraseña</span>
-          <input
-            type="password"
-            className="crear-usuario__input"
-            placeholder="Mínimo 6 caracteres"
-            value={form.password}
-            onChange={handleChange('password')}
-            autoComplete="new-password"
-            disabled={submitting}
-            minLength={6}
-            required
-          />
-        </label>
-
-        <label className="crear-usuario__field">
-          <span className="crear-usuario__label">Confirmar contraseña</span>
-          <input
-            type="password"
-            className="crear-usuario__input"
-            placeholder="Repite la contraseña"
-            value={form.confirmar}
-            onChange={handleChange('confirmar')}
-            autoComplete="new-password"
-            disabled={submitting}
-            minLength={6}
-            required
-          />
-        </label>
-
-        <div className="crear-usuario__consent">
-          <label className="crear-usuario__consent-check">
-            <input
-              type="checkbox"
-              className="crear-usuario__consent-input"
-              checked={autorizaDatos}
-              onChange={(e) => setAutorizaDatos(e.target.checked)}
-              disabled={submitting}
-              required
-            />
-            <span className="crear-usuario__consent-box" aria-hidden="true">
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 8.5l3 3 7-7" />
-              </svg>
-            </span>
-            <span className="crear-usuario__consent-label">
-              {AUTORIZACION_DATOS_CASILLA_PREFIJO}{' '}
-              <button
-                type="button"
-                className="crear-usuario__consent-link"
-                onClick={(event) => {
-                  event.preventDefault()
-                  event.stopPropagation()
-                  setAutorizacionOpen(true)
-                }}
-                disabled={submitting}
-              >
-                {AUTORIZACION_DATOS_CASILLA_ENLACE}
-              </button>
-            </span>
           </label>
-        </div>
-      </form>
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">Documento de identidad</span>
+            <div className="crear-usuario__document">
+              <select
+                className="crear-usuario__document-type crear-usuario__select"
+                value={form.tipoDocumento}
+                onChange={handleChange('tipoDocumento')}
+                disabled={submitting}
+                required
+                aria-label="Tipo de documento"
+              >
+                {tiposDocumento.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.value}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                className="crear-usuario__input crear-usuario__document-input"
+                value={form.documento}
+                onChange={handleDocumentoChange}
+                inputMode="numeric"
+                autoComplete="username"
+                disabled={submitting}
+                required
+              />
+            </div>
+          </label>
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">Número de celular</span>
+            <div className="crear-usuario__phone">
+              <span className="crear-usuario__phone-prefix">+57</span>
+              <input
+                type="tel"
+                className="crear-usuario__input crear-usuario__phone-input"
+                value={form.celular}
+                onChange={handleCelularChange}
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                minLength={10}
+                maxLength={10}
+                autoComplete="tel"
+                disabled={submitting}
+                required
+              />
+            </div>
+          </label>
+
+          <CampoFechaCalendario
+            label="Fecha de nacimiento"
+            value={form.fechaNacimiento}
+            onChange={(valor) => {
+              setForm((prev) => ({ ...prev, fechaNacimiento: valor }))
+              setLocalError('')
+            }}
+            disabled={submitting}
+          />
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">Contraseña</span>
+            <input
+              type="password"
+              className="crear-usuario__input"
+              placeholder="Mínimo 6 caracteres"
+              value={form.password}
+              onChange={handleChange('password')}
+              autoComplete="new-password"
+              disabled={submitting}
+              minLength={6}
+              required
+            />
+          </label>
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">Confirmar contraseña</span>
+            <input
+              type="password"
+              className="crear-usuario__input"
+              placeholder="Repite la contraseña"
+              value={form.confirmar}
+              onChange={handleChange('confirmar')}
+              autoComplete="new-password"
+              disabled={submitting}
+              minLength={6}
+              required
+            />
+          </label>
+
+          <div className="crear-usuario__consent">
+            <label className="crear-usuario__consent-check">
+              <input
+                type="checkbox"
+                className="crear-usuario__consent-input"
+                checked={autorizaDatos}
+                onChange={(e) => setAutorizaDatos(e.target.checked)}
+                disabled={submitting}
+                required
+              />
+              <span className="crear-usuario__consent-box" aria-hidden="true">
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 8.5l3 3 7-7" />
+                </svg>
+              </span>
+              <span className="crear-usuario__consent-label">
+                {AUTORIZACION_DATOS_CASILLA_PREFIJO}{' '}
+                <button
+                  type="button"
+                  className="crear-usuario__consent-link"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    setAutorizacionOpen(true)
+                  }}
+                  disabled={submitting}
+                >
+                  {AUTORIZACION_DATOS_CASILLA_ENLACE}
+                </button>
+              </span>
+            </label>
+          </div>
+        </form>
+      </Modal>
 
       <AutorizacionDatosModal
         open={autorizacionOpen}
         onClose={() => setAutorizacionOpen(false)}
+        className="modal--elevated"
       />
-    </Modal>
+    </>
   )
 }
 

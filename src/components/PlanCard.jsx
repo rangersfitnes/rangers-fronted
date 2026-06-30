@@ -31,7 +31,12 @@ function PlanCard({ plan }) {
     if (usuario) {
       navigate(`/payment-plan/${plan.id}`, { state: { plan } })
     } else {
-      navigate('/login', { state: { redirectTo: `/payment-plan/${plan.id}` } })
+      navigate('/login', {
+        state: {
+          redirectTo: `/payment-plan/${plan.id}`,
+          openSignup: true,
+        },
+      })
     }
   }
 

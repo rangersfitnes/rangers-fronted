@@ -21,7 +21,8 @@ import {
   calcularTotalHorasPlanificadas,
   claseBloqueCelda,
   construirEstadoEdicionDesdeMallas,
-  construirEstadoEdicionDesdePlantillas,
+  construirEstadoEdicionDesdePlantillaBase,
+  construirSlotsPlantillaParaGuardar,
   crearBloquesVacios,
   formatearEtiquetaSemana,
   formatearHorasTotal,
@@ -50,6 +51,10 @@ function GestionHumanaMallas({ onVolver }) {
   const [colaboradores, setColaboradores] = useState([])
   const [edicionSemana, setEdicionSemana] = useState({})
   const [edicionPlantilla, setEdicionPlantilla] = useState({})
+  const [numeroColaboradoresPlantilla, setNumeroColaboradoresPlantilla] =
+    useState(0)
+  const [numeroColaboradoresInput, setNumeroColaboradoresInput] = useState('0')
+  const [plantillaSlots, setPlantillaSlots] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [copiando, setCopiando] = useState(false)
@@ -74,6 +79,22 @@ function GestionHumanaMallas({ onVolver }) {
     [colaboradores, sede],
   )
 
+  const filasPlantilla = useMemo(
+    () =>
+      Array.from({ length: numeroColaboradoresPlantilla }, (_, slotIndex) => {
+        const slot =
+          plantillaSlots.find((item) => Number(item?.slotIndex) === slotIndex) ??
+          plantillaSlots[slotIndex]
+        return {
+          filaKey: String(slotIndex),
+          slotIndex,
+          etiqueta: `Puesto ${slotIndex + 1}`,
+          colaboradorNombre: slot?.colaboradorNombre || null,
+        }
+      }),
+    [numeroColaboradoresPlantilla, plantillaSlots],
+  )
+
   const cargarSemana = useCallback(async () => {
     const mallasData = await obtenerMallasSemana({ sede, semanaInicio })
     setEdicionSemana(construirEstadoEdicionDesdeMallas(mallasData.mallas))
@@ -83,8 +104,14 @@ function GestionHumanaMallas({ onVolver }) {
 
   const cargarPlantillas = useCallback(async () => {
     const plantillasData = await obtenerPlantillasSede({ sede })
+    const numero = plantillasData.numeroColaboradores ?? 0
+    const slots = plantillasData.slots ?? []
+
+    setNumeroColaboradoresPlantilla(numero)
+    setNumeroColaboradoresInput(String(numero))
+    setPlantillaSlots(slots)
     setEdicionPlantilla(
-      construirEstadoEdicionDesdePlantillas(plantillasData.plantillas),
+      construirEstadoEdicionDesdePlantillaBase(slots, numero),
     )
     setDirtyPlantilla(false)
     return plantillasData
@@ -107,6 +134,9 @@ function GestionHumanaMallas({ onVolver }) {
 
       if (resultadoPlantillas.status === 'rejected') {
         setEdicionPlantilla({})
+        setNumeroColaboradoresPlantilla(0)
+        setNumeroColaboradoresInput('0')
+        setPlantillaSlots([])
         toast.error(
           resultadoPlantillas.reason?.message ||
             'No se pudieron cargar las plantillas base',
@@ -117,6 +147,9 @@ function GestionHumanaMallas({ onVolver }) {
       setColaboradores([])
       setEdicionSemana({})
       setEdicionPlantilla({})
+      setNumeroColaboradoresPlantilla(0)
+      setNumeroColaboradoresInput('0')
+      setPlantillaSlots([])
     } finally {
       setLoading(false)
     }
@@ -126,18 +159,66 @@ function GestionHumanaMallas({ onVolver }) {
     cargar()
   }, [cargar])
 
-  const obtenerBloquesColaborador = (uid) =>
-    edicion[uid] ? normalizarBloquesEdicion(edicion[uid]) : crearBloquesVacios()
+  const obtenerBloquesFila = (filaKey) =>
+    edicion[filaKey] ? normalizarBloquesEdicion(edicion[filaKey]) : crearBloquesVacios()
 
-  const actualizarCelda = (uid, diaKey, bloquesDia) => {
+  const actualizarCelda = (filaKey, diaKey, bloquesDia) => {
     setEdicion((prev) => ({
       ...prev,
-      [uid]: {
-        ...(prev[uid] ? normalizarBloquesEdicion(prev[uid]) : crearBloquesVacios()),
+      [filaKey]: {
+        ...(prev[filaKey] ? normalizarBloquesEdicion(prev[filaKey]) : crearBloquesVacios()),
         [diaKey]: bloquesDia,
       },
     }))
     setDirty(true)
+  }
+
+  const generarFilasPlantilla = () => {
+    const numero = Math.max(
+      0,
+      Math.min(50, Number.parseInt(numeroColaboradoresInput, 10) || 0),
+    )
+
+    if (numero === numeroColaboradoresPlantilla) {
+      setNumeroColaboradoresInput(String(numero))
+      return
+    }
+
+    if (
+      numero < numeroColaboradoresPlantilla &&
+      !window.confirm(
+        `Se eliminarán ${numeroColaboradoresPlantilla - numero} fila(s) de la plantilla. ¿Continuar?`,
+      )
+    ) {
+      setNumeroColaboradoresInput(String(numeroColaboradoresPlantilla))
+      return
+    }
+
+    setNumeroColaboradoresPlantilla(numero)
+    setNumeroColaboradoresInput(String(numero))
+    setEdicionPlantilla((prev) => {
+      const siguiente = {}
+      for (let i = 0; i < numero; i += 1) {
+        const key = String(i)
+        siguiente[key] = prev[key]
+          ? normalizarBloquesEdicion(prev[key])
+          : crearBloquesVacios()
+      }
+      return siguiente
+    })
+    setPlantillaSlots((prev) =>
+      Array.from({ length: numero }, (_, slotIndex) => {
+        const existente =
+          prev.find((slot) => Number(slot?.slotIndex) === slotIndex) ??
+          prev[slotIndex]
+        return {
+          slotIndex,
+          colaboradorUid: existente?.colaboradorUid ?? null,
+          colaboradorNombre: existente?.colaboradorNombre ?? null,
+        }
+      }),
+    )
+    setDirtyPlantilla(true)
   }
 
   const confirmarDescartarCambios = () => {
@@ -177,7 +258,7 @@ function GestionHumanaMallas({ onVolver }) {
       const items = colaboradoresSede.map((colaborador) => ({
         colaboradorUid: colaborador.uid,
         colaboradorNombre: colaborador.nombre,
-        bloques: obtenerBloquesColaborador(colaborador.uid),
+        bloques: obtenerBloquesFila(colaborador.uid),
       }))
 
       if (esVistaSemana) {
@@ -190,12 +271,29 @@ function GestionHumanaMallas({ onVolver }) {
         setDirtySemana(false)
         toast.success('Malla semanal guardada')
       } else {
-        const resultado = await guardarPlantillasSede({ sede, items })
+        const slots = construirSlotsPlantillaParaGuardar(
+          numeroColaboradoresPlantilla,
+          edicionPlantilla,
+          plantillaSlots,
+        )
+        const resultado = await guardarPlantillasSede({
+          sede,
+          numeroColaboradores: numeroColaboradoresPlantilla,
+          slots,
+        })
+        setNumeroColaboradoresPlantilla(resultado.numeroColaboradores ?? 0)
+        setNumeroColaboradoresInput(
+          String(resultado.numeroColaboradores ?? 0),
+        )
+        setPlantillaSlots(resultado.slots ?? [])
         setEdicionPlantilla(
-          construirEstadoEdicionDesdePlantillas(resultado.plantillas),
+          construirEstadoEdicionDesdePlantillaBase(
+            resultado.slots,
+            resultado.numeroColaboradores,
+          ),
         )
         setDirtyPlantilla(false)
-        toast.success('Plantillas base guardadas')
+        toast.success('Plantilla base guardada')
       }
     } catch (err) {
       toast.error(err.message || 'No se pudo guardar')
@@ -242,8 +340,8 @@ function GestionHumanaMallas({ onVolver }) {
     }
   }
 
-  const renderCelda = (colaborador, diaKey) => {
-    const bloques = obtenerBloquesColaborador(colaborador.uid)[diaKey] || []
+  const renderCelda = (filaKey, diaKey) => {
+    const bloques = obtenerBloquesFila(filaKey)[diaKey] || []
 
     if (bloques.length === 0) {
       return <span className="ag-mallas__placeholder">Sin asignar</span>
@@ -324,7 +422,7 @@ function GestionHumanaMallas({ onVolver }) {
               ? 'Guardando…'
               : esVistaSemana
                 ? 'Guardar malla'
-                : 'Guardar plantillas'}
+                : 'Guardar plantilla'}
           </button>
         </div>
       </header>
@@ -366,7 +464,7 @@ function GestionHumanaMallas({ onVolver }) {
           </select>
         </label>
 
-        {esVistaSemana && (
+        {esVistaSemana ? (
           <>
             <div className="ag-mallas__semana">
               <button
@@ -405,6 +503,35 @@ function GestionHumanaMallas({ onVolver }) {
               />
             </label>
           </>
+        ) : (
+          <div className="ag-mallas__plantilla-config">
+            <label className="ag-mallas__filtro ag-mallas__filtro--numero">
+              <span>Número de colaboradores</span>
+              <input
+                type="number"
+                min={0}
+                max={50}
+                value={numeroColaboradoresInput}
+                disabled={ocupado}
+                onChange={(e) => setNumeroColaboradoresInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') generarFilasPlantilla()
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              className="ag-action-btn ag-action-btn--ghost"
+              disabled={ocupado}
+              onClick={generarFilasPlantilla}
+            >
+              Generar filas
+            </button>
+            <p className="ag-mallas__plantilla-ayuda">
+              Define cuántos puestos necesitas y organiza el horario de cada fila.
+              La asignación a colaboradores se hará en un paso posterior.
+            </p>
+          </div>
         )}
       </div>
 
@@ -413,7 +540,7 @@ function GestionHumanaMallas({ onVolver }) {
           Cambios sin guardar en{' '}
           {esVistaSemana
             ? `la semana del ${formatearEtiquetaSemana(semanaInicio)}`
-            : 'las plantillas base'}
+            : 'la plantilla base'}
           .
         </p>
       )}
@@ -421,15 +548,77 @@ function GestionHumanaMallas({ onVolver }) {
       {ocupado && <LoadingOverlay visible label="Cargando" />}
 
       <div className="ag-finanzas__tabla-wrap ag-mallas__tabla-wrap">
-        {colaboradoresSede.length === 0 && !loading ? (
+        {esVistaSemana ? (
+          colaboradoresSede.length === 0 && !loading ? (
+            <p className="ag-panel__empty">
+              No hay colaboradores registrados en {etiquetaSede(sede)}.
+            </p>
+          ) : (
+            <table className="ag-finanzas__tabla ag-mallas__tabla">
+              <thead>
+                <tr>
+                  <th>Colaborador</th>
+                  {DIAS_SEMANA.map((dia) => (
+                    <th key={dia.key}>{dia.label}</th>
+                  ))}
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {colaboradoresSede.map((colaborador) => {
+                  const bloques = obtenerBloquesFila(colaborador.uid)
+                  const total = calcularTotalHorasPlanificadas(bloques)
+                  const sinContenido = !mallaTieneContenido(bloques)
+
+                  return (
+                    <tr key={colaborador.uid}>
+                      <td className="ag-mallas__col-nombre">
+                        <strong>{colaborador.nombre}</strong>
+                        {sinContenido && (
+                          <span className="ag-mallas__sin-malla">
+                            Sin malla esta semana
+                          </span>
+                        )}
+                      </td>
+                      {DIAS_SEMANA.map((dia) => (
+                        <td key={dia.key}>
+                          <button
+                            type="button"
+                            className="ag-mallas__celda-btn"
+                            disabled={ocupado}
+                            onClick={() =>
+                              setCeldaEditando({
+                                filaKey: colaborador.uid,
+                                nombre: colaborador.nombre,
+                                diaKey: dia.key,
+                                diaLabel: dia.label,
+                                bloques: bloques[dia.key] || [],
+                              })
+                            }
+                          >
+                            {renderCelda(colaborador.uid, dia.key)}
+                          </button>
+                        </td>
+                      ))}
+                      <td className="ag-mallas__total">
+                        {formatearHorasTotal(total)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )
+        ) : filasPlantilla.length === 0 && !loading ? (
           <p className="ag-panel__empty">
-            No hay colaboradores registrados en {etiquetaSede(sede)}.
+            Indica el número de colaboradores y pulsa «Generar filas» para crear la
+            plantilla en {etiquetaSede(sede)}.
           </p>
         ) : (
           <table className="ag-finanzas__tabla ag-mallas__tabla">
             <thead>
               <tr>
-                <th>Colaborador</th>
+                <th>Puesto</th>
                 {DIAS_SEMANA.map((dia) => (
                   <th key={dia.key}>{dia.label}</th>
                 ))}
@@ -437,21 +626,20 @@ function GestionHumanaMallas({ onVolver }) {
               </tr>
             </thead>
             <tbody>
-              {colaboradoresSede.map((colaborador) => {
-                const bloques = obtenerBloquesColaborador(colaborador.uid)
+              {filasPlantilla.map((fila) => {
+                const bloques = obtenerBloquesFila(fila.filaKey)
                 const total = calcularTotalHorasPlanificadas(bloques)
                 const sinContenido = !mallaTieneContenido(bloques)
 
                 return (
-                  <tr key={colaborador.uid}>
+                  <tr key={fila.filaKey}>
                     <td className="ag-mallas__col-nombre">
-                      <strong>{colaborador.nombre}</strong>
+                      <strong>{fila.etiqueta}</strong>
+                      <span className="ag-mallas__sin-malla ag-mallas__sin-asignar">
+                        {fila.colaboradorNombre || 'Sin colaborador asignado'}
+                      </span>
                       {sinContenido && (
-                        <span className="ag-mallas__sin-malla">
-                          {esVistaSemana
-                            ? 'Sin malla esta semana'
-                            : 'Sin plantilla'}
-                        </span>
+                        <span className="ag-mallas__sin-malla">Sin horario</span>
                       )}
                     </td>
                     {DIAS_SEMANA.map((dia) => (
@@ -462,15 +650,15 @@ function GestionHumanaMallas({ onVolver }) {
                           disabled={ocupado}
                           onClick={() =>
                             setCeldaEditando({
-                              uid: colaborador.uid,
-                              nombre: colaborador.nombre,
+                              filaKey: fila.filaKey,
+                              nombre: fila.etiqueta,
                               diaKey: dia.key,
                               diaLabel: dia.label,
                               bloques: bloques[dia.key] || [],
                             })
                           }
                         >
-                          {renderCelda(colaborador, dia.key)}
+                          {renderCelda(fila.filaKey, dia.key)}
                         </button>
                       </td>
                     ))}
@@ -489,7 +677,7 @@ function GestionHumanaMallas({ onVolver }) {
         open={Boolean(celdaEditando)}
         celdaId={
           celdaEditando
-            ? `${celdaEditando.uid}-${celdaEditando.diaKey}`
+            ? `${celdaEditando.filaKey}-${celdaEditando.diaKey}`
             : ''
         }
         colaboradorNombre={celdaEditando?.nombre ?? ''}
@@ -498,7 +686,7 @@ function GestionHumanaMallas({ onVolver }) {
         onClose={() => setCeldaEditando(null)}
         onGuardar={(bloquesDia) => {
           if (!celdaEditando) return
-          actualizarCelda(celdaEditando.uid, celdaEditando.diaKey, bloquesDia)
+          actualizarCelda(celdaEditando.filaKey, celdaEditando.diaKey, bloquesDia)
         }}
       />
 

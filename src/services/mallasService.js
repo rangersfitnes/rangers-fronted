@@ -104,11 +104,16 @@ export async function obtenerPlantillasSede({ sede, signal } = {}) {
   )
   return {
     sede: data.sede,
-    plantillas: data.plantillas ?? [],
+    numeroColaboradores: data.numeroColaboradores ?? 0,
+    slots: data.slots ?? [],
   }
 }
 
-export async function guardarPlantillasSede({ sede, items }) {
+export async function guardarPlantillasSede({
+  sede,
+  numeroColaboradores,
+  slots,
+}) {
   const token = getAdminToken()
   if (!token) throw new Error('No hay sesión activa de administrador')
 
@@ -120,7 +125,7 @@ export async function guardarPlantillasSede({ sede, items }) {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ sede, items }),
+      body: JSON.stringify({ sede, numeroColaboradores, slots }),
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')
@@ -132,7 +137,8 @@ export async function guardarPlantillasSede({ sede, items }) {
   )
   return {
     sede: data.sede,
-    plantillas: data.plantillas ?? [],
+    numeroColaboradores: data.numeroColaboradores ?? 0,
+    slots: data.slots ?? [],
   }
 }
 

@@ -6,6 +6,7 @@ import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import ErrorModal from '../components/ErrorModal.jsx'
 import PagoExitoModal from '../components/PagoExitoModal.jsx'
 import { obtenerPlanesPublicos } from '../services/planesService.js'
+import { validarCuponParaPlan } from '../services/cuponesService.js'
 import { consultarBeneficiarios } from '../services/userService.js'
 import { cargarWidgetWompi } from '../services/wompiService.js'
 import { useWompiCheckout } from '../hooks/useWompiCheckout.js'
@@ -66,7 +67,47 @@ function PaymentPlan() {
 
   const [beneficiarios, setBeneficiarios] = useState([])
   const [resultados, setResultados] = useState({})
+  const [codigoCupon, setCodigoCupon] = useState('')
+  const [cuponAplicado, setCuponAplicado] = useState(null)
+  const [validandoCupon, setValidandoCupon] = useState(false)
+  const [errorCupon, setErrorCupon] = useState('')
   const timersRef = useRef({})
+
+  useEffect(() => {
+    setCuponAplicado(null)
+    setErrorCupon('')
+    setCodigoCupon('')
+  }, [plan?.id])
+
+  const precioFinal = cuponAplicado?.precioFinal ?? plan?.precio ?? 0
+  const precioOriginal = cuponAplicado?.precioOriginal ?? plan?.precio ?? 0
+
+  const aplicarCupon = async () => {
+    const codigo = codigoCupon.trim()
+    if (!codigo || !plan?.id) return
+
+    setValidandoCupon(true)
+    setErrorCupon('')
+    try {
+      const resultado = await validarCuponParaPlan({
+        codigo,
+        planId: plan.id,
+        precioOriginal: plan.precio,
+      })
+      setCuponAplicado(resultado)
+    } catch (err) {
+      setCuponAplicado(null)
+      setErrorCupon(err.message || 'No se pudo aplicar el cupón')
+    } finally {
+      setValidandoCupon(false)
+    }
+  }
+
+  const quitarCupon = () => {
+    setCuponAplicado(null)
+    setErrorCupon('')
+    setCodigoCupon('')
+  }
 
   const validandoBeneficiarios = useMemo(
     () => Object.values(resultados).some((r) => r?.loading),
@@ -230,7 +271,7 @@ function PaymentPlan() {
       <Navigate
         to="/login"
         replace
-        state={{ redirectTo: `/payment-plan/${planId}` }}
+        state={{ redirectTo: `/payment-plan/${planId}`, openSignup: true }}
       />
     )
   }
@@ -241,6 +282,7 @@ function PaymentPlan() {
     pagar({
       planId: idPlan,
       beneficiarios: beneficiarios.map((doc) => doc.trim()).filter(Boolean),
+      codigoCupon: cuponAplicado?.cupon?.codigo || codigoCupon.trim() || undefined,
     })
   }
 
@@ -354,10 +396,70 @@ function PaymentPlan() {
               <p className="payment-card__description">{plan.descripcion}</p>
             )}
 
+            <div className="payment-card__cupon">
+              <p className="payment-card__cupon-title">Código de descuento</p>
+              <div className="payment-card__cupon-row">
+                <input
+                  type="text"
+                  className="payment-card__cupon-input"
+                  value={codigoCupon}
+                  onChange={(e) => {
+                    setCodigoCupon(
+                      e.target.value.toUpperCase().replace(/\s+/g, ''),
+                    )
+                    setErrorCupon('')
+                    if (cuponAplicado) setCuponAplicado(null)
+                  }}
+                  placeholder="Ej. VERANO20"
+                  disabled={procesando || confirmando || validandoCupon}
+                />
+                {cuponAplicado ? (
+                  <button
+                    type="button"
+                    className="payment-card__cupon-btn payment-card__cupon-btn--ghost"
+                    onClick={quitarCupon}
+                    disabled={procesando || confirmando}
+                  >
+                    Quitar
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="payment-card__cupon-btn"
+                    onClick={aplicarCupon}
+                    disabled={
+                      !codigoCupon.trim() ||
+                      procesando ||
+                      confirmando ||
+                      validandoCupon
+                    }
+                  >
+                    {validandoCupon ? 'Validando…' : 'Aplicar'}
+                  </button>
+                )}
+              </div>
+              {errorCupon && (
+                <p className="payment-card__cupon-error" role="alert">
+                  {errorCupon}
+                </p>
+              )}
+              {cuponAplicado && (
+                <p className="payment-card__cupon-ok">
+                  Cupón <strong>{cuponAplicado.cupon.codigo}</strong> aplicado (
+                  {cuponAplicado.cupon.porcentajeDescuento}% de descuento)
+                </p>
+              )}
+            </div>
+
             <div className="payment-card__price-row">
               <span className="payment-card__price-label">Total a pagar</span>
               <span className="payment-card__price-value">
-                {formatearPrecio(plan.precio)}
+                {cuponAplicado && (
+                  <span className="payment-card__price-original">
+                    {formatearPrecio(precioOriginal)}
+                  </span>
+                )}
+                {formatearPrecio(precioFinal)}
                 {plan.duracion && (
                   <span className="payment-card__price-period">
                     {' '}
@@ -366,6 +468,11 @@ function PaymentPlan() {
                 )}
               </span>
             </div>
+            {cuponAplicado && (
+              <p className="payment-card__descuento">
+                Ahorras {formatearPrecio(cuponAplicado.descuentoMonto)}
+              </p>
+            )}
           </div>
         )}
 
@@ -460,7 +567,7 @@ function PaymentPlan() {
                 aria-label="Procesando"
               />
             ) : (
-              `Pagar ${plan ? formatearPrecio(plan.precio) : ''}`
+              `Pagar ${plan ? formatearPrecio(precioFinal) : ''}`
             )}
           </button>
         </div>
@@ -477,17 +584,20 @@ function PaymentPlan() {
       />
       <LoadingOverlay
         visible={
-          (loading || validandoBeneficiarios || confirmando) && !pagoExito
+          (loading || validandoBeneficiarios || validandoCupon || confirmando) &&
+          !pagoExito
         }
         label={
           confirmando
             ? 'Confirmando tu pago'
+            : validandoCupon
+              ? 'Validando cupón'
             : validandoBeneficiarios
               ? 'Verificando documento'
               : 'Cargando plan'
         }
         useLogo={confirmando}
-        labelNormalCase={validandoBeneficiarios || confirmando}
+        labelNormalCase={validandoBeneficiarios || validandoCupon || confirmando}
       />
     </main>
   )

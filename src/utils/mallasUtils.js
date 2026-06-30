@@ -146,4 +146,48 @@ export function construirEstadoEdicionDesdePlantillas(plantillas = []) {
   return construirEstadoEdicionDesdeMallas(plantillas)
 }
 
+export function construirEstadoEdicionDesdePlantillaBase(
+  slots = [],
+  numeroColaboradores = 0,
+) {
+  const mapa = {}
+  const count = Math.max(
+    Number(numeroColaboradores) || 0,
+    Array.isArray(slots) ? slots.length : 0,
+  )
+
+  for (let i = 0; i < count; i += 1) {
+    const slot =
+      slots.find((item) => Number(item?.slotIndex) === i) ?? slots[i]
+    mapa[String(i)] = slot
+      ? normalizarBloquesEdicion(slot.bloques)
+      : crearBloquesVacios()
+  }
+
+  return mapa
+}
+
+export function construirSlotsPlantillaParaGuardar(
+  numeroColaboradores,
+  edicion = {},
+  slotsExistentes = [],
+) {
+  const count = Math.max(0, Number(numeroColaboradores) || 0)
+
+  return Array.from({ length: count }, (_, slotIndex) => {
+    const existente =
+      slotsExistentes.find((item) => Number(item?.slotIndex) === slotIndex) ??
+      slotsExistentes[slotIndex]
+
+    return {
+      slotIndex,
+      colaboradorUid: existente?.colaboradorUid ?? null,
+      colaboradorNombre: existente?.colaboradorNombre ?? null,
+      bloques: normalizarBloquesEdicion(
+        edicion[String(slotIndex)] || crearBloquesVacios(),
+      ),
+    }
+  })
+}
+
 export { TIPOS_BLOQUE_SIN_HORARIO, esHoraValida, calcularMinutosBloque }

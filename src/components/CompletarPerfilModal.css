@@ -1,7 +1,7 @@
 .completar-perfil-overlay {
   position: fixed;
   inset: 0;
-  z-index: 250;
+  z-index: 650;
   display: flex;
   align-items: center;
   justify-content: center;

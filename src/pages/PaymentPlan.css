@@ -130,6 +130,85 @@
   color: #d4d4d4;
 }
 
+.payment-card__cupon {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.payment-card__cupon-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.payment-card__cupon-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.payment-card__cupon-input {
+  flex: 1;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #f5f5f5;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+}
+
+.payment-card__cupon-btn {
+  padding: 0.7rem 0.95rem;
+  border: none;
+  border-radius: 8px;
+  background: #f97316;
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.payment-card__cupon-btn--ghost {
+  background: transparent;
+  color: #f5f5f5;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.payment-card__cupon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.payment-card__cupon-error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #fca5a5;
+}
+
+.payment-card__cupon-ok {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #86efac;
+}
+
+.payment-card__price-original {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #a3a3a3;
+  text-decoration: line-through;
+}
+
+.payment-card__descuento {
+  margin: -0.35rem 0 0;
+  font-size: 0.82rem;
+  color: #86efac;
+  text-align: right;
+}
+
 .payment-card__price-row {
   display: flex;
   align-items: baseline;

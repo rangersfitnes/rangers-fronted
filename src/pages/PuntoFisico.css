@@ -240,6 +240,34 @@
   gap: 0.4rem;
 }
 
+.pf-usuarios-busqueda__field--tipo {
+  flex: 0 1 180px;
+  min-width: min(100%, 160px);
+}
+
+.pf-usuarios-busqueda__select {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: #121212;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pf-usuarios-busqueda__select:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+.pf-usuarios-busqueda__select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .pf-usuarios-busqueda__label {
   font-size: 0.72rem;
   font-weight: 600;

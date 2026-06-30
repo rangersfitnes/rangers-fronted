@@ -38,7 +38,12 @@ export function cargarWidgetWompi() {
   return widgetPromise
 }
 
-export async function crearTransaccionWompi({ planId, beneficiarios = [], sede }) {
+export async function crearTransaccionWompi({
+  planId,
+  beneficiarios = [],
+  sede,
+  codigoCupon,
+}) {
   const token = getUserToken()
   if (!token) {
     throw new Error('No hay sesión activa')
@@ -52,7 +57,7 @@ export async function crearTransaccionWompi({ planId, beneficiarios = [], sede }
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ planId, beneficiarios, sede }),
+      body: JSON.stringify({ planId, beneficiarios, sede, codigoCupon }),
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor. Inténtalo más tarde.')

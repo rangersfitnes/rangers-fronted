@@ -5,12 +5,13 @@ import {
 } from '../content/autorizacionDatosPersonales.js'
 import './AutorizacionDatosModal.css'
 
-function AutorizacionDatosModal({ open, onClose }) {
+function AutorizacionDatosModal({ open, onClose, className = '' }) {
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={AUTORIZACION_DATOS_TITULO}
+      className={className}
       footer={
         <button
           type="button"

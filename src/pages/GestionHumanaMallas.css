@@ -69,6 +69,37 @@
   min-width: 180px;
 }
 
+.ag-mallas__filtro--numero input[type='number'] {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.88rem;
+  color: #f5f5f5;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  width: 5.5rem;
+}
+
+.ag-mallas__plantilla-config {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex: 1;
+}
+
+.ag-mallas__plantilla-ayuda {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  color: #a3a3a3;
+  line-height: 1.4;
+}
+
+.ag-mallas__sin-asignar {
+  color: #fbbf24;
+}
+
+
 .ag-mallas__semana {
   display: flex;
   align-items: center;
