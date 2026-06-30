@@ -5,6 +5,7 @@ dist-ssr/
 
 # Backend (repositorio independiente)
 backend/
+backend/baileys/auth_info/
 
 # Logs
 logs

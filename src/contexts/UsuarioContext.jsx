@@ -23,8 +23,6 @@ import {
 } from '../utils/recordarSesion.js'
 import { esUsuarioCliente } from '../utils/usuarioRol.js'
 
-const REFRESH_INTERVAL_MS = 50 * 60 * 1000
-
 const UsuarioContext = createContext(null)
 
 export function UsuarioProvider({ children }) {
@@ -158,26 +156,6 @@ export function UsuarioProvider({ children }) {
       unsubscribe()
     }
   }, [syncUserToken, cargarUsuarioDesdeSesion])
-
-  useEffect(() => {
-    if (!usuario || getAdminToken()) return undefined
-
-    const intervalo = window.setInterval(async () => {
-      const user = auth.currentUser
-      if (!user || getAdminToken() || !getUserToken()) return
-
-      try {
-        const idToken = await user.getIdToken(true)
-        saveUserToken(idToken, {
-          persistente: resolverPersistenciaSesion('user', esUserTokenPersistente()),
-        })
-      } catch {
-        // onIdTokenChanged gestionará la sesión inválida.
-      }
-    }, REFRESH_INTERVAL_MS)
-
-    return () => window.clearInterval(intervalo)
-  }, [usuario])
 
   const refresh = useCallback(() => cargarUsuario({ silent: true }), [cargarUsuario])
 

@@ -25,8 +25,6 @@ import {
   resolverPersistenciaSesion,
 } from '../utils/recordarSesion.js'
 
-const REFRESH_INTERVAL_MS = 50 * 60 * 1000
-
 const AdminAuthContext = createContext(null)
 
 export function AdminAuthProvider({ children }) {
@@ -106,29 +104,6 @@ export function AdminAuthProvider({ children }) {
       unsubscribe()
     }
   }, [syncToken])
-
-  useEffect(() => {
-    if (!autenticado) return undefined
-
-    const intervalo = window.setInterval(async () => {
-      const user = auth.currentUser
-      if (!user || !getAdminToken()) return
-
-      try {
-        const idToken = await user.getIdToken(true)
-        saveAdminToken(idToken, {
-          persistente: resolverPersistenciaSesion(
-            'admin',
-            esAdminTokenPersistente(),
-          ),
-        })
-      } catch {
-        // onIdTokenChanged gestionará la sesión inválida.
-      }
-    }, REFRESH_INTERVAL_MS)
-
-    return () => window.clearInterval(intervalo)
-  }, [autenticado])
 
   const establecerSesion = useCallback((token, rol, { persistente = true } = {}) => {
     clearUserToken()

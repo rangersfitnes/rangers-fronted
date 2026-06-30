@@ -9,6 +9,10 @@ import ConfiguracionHorarios from '../components/ConfiguracionHorarios.jsx'
 import ConfiguracionClasesGrupales from '../components/ConfiguracionClasesGrupales.jsx'
 import EventosTable from '../components/EventosTable.jsx'
 import EventoFormModal from '../components/EventoFormModal.jsx'
+import EnviarMensajeWhatsAppModal from '../components/EnviarMensajeWhatsAppModal.jsx'
+import WhatsAppConexionModal from '../components/WhatsAppConexionModal.jsx'
+import PlantillaFormModal from '../components/PlantillaFormModal.jsx'
+import EnviarMensajeMasivoModal from '../components/EnviarMensajeMasivoModal.jsx'
 import RowActionsMenu from '../components/RowActionsMenu.jsx'
 import trashIcon from '../assets/images/icons/trash.svg'
 import { useToast } from '../components/Toast.jsx'
@@ -24,6 +28,12 @@ import {
   eliminarEvento,
   obtenerEventos,
 } from '../services/eventosService.js'
+import {
+  enviarMensajeWhatsApp,
+  obtenerEstadoWhatsApp,
+  WHATSAPP_SESSION_CLOSED_CODE,
+} from '../services/whatsappService.js'
+import { crearPlantilla, guardarPlantillaAutomatica } from '../services/plantillasService.js'
 import VistaFinanzas from './AdministracionGeneralFinanzas.jsx'
 import VistaGestionHumana from './AdministracionGeneralGestionHumana.jsx'
 import VistaAsistencias from './AdministracionGeneralAsistencias.jsx'
@@ -299,6 +309,15 @@ function VistaEventos() {
   const [submitting, setSubmitting] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [formError, setFormError] = useState('')
+  const [mensajeWhatsAppOpen, setMensajeWhatsAppOpen] = useState(false)
+  const [enviandoWhatsApp, setEnviandoWhatsApp] = useState(false)
+  const [whatsappFormError, setWhatsappFormError] = useState('')
+  const [whatsappConexionOpen, setWhatsappConexionOpen] = useState(false)
+  const [whatsappConectado, setWhatsappConectado] = useState(false)
+  const [plantillasOpen, setPlantillasOpen] = useState(false)
+  const [guardandoPlantilla, setGuardandoPlantilla] = useState(false)
+  const [plantillaError, setPlantillaError] = useState('')
+  const [envioMasivoOpen, setEnvioMasivoOpen] = useState(false)
 
   const cargarEventos = useCallback(
     async ({ signal } = {}) => {
@@ -321,6 +340,34 @@ function VistaEventos() {
     cargarEventos({ signal: controller.signal })
     return () => controller.abort()
   }, [cargarEventos])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const consultarWhatsApp = async () => {
+      try {
+        const estado = await obtenerEstadoWhatsApp({ signal: controller.signal })
+        setWhatsappConectado(estado.conectado)
+      } catch (err) {
+        if (err?.name === 'AbortError') return
+        setWhatsappConectado(false)
+      }
+    }
+
+    consultarWhatsApp()
+    const intervalo = window.setInterval(consultarWhatsApp, 5000)
+
+    return () => {
+      controller.abort()
+      window.clearInterval(intervalo)
+    }
+  }, [])
+
+  const handleWhatsAppConectado = useCallback(() => {
+    setWhatsappConectado(true)
+    setWhatsappConexionOpen(false)
+    toast.success('WhatsApp conectado en el servidor')
+  }, [toast])
 
   const handleGuardarEvento = async (datos) => {
     setFormError('')
@@ -363,6 +410,67 @@ function VistaEventos() {
     }
   }
 
+  const handleGuardarPlantilla = async ({ nombre, contenido }) => {
+    setPlantillaError('')
+    setGuardandoPlantilla(true)
+
+    try {
+      const plantilla = await crearPlantilla({ nombre, contenido })
+      toast.success(`Plantilla "${plantilla.nombre}" guardada`)
+      setPlantillasOpen(false)
+    } catch (err) {
+      setPlantillaError(err.message || 'No se pudo guardar la plantilla')
+    } finally {
+      setGuardandoPlantilla(false)
+    }
+  }
+
+  const handleGuardarPlantillaAutomatica = async ({
+    id,
+    contenido,
+    esActualizacion = false,
+  }) => {
+    setPlantillaError('')
+    setGuardandoPlantilla(true)
+
+    try {
+      const plantilla = await guardarPlantillaAutomatica({ id, contenido })
+      toast.success(
+        esActualizacion
+          ? `Plantilla "${plantilla.nombre}" actualizada`
+          : `Plantilla "${plantilla.nombre}" guardada`,
+      )
+      setPlantillasOpen(false)
+    } catch (err) {
+      setPlantillaError(
+        err.message || 'No se pudo guardar la plantilla automática',
+      )
+    } finally {
+      setGuardandoPlantilla(false)
+    }
+  }
+
+  const handleEnviarMensajeWhatsApp = async ({ telefono, mensaje }) => {
+    setWhatsappFormError('')
+    setEnviandoWhatsApp(true)
+
+    try {
+      await enviarMensajeWhatsApp({ telefono, mensaje })
+      toast.success('Mensaje enviado por WhatsApp')
+      setMensajeWhatsAppOpen(false)
+    } catch (err) {
+      if (err.code === WHATSAPP_SESSION_CLOSED_CODE) {
+        setMensajeWhatsAppOpen(false)
+        setWhatsappConexionOpen(true)
+        return
+      }
+
+      setWhatsappFormError(err.message || 'No se pudo enviar el mensaje')
+    } finally {
+      setEnviandoWhatsApp(false)
+    }
+  }
+
   return (
     <section className="ag-page__view">
       <header className="ag-page__view-header ag-page__view-header--with-action">
@@ -372,17 +480,78 @@ function VistaEventos() {
             Banners y actividades programadas (ordenados por posición)
           </p>
         </div>
-        <button
-          type="button"
-          className="ag-action-btn"
-          onClick={() => {
-            setFormError('')
-            setCrearOpen(true)
-          }}
-        >
-          Crear evento
-        </button>
+        <div className="ag-page__view-actions">
+          {!whatsappConectado ? (
+            <button
+              type="button"
+              className="ag-action-btn ag-action-btn--ghost"
+              onClick={() => setWhatsappConexionOpen(true)}
+            >
+              Conectar WhatsApp
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => {
+              if (!whatsappConectado) {
+                setWhatsappConexionOpen(true)
+                return
+              }
+              setWhatsappFormError('')
+              setMensajeWhatsAppOpen(true)
+            }}
+          >
+            Enviar mensaje a un usuario
+          </button>
+          <button
+            type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => {
+              if (!whatsappConectado) {
+                setWhatsappConexionOpen(true)
+                return
+              }
+              setEnvioMasivoOpen(true)
+            }}
+          >
+            Envío masivo
+          </button>
+          <button
+            type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => {
+              setPlantillaError('')
+              setPlantillasOpen(true)
+            }}
+          >
+            Plantillas
+          </button>
+          <button
+            type="button"
+            className="ag-action-btn"
+            onClick={() => {
+              setFormError('')
+              setCrearOpen(true)
+            }}
+          >
+            Crear evento
+          </button>
+        </div>
       </header>
+
+      {!whatsappConectado ? (
+        <p className="ag-whatsapp-aviso">
+          WhatsApp no está conectado en el servidor.{' '}
+          <button
+            type="button"
+            className="ag-whatsapp-aviso__link"
+            onClick={() => setWhatsappConexionOpen(true)}
+          >
+            Escanea el QR para vincular
+          </button>
+        </p>
+      ) : null}
 
       <div className="ag-panel">
         <EventosTable
@@ -424,10 +593,60 @@ function VistaEventos() {
         loading={actionLoading}
       />
 
+      <EnviarMensajeWhatsAppModal
+        open={mensajeWhatsAppOpen}
+        onClose={() => {
+          if (enviandoWhatsApp) return
+          setWhatsappFormError('')
+          setMensajeWhatsAppOpen(false)
+        }}
+        onSubmit={handleEnviarMensajeWhatsApp}
+        submitting={enviandoWhatsApp}
+        error={whatsappFormError}
+      />
+
+      <WhatsAppConexionModal
+        open={whatsappConexionOpen}
+        onClose={() => setWhatsappConexionOpen(false)}
+        onConectado={handleWhatsAppConectado}
+      />
+
+      <PlantillaFormModal
+        open={plantillasOpen}
+        onClose={() => {
+          if (guardandoPlantilla) return
+          setPlantillaError('')
+          setPlantillasOpen(false)
+        }}
+        onSubmit={handleGuardarPlantilla}
+        onSubmitAutomatica={handleGuardarPlantillaAutomatica}
+        submitting={guardandoPlantilla}
+        error={plantillaError}
+      />
+
+      <EnviarMensajeMasivoModal
+        open={envioMasivoOpen}
+        onClose={() => setEnvioMasivoOpen(false)}
+        onWhatsAppDesconectado={() => {
+          setEnvioMasivoOpen(false)
+          setWhatsappConexionOpen(true)
+        }}
+      />
+
       <LoadingOverlay
-        visible={loading || submitting || actionLoading}
+        visible={
+          loading ||
+          submitting ||
+          actionLoading ||
+          enviandoWhatsApp ||
+          guardandoPlantilla
+        }
         label={
-          submitting
+          guardandoPlantilla
+            ? 'Guardando plantilla'
+            : enviandoWhatsApp
+            ? 'Enviando mensaje'
+            : submitting
             ? editarEvento
               ? 'Guardando cambios'
               : 'Guardando evento'

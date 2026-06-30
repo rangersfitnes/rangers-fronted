@@ -6,7 +6,10 @@ import App from './App.jsx'
 import { ToastProvider } from './components/Toast.jsx'
 import { AdminAuthProvider } from './contexts/AdminAuthContext.jsx'
 import { UsuarioProvider } from './contexts/UsuarioContext.jsx'
+import { iniciarRenovacionAutomaticaToken } from './utils/firebaseTokenRefresh.js'
 import logo from './assets/images/logos/logo.webp'
+
+iniciarRenovacionAutomaticaToken()
 
 
 const favicon = document.createElement('link')
