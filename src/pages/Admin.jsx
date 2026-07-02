@@ -8,7 +8,9 @@ import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import RecordarSesionCheckbox from '../components/RecordarSesionCheckbox.jsx'
 import {
   verifyAdminAccess,
+  clearAdminSession,
 } from '../services/authService.js'
+import { clearUserToken } from '../services/userService.js'
 import { useAdminAuth } from '../contexts/AdminAuthContext.jsx'
 import {
   aplicarPersistenciaFirebase,
@@ -45,6 +47,8 @@ function Admin() {
 
     try {
       await aplicarPersistenciaFirebase(auth, recordar)
+      clearUserToken()
+      clearAdminSession()
       const credential = await signInWithEmailAndPassword(auth, email, password)
       const idToken = await credential.user.getIdToken()
       const result = await verifyAdminAccess(idToken)

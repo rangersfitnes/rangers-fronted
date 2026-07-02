@@ -90,7 +90,11 @@ export function UsuarioProvider({ children }) {
       const datos = await obtenerDatosUsuario({ token: idToken })
 
       if (!datos || !esUsuarioCliente(datos)) {
-        await invalidarSesionNoCliente()
+        // Admin/colaborador: no cerrar Firebase; AdminAuthContext gestiona esa sesión.
+        if (getUserToken()) {
+          clearUserToken()
+          setUsuario(null)
+        }
         return null
       }
 
@@ -100,11 +104,13 @@ export function UsuarioProvider({ children }) {
       return datos
     } catch (err) {
       console.warn('[usuario] No se pudo restaurar la sesión:', err.message)
-      clearUserToken()
-      setUsuario(null)
+      if (getUserToken()) {
+        clearUserToken()
+        setUsuario(null)
+      }
       return null
     }
-  }, [invalidarSesionNoCliente])
+  }, [])
 
   useEffect(() => {
     let activo = true
@@ -131,7 +137,7 @@ export function UsuarioProvider({ children }) {
 
         await syncUserToken(user)
 
-        if (user) {
+        if (user && getUserToken()) {
           await cargarUsuarioDesdeSesion(user)
         } else {
           setUsuario(null)

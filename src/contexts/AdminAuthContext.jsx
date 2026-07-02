@@ -33,10 +33,7 @@ export function AdminAuthProvider({ children }) {
 
   const syncToken = useCallback(async (user) => {
     if (!user) {
-      if (getAdminToken()) {
-        clearAdminSession()
-        setAutenticado(false)
-      }
+      setAutenticado(Boolean(getAdminToken()))
       return
     }
 

@@ -3,72 +3,49 @@
   flex-direction: column;
   gap: 0.45rem;
   min-width: 0;
-  position: relative;
 }
 
 .campo-fecha-calendario__label {
   font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #a3a3a3;
+  color: #d4d4d4;
 }
 
-.campo-fecha-calendario__trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+.campo-fecha-calendario__input {
+  display: block;
   width: 100%;
-  padding: 0.72rem 0.9rem;
-  font-size: 0.92rem;
+  min-height: 44px;
+  padding: 0.75rem 0.9rem;
+  font-size: 16px;
   font-family: inherit;
+  line-height: 1.4;
   color: #ffffff;
-  text-align: left;
-  background-color: #1a1a1a;
+  background-color: #121212;
   border: 1px solid #404040;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
-}
-
-.campo-fecha-calendario__trigger:hover:not(:disabled) {
-  border-color: #f97316;
-  background-color: #202020;
-}
-
-.campo-fecha-calendario__trigger:focus-visible {
+  border-radius: 8px;
   outline: none;
+  color-scheme: dark;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.campo-fecha-calendario__input:focus {
   border-color: #f97316;
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
 }
 
-.campo-fecha-calendario__trigger:disabled {
+.campo-fecha-calendario__input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.campo-fecha-calendario__valor {
-  flex: 1;
-  min-width: 0;
+.campo-fecha-calendario__input::-webkit-date-and-time-value {
+  text-align: left;
 }
 
-.campo-fecha-calendario__icono {
-  flex-shrink: 0;
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.campo-fecha-calendario__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-  opacity: 0;
-  pointer-events: none;
+.campo-fecha-calendario__input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.85);
+  opacity: 0.9;
 }
