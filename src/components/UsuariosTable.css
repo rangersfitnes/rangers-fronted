@@ -232,6 +232,21 @@
   color: #d4d4d4;
 }
 
+.usuarios-table__vigencia-modificada {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  color: #fdba74;
+  background-color: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .usuarios-table-wrapper {
     -webkit-overflow-scrolling: touch;

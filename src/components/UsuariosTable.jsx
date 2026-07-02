@@ -11,6 +11,7 @@ const TIPO_LABEL = {
 function formatearFecha(ms) {
   if (!ms) return '—'
   return new Date(ms).toLocaleDateString('es-CO', {
+    timeZone: 'America/Bogota',
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -95,6 +96,7 @@ function UsuariosTable({ usuarios, onRowClick }) {
             <th>Grupo del plan</th>
             <th>Inicio</th>
             <th>Vigencia</th>
+            <th>Vigencia admin.</th>
             <th>Creado</th>
           </tr>
         </thead>
@@ -153,8 +155,32 @@ function UsuariosTable({ usuarios, onRowClick }) {
                     rolEnPlan={u.rolEnPlan}
                   />
                 </td>
-                <td>{planEstado === 'sin_plan' ? '—' : formatearFecha(u.fechaInicio)}</td>
-                <td>{planEstado === 'sin_plan' ? '—' : formatearFecha(u.vigencia)}</td>
+                <td>
+                  <span className="usuarios-table__fecha-cell">
+                    {planEstado === 'sin_plan' ? '—' : formatearFecha(u.fechaInicio)}
+                  </span>
+                </td>
+                <td>
+                  <span className="usuarios-table__fecha-cell">
+                    {planEstado === 'sin_plan' ? '—' : formatearFecha(u.vigencia)}
+                  </span>
+                </td>
+                <td>
+                  {planEstado === 'activo' && u.vigenciaModificada ? (
+                    <span
+                      className="usuarios-table__vigencia-modificada"
+                      title={
+                        u.ultimaModificacionVigencia?.causal
+                          ? `Causal: ${u.ultimaModificacionVigencia.causal}`
+                          : 'Vigencia modificada administrativamente'
+                      }
+                    >
+                      Modificada
+                    </span>
+                  ) : (
+                    '—'
+                  )}
+                </td>
                 <td>{formatearFecha(u.fechaCreacion)}</td>
               </tr>
             )

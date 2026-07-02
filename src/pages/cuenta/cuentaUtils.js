@@ -2,6 +2,7 @@ export function formatearFechaCuenta(ms) {
   if (!ms) return '—'
   try {
     return new Date(ms).toLocaleDateString('es-CO', {
+      timeZone: 'America/Bogota',
       day: '2-digit',
       month: 'long',
       year: 'numeric',
@@ -114,6 +115,7 @@ export function formatearFechaTabla(ms) {
   if (!ms) return '—'
   try {
     return new Date(ms).toLocaleDateString('es-CO', {
+      timeZone: 'America/Bogota',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

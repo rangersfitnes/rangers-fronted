@@ -111,6 +111,48 @@ export async function obtenerUsuarios({
   }
 }
 
+export async function obtenerReporteCompletoUsuarios({ signal } = {}) {
+  const token = getAdminToken()
+
+  if (!token) {
+    throw new Error('No hay sesión activa de administrador')
+  }
+
+  let response
+
+  try {
+    response = await fetch(`${API_BASE_URL}/api/usuarios/reporte-completo`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error(
+      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+    )
+  }
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo generar el reporte de usuarios')
+  }
+
+  return {
+    usuarios: data.usuarios || [],
+    estadisticas: data.estadisticas || {
+      total: 0,
+      activos: 0,
+      vencidos: 0,
+      sinPlan: 0,
+    },
+    generadoEn: data.generadoEn ?? Date.now(),
+  }
+}
+
 export async function actualizarUsuario(uid, datos) {
   const token = getAdminToken()
 

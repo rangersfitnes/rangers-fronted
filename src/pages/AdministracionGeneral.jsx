@@ -4,6 +4,7 @@ import AdminTabsHeader from '../components/AdminTabsHeader.jsx'
 import PlanFormModal from '../components/PlanFormModal.jsx'
 import CuponFormModal from '../components/CuponFormModal.jsx'
 import CuponesListModal from '../components/CuponesListModal.jsx'
+import ModificarVigenciaModal from '../components/ModificarVigenciaModal.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import PlanesTable from '../components/PlanesTable.jsx'
@@ -61,6 +62,8 @@ function VistaPlanes() {
 
   const [crearOpen, setCrearOpen] = useState(false)
   const [cuponOpen, setCuponOpen] = useState(false)
+  const [vigenciaOpen, setVigenciaOpen] = useState(false)
+  const [guardandoVigencia, setGuardandoVigencia] = useState(false)
   const [cuponesListOpen, setCuponesListOpen] = useState(false)
   const [cupones, setCupones] = useState([])
   const [cuponError, setCuponError] = useState('')
@@ -254,6 +257,13 @@ function VistaPlanes() {
           <button
             type="button"
             className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => setVigenciaOpen(true)}
+          >
+            Modificar vigencia
+          </button>
+          <button
+            type="button"
+            className="ag-action-btn ag-action-btn--ghost"
             onClick={() => cargarPlanes({ force: true })}
           >
             Actualizar
@@ -351,6 +361,21 @@ function VistaPlanes() {
         planes={planes}
       />
 
+      <ModificarVigenciaModal
+        open={vigenciaOpen}
+        onClose={() => {
+          if (guardandoVigencia) return
+          setVigenciaOpen(false)
+        }}
+        submitting={guardandoVigencia}
+        setSubmitting={setGuardandoVigencia}
+        onSuccess={(resultado) => {
+          toast.success(
+            `Vigencia actualizada para ${resultado.nombre || resultado.documento}`,
+          )
+        }}
+      />
+
       <ConfirmModal
         open={Boolean(eliminarTarget)}
         onClose={() => setEliminarTarget(null)}
@@ -367,9 +392,13 @@ function VistaPlanes() {
       />
 
       <LoadingOverlay
-        visible={loading || submitting || actionLoading || guardandoCupon}
+        visible={
+          loading || submitting || actionLoading || guardandoCupon || guardandoVigencia
+        }
         label={
-          guardandoCupon
+          guardandoVigencia
+            ? 'Guardando vigencia'
+            : guardandoCupon
             ? 'Generando cupón'
             : submitting
             ? editarPlan

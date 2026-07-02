@@ -12,9 +12,11 @@ import {
   actualizarUsuario,
   eliminarUsuario,
   obtenerEstadisticasUsuarios,
+  obtenerReporteCompletoUsuarios,
   obtenerUsuarios,
   registrarUsuario,
 } from '../services/usuariosService.js'
+import { exportarReporteUsuariosPdf } from '../utils/exportReporteUsuarios.js'
 import { abrirKioscoAcceso } from '../utils/abrirKioscoAcceso.js'
 import UsuarioDetalleGestion from './UsuarioDetalleGestion.jsx'
 import VistaPagoClases from './PuntoFisicoPagoClases.jsx'
@@ -102,6 +104,7 @@ function VistaUsuarios() {
 
   const [submitting, setSubmitting] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [exportandoPdf, setExportandoPdf] = useState(false)
   const [error, setError] = useState('')
 
   const [usuarios, setUsuarios] = useState([])
@@ -257,6 +260,23 @@ function VistaUsuarios() {
     }
   }
 
+  const handleExportarPdf = async () => {
+    setExportandoPdf(true)
+    try {
+      const reporte = await obtenerReporteCompletoUsuarios()
+      exportarReporteUsuariosPdf(reporte)
+      toast.success(
+        `PDF exportado con ${reporte.usuarios.length} usuario${
+          reporte.usuarios.length === 1 ? '' : 's'
+        }`,
+      )
+    } catch (err) {
+      toast.error(err.message || 'No se pudo exportar el PDF')
+    } finally {
+      setExportandoPdf(false)
+    }
+  }
+
   const handleRowClick = (usuario) => {
     setUsuarioGestion(usuario)
   }
@@ -401,8 +421,16 @@ function VistaUsuarios() {
           <button
             type="button"
             className="pf-action-btn pf-action-btn--ghost"
+            onClick={handleExportarPdf}
+            disabled={loading || exportandoPdf}
+          >
+            {exportandoPdf ? 'Generando PDF…' : 'Exportar PDF'}
+          </button>
+          <button
+            type="button"
+            className="pf-action-btn pf-action-btn--ghost"
             onClick={() => recargarListado(page)}
-            disabled={loading}
+            disabled={loading || exportandoPdf}
           >
             Actualizar
           </button>
@@ -583,15 +611,17 @@ function VistaUsuarios() {
       />
 
       <LoadingOverlay
-        visible={loading || submitting || actionLoading}
+        visible={loading || submitting || actionLoading || exportandoPdf}
         label={
-          submitting
-            ? editarUsuario
-              ? 'Guardando cambios'
-              : 'Creando usuario'
-            : actionLoading
-              ? 'Procesando…'
-              : 'Cargando usuarios'
+          exportandoPdf
+            ? 'Generando reporte PDF'
+            : submitting
+              ? editarUsuario
+                ? 'Guardando cambios'
+                : 'Creando usuario'
+              : actionLoading
+                ? 'Procesando…'
+                : 'Cargando usuarios'
         }
       />
     </section>
