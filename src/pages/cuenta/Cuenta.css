@@ -1,8 +1,26 @@
 .cuenta-page {
-  min-height: 100vh;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   padding: var(--page-padding-top) clamp(1rem, 4vw, 1.5rem) 3rem;
   padding-bottom: max(3rem, env(safe-area-inset-bottom));
   color: #e5e5e5;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.cuenta-page::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cuenta-page::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
 }
 
 @media (max-width: 640px) {

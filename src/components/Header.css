@@ -71,11 +71,6 @@
   color: #f97316;
 }
 
-.header__quick-link .header__nav-chevron {
-  font-size: 0.65rem;
-  opacity: 0.8;
-}
-
 .header__home-link {
   flex-shrink: 0;
   display: inline-flex;
@@ -118,11 +113,6 @@
 .header__nav-link:hover,
 .header__nav-link--active {
   color: #f97316;
-}
-
-.header__nav-chevron {
-  font-size: 0.65rem;
-  opacity: 0.8;
 }
 
 .header__actions {
@@ -259,48 +249,6 @@
 
 .header__profile-menu-link:hover .header__profile-menu-link-arrow {
   color: #f97316;
-}
-
-.header__profile-menu-foto {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.25rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.header__profile-menu-item {
-  padding: 0.55rem 0.75rem;
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  text-align: left;
-  color: #d4d4d4;
-  background: none;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: color 0.15s, background-color 0.15s;
-}
-
-.header__profile-menu-item:hover:not(:disabled),
-.header__profile-menu-item:focus-visible {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.06);
-  outline: none;
-}
-
-.header__profile-menu-item--danger:hover:not(:disabled),
-.header__profile-menu-item--danger:focus-visible {
-  color: #ef4444;
-  background-color: rgba(239, 68, 68, 0.08);
-}
-
-.header__profile-menu-item:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .header__profile-menu-logout {
@@ -567,10 +515,6 @@
 
 .header__drawer-link--active {
   color: #f97316;
-}
-
-.header__drawer-link .header__nav-chevron {
-  color: #525252;
 }
 
 .header__drawer-auth {

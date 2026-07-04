@@ -22,14 +22,19 @@
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
 .pf-page__main::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+  width: 6px;
+}
+
+.pf-page__main::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
 }
 
 .pf-page__view-header {

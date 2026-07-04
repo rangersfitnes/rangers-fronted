@@ -5,12 +5,6 @@ import UserIcon from './icons/UserIcon.jsx'
 import ChevronRightIcon from './icons/ChevronRightIcon.jsx'
 import { useActiveSection } from '../hooks/useActiveSection.js'
 import { useUsuario } from '../contexts/UsuarioContext.jsx'
-import {
-  actualizarFotoPerfil,
-  eliminarFotoPerfil,
-} from '../services/userService.js'
-import { useToast } from './Toast.jsx'
-import LoadingOverlay from './LoadingOverlay.jsx'
 import './Header.css'
 
 const navItems = [
@@ -19,13 +13,11 @@ const navItems = [
     label: 'Sobre nosotros',
     sectionId: 'sobre-nosotros',
     to: '/sobre-nosotros',
-    hasDropdown: true,
   },
   {
     label: 'Clases',
     sectionId: 'clases',
     to: '/clases',
-    hasDropdown: true,
   },
   { label: 'Ver planes', sectionId: 'planes', to: '/planes' },
 ]
@@ -38,7 +30,7 @@ function obtenerSoloNombres(nombreCompleto) {
 }
 
 const accountActions = [
-  { label: 'Información del perfil', to: '/cuenta/perfil' },
+  { label: 'Perfil', to: '/cuenta/perfil' },
   { label: 'Actividad', to: '/cuenta/actividad' },
   { label: 'Asistencias', to: '/cuenta/asistencias' },
 ]
@@ -62,13 +54,7 @@ function IconoSalir() {
   )
 }
 
-function HeaderUserMenu({
-  usuario,
-  fotoCargando,
-  onLogout,
-  onSeleccionarArchivo,
-  onEliminarFoto,
-}) {
+function HeaderUserMenu({ usuario, onLogout }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const wrapRef = useRef(null)
   const tieneFoto = Boolean(usuario?.profileImage)
@@ -150,48 +136,6 @@ function HeaderUserMenu({
             ))}
           </ul>
 
-          {tieneFoto ? (
-            <div className="header__profile-menu-foto">
-              <button
-                type="button"
-                role="menuitem"
-                className="header__profile-menu-item"
-                onClick={() => {
-                  cerrarMenu()
-                  onSeleccionarArchivo()
-                }}
-                disabled={fotoCargando}
-              >
-                Cambiar foto
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                className="header__profile-menu-item header__profile-menu-item--danger"
-                onClick={() => {
-                  cerrarMenu()
-                  onEliminarFoto()
-                }}
-                disabled={fotoCargando}
-              >
-                Eliminar foto
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              className="header__profile-menu-item"
-              onClick={() => {
-                cerrarMenu()
-                onSeleccionarArchivo()
-              }}
-              disabled={fotoCargando}
-            >
-              Subir foto de perfil
-            </button>
-          )}
-
           <button
             type="button"
             role="menuitem"
@@ -211,12 +155,9 @@ function HeaderUserMenu({
 }
 
 function Header({ inScroll = false }) {
-  const [fotoCargando, setFotoCargando] = useState(false)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
-  const fileInputRef = useRef(null)
   const activeSection = useActiveSection()
-  const { usuario, logout, actualizarUsuario } = useUsuario()
-  const toast = useToast()
+  const { usuario, logout } = useUsuario()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -248,41 +189,6 @@ function Header({ inScroll = false }) {
     navigate('/', { replace: true })
   }
 
-  const abrirSelectorArchivo = useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
-
-  const handleFotoChange = async (event) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-
-    setFotoCargando(true)
-    try {
-      const url = await actualizarFotoPerfil(file)
-      actualizarUsuario({ profileImage: url })
-      toast.success('Foto de perfil actualizada')
-    } catch (err) {
-      toast.error(err.message || 'No se pudo actualizar la foto')
-    } finally {
-      setFotoCargando(false)
-    }
-  }
-
-  const handleEliminarFoto = useCallback(async () => {
-    if (fotoCargando || !usuario?.profileImage) return
-    setFotoCargando(true)
-    try {
-      await eliminarFotoPerfil()
-      actualizarUsuario({ profileImage: null })
-      toast.success('Foto de perfil eliminada')
-    } catch (err) {
-      toast.error(err.message || 'No se pudo eliminar la foto')
-    } finally {
-      setFotoCargando(false)
-    }
-  }, [actualizarUsuario, fotoCargando, toast, usuario?.profileImage])
-
   const isItemActive = (item) => activeSection === item.sectionId
 
   const getNavClassName = (item, baseClass) =>
@@ -290,16 +196,6 @@ function Header({ inScroll = false }) {
 
   const renderNavItem = (item, linkClass, onNavigate) => {
     const className = getNavClassName(item, linkClass)
-    const content = (
-      <>
-        {item.label}
-        {item.hasDropdown && linkClass !== 'header__drawer-link' && (
-          <span className="header__nav-chevron" aria-hidden="true">
-            ▾
-          </span>
-        )}
-      </>
-    )
 
     if (item.to === '/planes' || item.to === '/clases') {
       return (
@@ -310,14 +206,14 @@ function Header({ inScroll = false }) {
           }
           onClick={() => onNavigate?.()}
         >
-          {content}
+          {item.label}
         </NavLink>
       )
     }
 
     return (
       <Link to={item.to} className={className} onClick={() => onNavigate?.()}>
-        {content}
+        {item.label}
       </Link>
     )
   }
@@ -357,13 +253,7 @@ function Header({ inScroll = false }) {
           </button>
 
           {usuario ? (
-            <HeaderUserMenu
-              usuario={usuario}
-              fotoCargando={fotoCargando}
-              onLogout={handleLogout}
-              onSeleccionarArchivo={abrirSelectorArchivo}
-              onEliminarFoto={handleEliminarFoto}
-            />
+            <HeaderUserMenu usuario={usuario} onLogout={handleLogout} />
           ) : (
             <Link
               to="/login"
@@ -411,28 +301,6 @@ function Header({ inScroll = false }) {
         </button>
       </div>
 
-      {usuario && (
-        <div className="header__drawer-profile">
-          <span className="header__drawer-avatar-wrap">
-            <span className="header__drawer-avatar-inner header__drawer-avatar">
-              {usuario.profileImage ? (
-                <img
-                  src={usuario.profileImage}
-                  alt=""
-                  className="header__drawer-avatar-img"
-                />
-              ) : (
-                <UserIcon className="header__drawer-avatar-placeholder" />
-              )}
-            </span>
-          </span>
-          <div className="header__drawer-profile-text">
-            <span className="header__drawer-profile-eyebrow">Atleta</span>
-            <span className="header__drawer-profile-name">{usuario.nombre}</span>
-          </div>
-        </div>
-      )}
-
       <nav className="header__drawer-nav" aria-label="Navegación móvil">
         <ul className="header__drawer-list">
           {navItems.map((item) => (
@@ -441,74 +309,8 @@ function Header({ inScroll = false }) {
             </li>
           ))}
         </ul>
-
-        {usuario ? (
-          <ul className="header__account-actions">
-            {accountActions.map((action) => (
-              <li key={action.to}>
-                <Link
-                  to={action.to}
-                  className="header__account-action"
-                  onClick={cerrarDrawer}
-                >
-                  <span className="header__account-action-label">
-                    {action.label}
-                  </span>
-                  <ChevronRightIcon className="header__account-action-arrow" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="header__drawer-auth">
-            <Link
-              to="/login"
-              className="header__drawer-login"
-              onClick={cerrarDrawer}
-            >
-              <UserIcon className="header__drawer-login-icon" />
-              Iniciar sesión
-            </Link>
-            <Link
-              to="/login"
-              state={{ openSignup: true }}
-              className="header__drawer-signup"
-              onClick={cerrarDrawer}
-            >
-              Crear cuenta
-            </Link>
-          </div>
-        )}
       </nav>
-
-      {usuario && (
-        <div className="header__drawer-footer">
-          <button
-            type="button"
-            className="header__drawer-logout"
-            onClick={() => {
-              cerrarDrawer()
-              handleLogout()
-            }}
-          >
-            <IconoSalir />
-            Cerrar sesión
-          </button>
-        </div>
-      )}
     </aside>
-
-    {usuario && (
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="header__drawer-file-input"
-          onChange={handleFotoChange}
-        />
-      )}
-
-    <LoadingOverlay visible={fotoCargando} label="Actualizando foto" />
     </>
   )
 }

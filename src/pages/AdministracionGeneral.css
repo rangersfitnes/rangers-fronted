@@ -22,14 +22,19 @@
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
 .ag-page__main::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+  width: 6px;
+}
+
+.ag-page__main::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
 }
 
 .ag-page__view-header {
@@ -1054,11 +1059,27 @@
 
 .ag-finanzas__tabla-wrap {
   overflow-x: auto;
+  overflow-y: visible;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: auto;
   background-color: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.ag-finanzas__tabla-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ag-finanzas__tabla-wrap::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
 }
 
 .ag-finanzas__tabla {

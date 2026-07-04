@@ -78,7 +78,7 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  touch-action: pan-y;
+  touch-action: manipulation;
 }
 
 input,

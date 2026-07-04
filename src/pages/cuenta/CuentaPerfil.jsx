@@ -98,7 +98,7 @@ function CuentaPerfil() {
   return (
     <main className="cuenta-page">
       <div className="cuenta-page__inner">
-        <h1 className="cuenta-page__title">Información del perfil</h1>
+        <h1 className="cuenta-page__title">Perfil</h1>
         <p className="cuenta-page__subtitle">
           Tus datos de cuenta en Rangers Box.
         </p>
