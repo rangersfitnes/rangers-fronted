@@ -63,6 +63,14 @@
   resize: vertical;
 }
 
+.modificar-vigencia-modal__campo-hint {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #a3a3a3;
+  line-height: 1.4;
+}
+
 .modificar-vigencia-modal__historial {
   margin-top: 1.25rem;
 }

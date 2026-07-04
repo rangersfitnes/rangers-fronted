@@ -40,7 +40,7 @@ const GESTION_HUMANA_CARDS = [
     id: 'liquidar-nominas',
     titulo: 'Liquidar nóminas',
     descripcion:
-      'Consulta registros aprobados y prepara la liquidación de nómina.',
+      'Liquida turnos pendientes por colaborador de forma automática.',
     icono: '💰',
   },
 ]

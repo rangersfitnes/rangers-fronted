@@ -36,6 +36,7 @@ function formatearPrecio(valor) {
 function formatearFecha(ms) {
   if (!ms) return '—'
   return new Date(ms).toLocaleDateString('es-CO', {
+    timeZone: 'America/Bogota',
     day: '2-digit',
     month: 'long',
     year: 'numeric',

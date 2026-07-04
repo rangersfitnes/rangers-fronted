@@ -15,15 +15,11 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` }
 }
 
-export async function obtenerEstadoLiquidacionColaboradores({
-  fechaInicio,
-  fechaFin,
-}) {
-  const params = new URLSearchParams({ fechaInicio, fechaFin })
+export async function obtenerEstadoLiquidacionColaboradores() {
   let response
   try {
     response = await fetch(
-      `${API_BASE_URL}/api/nominas/liquidaciones/colaboradores?${params}`,
+      `${API_BASE_URL}/api/nominas/liquidaciones/colaboradores`,
       {
         method: 'GET',
         headers: authHeaders(),
@@ -40,16 +36,8 @@ export async function obtenerEstadoLiquidacionColaboradores({
   return data.estado
 }
 
-export async function obtenerPreviewColaborador({
-  colaboradorUid,
-  fechaInicio,
-  fechaFin,
-}) {
-  const params = new URLSearchParams({
-    colaboradorUid,
-    fechaInicio,
-    fechaFin,
-  })
+export async function obtenerPreviewColaborador({ colaboradorUid }) {
+  const params = new URLSearchParams({ colaboradorUid })
   let response
   try {
     response = await fetch(
@@ -70,11 +58,7 @@ export async function obtenerPreviewColaborador({
   return data.preview
 }
 
-export async function ejecutarLiquidacionColaborador({
-  colaboradorUid,
-  fechaInicio,
-  fechaFin,
-}) {
+export async function ejecutarLiquidacionColaborador({ colaboradorUid }) {
   let response
   try {
     response = await fetch(
@@ -85,7 +69,7 @@ export async function ejecutarLiquidacionColaborador({
           ...authHeaders(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ colaboradorUid, fechaInicio, fechaFin }),
+        body: JSON.stringify({ colaboradorUid }),
       },
     )
   } catch {
@@ -95,6 +79,34 @@ export async function ejecutarLiquidacionColaborador({
   const data = await parseJsonResponse(
     response,
     'No se pudo ejecutar la liquidación',
+  )
+  return data
+}
+
+export async function revertirLiquidacionColaborador({
+  colaboradorUid,
+  liquidacionId,
+}) {
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nominas/liquidaciones/colaborador/revertir`,
+      {
+        method: 'POST',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ colaboradorUid, liquidacionId }),
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await parseJsonResponse(
+    response,
+    'No se pudo revertir la liquidación',
   )
   return data
 }

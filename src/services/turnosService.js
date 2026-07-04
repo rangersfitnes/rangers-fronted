@@ -120,3 +120,24 @@ export async function obtenerTurnosActivos({ signal } = {}) {
   )
   return data.turnos ?? []
 }
+
+export async function eliminarTurnoLaboral({ sede, turnoId }) {
+  const token = getAdminToken()
+  if (!token) throw new Error('No hay sesión activa de administrador')
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/nominas/turnos/eliminar`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sede, turnoId }),
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  return parseJsonResponse(response, 'No se pudo eliminar el turno')
+}

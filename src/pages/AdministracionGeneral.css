@@ -255,6 +255,12 @@
   background-color: rgba(127, 29, 29, 0.35);
 }
 
+.ag-reporte__categoria--nomina {
+  color: #fdba74;
+  border-color: rgba(249, 115, 22, 0.4);
+  background-color: rgba(154, 52, 18, 0.35);
+}
+
 .pf-cierre__item-monto--egreso {
   color: #fca5a5;
 }
@@ -568,36 +574,144 @@
   color: #a3a3a3;
 }
 
-.ag-liquidacion__filtros {
-  display: flex;
-  flex-wrap: wrap;
+.ag-liquidacion__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.5rem;
 }
 
-.ag-liquidacion__campo {
+.ag-liquidacion__card {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-width: 180px;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 1rem 1.1rem;
+  text-align: left;
+  color: inherit;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
-.ag-liquidacion__campo span {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #737373;
+.ag-liquidacion__card:hover {
+  border-color: #525252;
+  transform: translateY(-1px);
 }
 
-.ag-liquidacion__campo input {
-  padding: 0.65rem 0.75rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  color: #ffffff;
-  background-color: #1a1a1a;
-  border: 1px solid #404040;
+.ag-liquidacion__card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ag-liquidacion__card-main:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.ag-liquidacion__card-revertir {
+  align-self: stretch;
+  padding: 0.45rem 0.7rem;
   border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ag-liquidacion__card-revertir:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.ag-liquidacion__card-revertir:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ag-liquidacion__card--pendiente {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.ag-liquidacion__card--bloqueado {
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.ag-liquidacion__card--liquidado {
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.ag-liquidacion__card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.ag-liquidacion__card-nombre {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.ag-liquidacion__card-badge {
+  flex-shrink: 0;
+  min-width: 1.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fbbf24;
+  color: #111111;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ag-liquidacion__card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+  color: #a3a3a3;
+}
+
+.ag-liquidacion__card-estado {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a3a3a3;
+}
+
+.ag-liquidacion__card-estado--pendiente {
+  color: #fbbf24;
+}
+
+.ag-liquidacion__card-estado--bloqueado {
+  color: #f87171;
+}
+
+.ag-liquidacion__card-estado--ok {
+  color: #4ade80;
+}
+
+.ag-liquidacion__card-accion {
+  margin-top: auto;
+  font-size: 0.75rem;
+  color: #737373;
 }
 
 .ag-liquidacion__historial {

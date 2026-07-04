@@ -12,13 +12,13 @@ import './CrearPlanModal.css'
 const TIPOS_MODIFICACION = [
   { id: 'agregar_dias', label: 'Agregar días a la vigencia' },
   { id: 'restar_dias', label: 'Restar días a la vigencia' },
-  { id: 'mover_inicio', label: 'Mover fecha de inicio' },
+  { id: 'mover_inicio', label: 'Mover vigencia completa (nuevo inicio)' },
 ]
 
 const TIPO_LABEL = {
   agregar_dias: 'Agregar días',
   restar_dias: 'Restar días',
-  mover_inicio: 'Mover inicio',
+  mover_inicio: 'Mover vigencia',
 }
 
 function ModificarVigenciaModal({ open, onClose, onSuccess, submitting, setSubmitting }) {
@@ -254,6 +254,10 @@ function ModificarVigenciaModal({ open, onClose, onSuccess, submitting, setSubmi
                   disabled={ocupado}
                   required
                 />
+                <span className="modificar-vigencia-modal__campo-hint">
+                  Se desplaza toda la vigencia (inicio y fin) manteniendo la misma
+                  duración. No se acorta ni se alarga el plan.
+                </span>
               </label>
             ) : (
               <label className="crear-plan-field">

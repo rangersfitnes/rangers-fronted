@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import ConfirmModal from '../components/ConfirmModal.jsx'
 import LiquidarColaboradorModal from '../components/LiquidarColaboradorModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { etiquetaMetodoPagoColaborador } from '../constants/metodosPagoColaborador.js'
+import { SEDES } from '../services/horariosService.js'
 import {
   ejecutarLiquidacionColaborador,
   obtenerEstadoLiquidacionColaboradores,
   obtenerLiquidacionesNomina,
+  revertirLiquidacionColaborador,
 } from '../services/liquidacionNominaService.js'
 import {
   formatearFechaCuenta,
@@ -15,18 +18,13 @@ import {
 } from './cuenta/cuentaUtils.js'
 import './AdministracionGeneral.css'
 
-function obtenerPrimerDiaMes() {
-  const hoy = new Date()
-  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`
-}
-
-function obtenerAyerLocal() {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return d.toISOString().slice(0, 10)
+function etiquetaSede(sedeId) {
+  const id = String(sedeId || '').trim()
+  return SEDES.find((item) => item.id === id)?.nombre || id || '—'
 }
 
 function formatearPeriodo(fechaInicio, fechaFin) {
+  if (!fechaInicio || !fechaFin) return '—'
   const inicio = formatearFechaCuenta(
     new Date(`${fechaInicio}T12:00:00`).getTime(),
   )
@@ -34,16 +32,28 @@ function formatearPeriodo(fechaInicio, fechaFin) {
   return `${inicio} – ${fin}`
 }
 
+function etiquetaEstado(estado) {
+  switch (estado) {
+    case 'pendiente':
+      return 'Pendiente por liquidar'
+    case 'bloqueado_horas_extra':
+      return 'Horas extra pendientes'
+    case 'liquidado':
+      return 'Liquidado'
+    default:
+      return 'Sin turnos'
+  }
+}
+
 function GestionHumanaLiquidarNominas({ onVolver }) {
   const toast = useToast()
-  const [fechaInicio, setFechaInicio] = useState(obtenerPrimerDiaMes)
-  const [fechaFin, setFechaFin] = useState(obtenerAyerLocal)
-  const [fechaMaxima, setFechaMaxima] = useState(obtenerAyerLocal)
   const [estado, setEstado] = useState(null)
   const [historial, setHistorial] = useState([])
   const [loading, setLoading] = useState(true)
   const [liquidando, setLiquidando] = useState(false)
+  const [revertiendo, setRevertiendo] = useState(false)
   const [colaboradorLiquidar, setColaboradorLiquidar] = useState(null)
+  const [colaboradorRevertir, setColaboradorRevertir] = useState(null)
 
   const cargarHistorial = useCallback(async () => {
     try {
@@ -57,19 +67,15 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
   const cargarEstado = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await obtenerEstadoLiquidacionColaboradores({
-        fechaInicio,
-        fechaFin,
-      })
+      const data = await obtenerEstadoLiquidacionColaboradores()
       setEstado(data)
-      if (data.fechaMaxima) setFechaMaxima(data.fechaMaxima)
     } catch (err) {
       toast.error(err.message || 'No se pudo cargar el estado de liquidación')
       setEstado(null)
     } finally {
       setLoading(false)
     }
-  }, [fechaInicio, fechaFin, toast])
+  }, [toast])
 
   useEffect(() => {
     cargarHistorial()
@@ -80,30 +86,16 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
   }, [cargarEstado])
 
   const colaboradores = estado?.colaboradores ?? []
-  const bloqueados = estado?.bloqueados ?? []
 
-  const advertencias = useMemo(() => {
-    const sinAprobar = bloqueados.filter(
-      (b) => b.motivo === 'horas_extra_sin_aprobar',
-    )
-    const diaActual = bloqueados.filter((b) => b.motivo === 'dia_actual')
-    const yaLiquidados = bloqueados.filter((b) => b.motivo === 'ya_liquidado')
-    return { sinAprobar, diaActual, yaLiquidados }
-  }, [bloqueados])
-
-  const resumenPeriodo = useMemo(() => {
-    const pendientes = colaboradores.filter((c) => c.estado === 'pendiente')
-    const bloqueadosHoras = colaboradores.filter(
-      (c) => c.estado === 'bloqueado_horas_extra',
-    )
-    return {
-      pendientes: pendientes.length,
-      bloqueadosHoras: bloqueadosHoras.length,
-      totalPago: pendientes.reduce((acc, c) => acc + (c.totalPago || 0), 0),
-      turnos: pendientes.reduce((acc, c) => acc + (c.totalTurnos || 0), 0),
+  const resumen = useMemo(
+    () => ({
+      pendientes: estado?.totalPendientes ?? 0,
+      turnos: estado?.totalTurnosPendientes ?? 0,
+      totalPago: estado?.totalPagoPendiente ?? 0,
       liquidados: colaboradores.filter((c) => c.estado === 'liquidado').length,
-    }
-  }, [colaboradores])
+    }),
+    [estado, colaboradores],
+  )
 
   const handleLiquidar = async (colaborador) => {
     if (!colaborador?.uid) return
@@ -112,12 +104,8 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
     try {
       await ejecutarLiquidacionColaborador({
         colaboradorUid: colaborador.uid,
-        fechaInicio,
-        fechaFin,
       })
-      toast.success(
-        `Nómina de ${colaborador.nombre} liquidada (${formatearPeriodo(fechaInicio, fechaFin)})`,
-      )
+      toast.success(`Nómina de ${colaborador.nombre} liquidada`)
       setColaboradorLiquidar(null)
       await Promise.all([cargarEstado(), cargarHistorial()])
     } catch (err) {
@@ -127,7 +115,34 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
     }
   }
 
-  const accionesDeshabilitadas = loading || liquidando
+  const handleRevertir = async () => {
+    if (!colaboradorRevertir?.uid) return
+
+    setRevertiendo(true)
+    try {
+      const resultado = await revertirLiquidacionColaborador({
+        colaboradorUid: colaboradorRevertir.uid,
+        liquidacionId: colaboradorRevertir.ultimaLiquidacion?.id,
+      })
+
+      const movimientoMsg = resultado.movimientoFinancieroEliminado
+        ? 'Se eliminó también el movimiento de salida.'
+        : 'El movimiento financiero ya no existía (fue eliminado antes).'
+
+      toast.success(
+        `Liquidación de ${colaboradorRevertir.nombre} revertida. ${movimientoMsg}`,
+      )
+      setColaboradorRevertir(null)
+      await Promise.all([cargarEstado(), cargarHistorial()])
+    } catch (err) {
+      toast.error(err.message || 'No se pudo revertir la liquidación')
+    } finally {
+      setRevertiendo(false)
+    }
+  }
+
+  const accionesDeshabilitadas = loading || liquidando || revertiendo
+  const ultima = colaboradorRevertir?.ultimaLiquidacion
 
   return (
     <section className="ag-page__view">
@@ -144,8 +159,9 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
           <div>
             <h1 className="ag-page__title">Liquidar nóminas</h1>
             <p className="ag-page__subtitle">
-              Liquida a cada colaborador de forma independiente. Solo turnos
-              finalizados hasta el día anterior.
+              Se calculan automáticamente todos los turnos pendientes por
+              liquidar (hasta el día anterior). Puedes revertir la última
+              liquidación de cada colaborador.
             </p>
           </div>
         </div>
@@ -161,200 +177,134 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
         </div>
       </header>
 
-      <div className="ag-liquidacion__filtros">
-        <label className="ag-liquidacion__campo">
-          <span>Desde</span>
-          <input
-            type="date"
-            value={fechaInicio}
-            max={fechaFin}
-            onChange={(e) => setFechaInicio(e.target.value)}
-            disabled={accionesDeshabilitadas}
-          />
-        </label>
-        <label className="ag-liquidacion__campo">
-          <span>Hasta (máx. ayer)</span>
-          <input
-            type="date"
-            value={fechaFin}
-            min={fechaInicio}
-            max={fechaMaxima}
-            onChange={(e) => setFechaFin(e.target.value)}
-            disabled={accionesDeshabilitadas}
-          />
-        </label>
-      </div>
-
-      <div className="ag-panel ag-horas-extra__panel-info">
-        <p className="ag-panel__empty">
-          Cada colaborador se liquida por separado. Los turnos ya pagados en
-          liquidaciones anteriores no se incluyen de nuevo: el sistema registra
-          cada liquidación con su periodo (desde – hasta) y marca los turnos
-          liquidados para evitar doble pago.
-        </p>
-      </div>
-
-      {advertencias.yaLiquidados.length > 0 && (
-        <p className="ag-horas-extra__alerta ag-horas-extra__alerta--info" role="status">
-          {advertencias.yaLiquidados.length} turno
-          {advertencias.yaLiquidados.length === 1 ? '' : 's'} en el periodo ya
-          fueron pagados en liquidaciones anteriores y no se incluirán de nuevo.
-        </p>
-      )}
-
-      {advertencias.sinAprobar.length > 0 && (
-        <p className="ag-horas-extra__alerta" role="status">
-          Hay colaboradores con horas extra pendientes de aprobar o rechazar. La
-          liquidación está bloqueada hasta resolver todas las solicitudes del
-          periodo ({advertencias.sinAprobar.length} turno
-          {advertencias.sinAprobar.length === 1 ? '' : 's'} afectado
-          {advertencias.sinAprobar.length === 1 ? '' : 's'}).
-        </p>
-      )}
-
       {estado ? (
         <div className="ag-horas-extra__resumen-grid">
           <article className="ag-horas-extra__resumen-card">
-            <span>Pendientes de liquidar</span>
-            <strong>{resumenPeriodo.pendientes}</strong>
+            <span>Colaboradores pendientes</span>
+            <strong>{resumen.pendientes}</strong>
           </article>
           <article className="ag-horas-extra__resumen-card">
             <span>Turnos pendientes</span>
-            <strong>{resumenPeriodo.turnos}</strong>
+            <strong>{resumen.turnos}</strong>
           </article>
           <article className="ag-horas-extra__resumen-card ag-horas-extra__resumen-card--destacado">
             <span>Total pendiente</span>
-            <strong>{formatearPrecioCuenta(resumenPeriodo.totalPago)}</strong>
+            <strong>{formatearPrecioCuenta(resumen.totalPago)}</strong>
           </article>
           <article className="ag-horas-extra__resumen-card">
-            <span>Liquidados en periodo</span>
-            <strong>{resumenPeriodo.liquidados}</strong>
+            <span>Al día (liquidados)</span>
+            <strong>{resumen.liquidados}</strong>
           </article>
         </div>
       ) : null}
 
-      {colaboradores.length > 0 && (
-        <div className="ag-finanzas__tabla-wrap">
-          <table className="ag-finanzas__tabla">
-            <thead>
-              <tr>
-                <th>Colaborador</th>
-                <th>Método de pago</th>
-                <th>Turnos</th>
-                <th>Total</th>
-                <th>Estado</th>
-                <th>Liquidaciones previas</th>
-                <th aria-label="Acciones" />
-              </tr>
-            </thead>
-            <tbody>
-              {colaboradores.map((item) => (
-                <tr key={item.uid}>
-                  <td>
-                    <span className="ag-horas-extra__tabla-nombre">
+      {colaboradores.length > 0 ? (
+        <div className="ag-liquidacion__cards">
+          {colaboradores.map((item) => {
+            const pendiente = item.estado === 'pendiente'
+            const bloqueado = item.estado === 'bloqueado_horas_extra'
+            const liquidado = item.estado === 'liquidado'
+            const puedeRevertir = Boolean(item.puedeRevertir)
+
+            return (
+              <article
+                key={item.uid}
+                className={[
+                  'ag-liquidacion__card',
+                  pendiente ? 'ag-liquidacion__card--pendiente' : '',
+                  bloqueado ? 'ag-liquidacion__card--bloqueado' : '',
+                  liquidado ? 'ag-liquidacion__card--liquidado' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <button
+                  type="button"
+                  className="ag-liquidacion__card-main"
+                  onClick={() =>
+                    setColaboradorLiquidar({
+                      uid: item.uid,
+                      nombre: item.nombre,
+                      documento: item.documento,
+                      sede: item.sede,
+                      metodoPago: item.metodoPago,
+                      estado: item.estado,
+                      puedeLiquidar: item.puedeLiquidar,
+                    })
+                  }
+                  disabled={accionesDeshabilitadas}
+                >
+                  <span className="ag-liquidacion__card-top">
+                    <span className="ag-liquidacion__card-nombre">
                       {item.nombre}
                     </span>
-                    {item.documento ? (
-                      <span className="ag-horas-extra__tabla-doc">
-                        {item.documento}
+                    {pendiente ? (
+                      <span
+                        className="ag-liquidacion__card-badge"
+                        aria-label="Turnos pendientes"
+                      >
+                        {item.turnosPendientes}
                       </span>
                     ) : null}
-                  </td>
-                  <td>
-                    {item.metodoPago
-                      ? etiquetaMetodoPagoColaborador(item.metodoPago)
-                      : '—'}
-                  </td>
-                  <td>{item.totalTurnos}</td>
-                  <td className="ag-horas-extra__monto-destacado">
-                    {item.totalPago > 0
-                      ? formatearPrecioCuenta(item.totalPago)
-                      : '—'}
-                  </td>
-                  <td>
-                    {item.estado === 'liquidado' ? (
-                      <span className="ag-liquidacion__estado ag-liquidacion__estado--ok">
-                        Liquidado del{' '}
-                        {formatearPeriodo(fechaInicio, fechaFin)}
-                      </span>
-                    ) : item.estado === 'pendiente' ? (
-                      <span className="ag-liquidacion__estado ag-liquidacion__estado--pendiente">
-                        Pendiente
-                        {item.turnosYaLiquidados > 0
-                          ? ` (${item.turnosYaLiquidados} turno${item.turnosYaLiquidados === 1 ? '' : 's'} ya pagado${item.turnosYaLiquidados === 1 ? '' : 's'} excluido${item.turnosYaLiquidados === 1 ? '' : 's'})`
-                          : ''}
-                      </span>
-                    ) : item.estado === 'bloqueado_horas_extra' ? (
-                      <span className="ag-liquidacion__estado ag-liquidacion__estado--bloqueado">
-                        Horas extra pendientes
-                        {item.horasExtraPendientes > 0
-                          ? ` (${item.horasExtraPendientes})`
-                          : ''}
-                      </span>
-                    ) : item.estado === 'turnos_ya_pagados' ? (
-                      <span className="ag-liquidacion__estado ag-liquidacion__estado--info">
-                        Turnos ya pagados
-                        {item.turnosYaLiquidados > 0
-                          ? ` (${item.turnosYaLiquidados})`
-                          : ''}
-                      </span>
-                    ) : (
-                      <span className="ag-liquidacion__estado">Sin turnos</span>
-                    )}
-                  </td>
-                  <td>
-                    {item.historialLiquidaciones?.length > 0 ? (
-                      <ul className="ag-liquidacion__historial-col">
-                        {item.historialLiquidaciones.slice(0, 3).map((liq) => (
-                          <li key={liq.id}>
-                            {formatearPeriodo(liq.fechaInicio, liq.fechaFin)}
-                            {' · '}
-                            {formatearPrecioCuenta(liq.totalPago)}
-                          </li>
-                        ))}
-                        {item.historialLiquidaciones.length > 3 ? (
-                          <li className="ag-liquidacion__historial-col-mas">
-                            +{item.historialLiquidaciones.length - 3} más
-                          </li>
-                        ) : null}
-                      </ul>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td className="ag-finanzas__tabla-acciones">
-                    {item.estado === 'pendiente' ? (
-                      <button
-                        type="button"
-                        className="ag-action-btn ag-action-btn--ghost"
-                        onClick={() =>
-                          setColaboradorLiquidar({
-                            uid: item.uid,
-                            nombre: item.nombre,
-                            metodoPago: item.metodoPago,
-                          })
-                        }
-                        disabled={accionesDeshabilitadas}
-                      >
-                        Liquidar
-                      </button>
-                    ) : item.estado === 'bloqueado_horas_extra' ? (
-                      <span
-                        className="ag-liquidacion__accion-bloqueada"
-                        title="Aprueba o rechaza las horas extra pendientes antes de liquidar"
-                      >
-                        Bloqueado
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </span>
+
+                  <span className="ag-liquidacion__card-meta">
+                    <span>Sede: {etiquetaSede(item.sede)}</span>
+                    <span>CC: {item.documento || '—'}</span>
+                  </span>
+
+                  <span
+                    className={[
+                      'ag-liquidacion__card-estado',
+                      pendiente ? 'ag-liquidacion__card-estado--pendiente' : '',
+                      bloqueado ? 'ag-liquidacion__card-estado--bloqueado' : '',
+                      liquidado ? 'ag-liquidacion__card-estado--ok' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    {etiquetaEstado(item.estado)}
+                    {pendiente && item.totalPago > 0
+                      ? ` · ${formatearPrecioCuenta(item.totalPago)}`
+                      : ''}
+                    {bloqueado && item.horasExtraPendientes > 0
+                      ? ` (${item.horasExtraPendientes})`
+                      : ''}
+                  </span>
+
+                  <span className="ag-liquidacion__card-accion">
+                    {pendiente
+                      ? 'Ver detalle y liquidar'
+                      : liquidado
+                        ? 'Sin turnos pendientes'
+                        : bloqueado
+                          ? 'Resolver horas extra'
+                          : 'Sin turnos'}
+                  </span>
+                </button>
+
+                {puedeRevertir ? (
+                  <button
+                    type="button"
+                    className="ag-liquidacion__card-revertir"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setColaboradorRevertir(item)
+                    }}
+                    disabled={accionesDeshabilitadas}
+                  >
+                    Revertir liquidación
+                  </button>
+                ) : null}
+              </article>
+            )
+          })}
         </div>
-      )}
+      ) : !loading ? (
+        <div className="ag-panel">
+          <p className="ag-panel__empty">No hay colaboradores registrados.</p>
+        </div>
+      ) : null}
 
       {historial.length > 0 && (
         <section className="ag-liquidacion__historial">
@@ -364,7 +314,7 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
               <thead>
                 <tr>
                   <th>Colaborador</th>
-                  <th>Periodo</th>
+                  <th>Turnos liquidados</th>
                   <th>Método de pago</th>
                   <th>Turnos</th>
                   <th>Total</th>
@@ -401,15 +351,38 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
           setColaboradorLiquidar(null)
         }}
         colaborador={colaboradorLiquidar}
-        fechaInicio={fechaInicio}
-        fechaFin={fechaFin}
         onLiquidar={handleLiquidar}
         liquidando={liquidando}
+        onTurnosCambiados={cargarEstado}
+      />
+
+      <ConfirmModal
+        open={Boolean(colaboradorRevertir)}
+        onClose={() => {
+          if (revertiendo) return
+          setColaboradorRevertir(null)
+        }}
+        onConfirm={handleRevertir}
+        title="Revertir liquidación"
+        message={
+          colaboradorRevertir
+            ? `¿Revertir la última liquidación de ${colaboradorRevertir.nombre}? Se liberarán ${ultima?.totalTurnos ?? 0} turno(s) por ${formatearPrecioCuenta(ultima?.totalPago ?? 0)}. Si el movimiento de salida aún existe en finanzas, también se eliminará.`
+            : ''
+        }
+        confirmLabel="Revertir"
+        variant="danger"
+        loading={revertiendo}
       />
 
       <LoadingOverlay
-        visible={loading || liquidando}
-        label={liquidando ? 'Registrando liquidación' : 'Cargando colaboradores'}
+        visible={loading || liquidando || revertiendo}
+        label={
+          liquidando
+            ? 'Registrando liquidación'
+            : revertiendo
+              ? 'Revirtiendo liquidación'
+              : 'Cargando colaboradores'
+        }
       />
     </section>
   )

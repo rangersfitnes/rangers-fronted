@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import CampoFechaCalendario from '../components/CampoFechaCalendario.jsx'
 import LiquidezHistoricaPanel from '../components/LiquidezHistoricaPanel.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
+import {
+  BotonEliminarMovimiento,
+  useEliminarMovimiento,
+} from '../components/MovimientoEliminar.jsx'
 import { useToast } from '../components/Toast.jsx'
 import {
   obtenerLiquidezHistorica,
@@ -38,6 +42,7 @@ const CATEGORIA_CLASS = {
   cortesia: 'pf-cierre__badge--cortesia',
   clase: 'pf-cierre__badge--clase',
   salida: 'ag-reporte__categoria--salida',
+  nomina: 'ag-reporte__categoria--nomina',
 }
 
 function fechaHoyColombiaInput() {
@@ -124,6 +129,15 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
       setLoading(false)
     }
   }, [desde, hasta, verTodoHistorial])
+
+  const recargarTrasEliminar = useCallback(async () => {
+    await cargar()
+    await cargarLiquidez()
+  }, [cargar, cargarLiquidez])
+
+  const { solicitarEliminar, modalEliminar, eliminando } = useEliminarMovimiento({
+    onEliminado: recargarTrasEliminar,
+  })
 
   const movimientos = useMemo(
     () => (reporte ? combinarMovimientosReporte(reporte) : []),
@@ -355,6 +369,11 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
                         {esEgreso ? '−' : ''}
                         {formatearPrecioCuenta(mov.monto)}
                       </span>
+                      <BotonEliminarMovimiento
+                        mov={mov}
+                        onEliminar={solicitarEliminar}
+                        disabled={loading || eliminando}
+                      />
                     </div>
                   </li>
                 )
@@ -374,7 +393,11 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
         </div>
       )}
 
-      <LoadingOverlay visible={loading} label="Cargando movimientos" />
+      <LoadingOverlay
+        visible={loading || eliminando}
+        label={eliminando ? 'Eliminando movimiento' : 'Cargando movimientos'}
+      />
+      {modalEliminar}
     </section>
   )
 }

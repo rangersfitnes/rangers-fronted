@@ -10,9 +10,22 @@ import {
 import { etiquetaMetodoPagoColaborador } from '../constants/metodosPagoColaborador.js'
 import { NOTA_LIQUIDACION_HASTA_DIA_ANTERIOR } from '../constants/nominaLaboral.js'
 
+function rangoTurnosLabel(desprendible) {
+  const inicio = desprendible.fechaInicio
+  const fin = desprendible.fechaFin
+  if (!inicio || !fin) return '—'
+  const inicioTxt = formatearFechaCuenta(new Date(`${inicio}T12:00:00`).getTime())
+  const finTxt = formatearFechaCuenta(new Date(`${fin}T12:00:00`).getTime())
+  return inicio === fin ? inicioTxt : `${inicioTxt} – ${finTxt}`
+}
+
 function nombreArchivoDesprendible(desprendible) {
   const doc = desprendible.colaboradorDocumento || desprendible.colaboradorUid
-  return `desprendible-nomina-${doc}-${desprendible.fechaInicio}-${desprendible.fechaFin}.pdf`
+  const inicio = desprendible.fechaInicio || 'sin-inicio'
+  const fin = desprendible.fechaFin || 'sin-fin'
+  const liquidacionId = String(desprendible.liquidacionId || desprendible.id || '')
+    .slice(0, 8)
+  return `desprendible-nomina-${doc}-${inicio}-${fin}${liquidacionId ? `-${liquidacionId}` : ''}.pdf`
 }
 
 function filaTurno(linea) {
@@ -20,6 +33,7 @@ function filaTurno(linea) {
     formatearFechaTabla(linea.inicioEn),
     `${formatearHoraCuenta(linea.inicioEn)} – ${formatearHoraCuenta(linea.finEn)}`,
     formatearDuracionMs(linea.duracionMs),
+    Number(linea.horasTrabajadas) > 0 ? `${Number(linea.horasTrabajadas).toFixed(2)} h` : '—',
     linea.esDomingo ? 'Sí' : 'No',
     linea.horasNocturnas > 0 ? `${linea.horasNocturnas} h` : '—',
     linea.horasExtra > 0 ? `${linea.horasExtra} h` : '—',
@@ -38,6 +52,7 @@ function filaTurno(linea) {
 export function exportarDesprendibleNominaPdf(desprendible) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const resumen = desprendible.resumen ?? {}
+  const turnos = desprendible.turnos ?? []
   const margen = 14
   let y = margen
 
@@ -54,13 +69,14 @@ export function exportarDesprendibleNominaPdf(desprendible) {
   doc.setFontSize(10)
 
   const info = [
-    `Colaborador: ${desprendible.colaboradorNombre}`,
+    `Colaborador: ${desprendible.colaboradorNombre || '—'}`,
     `Identificación: ${desprendible.colaboradorDocumento || '—'}`,
+    `Sede: ${desprendible.sede || '—'}`,
     `Esquema: ${desprendible.esquemaNombre || desprendible.esquemaPago || '—'}`,
     `Método de pago: ${desprendible.metodoPago ? etiquetaMetodoPagoColaborador(desprendible.metodoPago) : '—'}`,
     `Cuenta: ${desprendible.numeroCuenta || '—'}`,
-    `Periodo: ${formatearFechaCuenta(new Date(`${desprendible.fechaInicio}T12:00:00`).getTime())} – ${formatearFechaCuenta(new Date(`${desprendible.fechaFin}T12:00:00`).getTime())}`,
-    `Días laborados: ${resumen.diasLaborados ?? 0}`,
+    `Turnos liquidados: ${rangoTurnosLabel(desprendible)}`,
+    `Cantidad de turnos: ${turnos.length || resumen.diasLaborados || 0}`,
     `Liquidado: ${formatearFechaCuenta(desprendible.liquidadoEn)}`,
   ]
 
@@ -92,6 +108,7 @@ export function exportarDesprendibleNominaPdf(desprendible) {
         'Fecha',
         'Horario',
         'Tiempo',
+        'Horas',
         'Dom.',
         'H. noct.',
         'H. extra',
@@ -102,8 +119,8 @@ export function exportarDesprendibleNominaPdf(desprendible) {
         'Total',
       ],
     ],
-    body: (desprendible.turnos ?? []).map(filaTurno),
-    styles: { fontSize: 7, cellPadding: 1.5 },
+    body: turnos.map(filaTurno),
+    styles: { fontSize: 6.5, cellPadding: 1.2 },
     headStyles: { fillColor: [249, 115, 22] },
     margin: { left: margen, right: margen },
   })
@@ -111,6 +128,10 @@ export function exportarDesprendibleNominaPdf(desprendible) {
   y = doc.lastAutoTable.finalY + 8
 
   const totales = [
+    [
+      'Horas trabajadas',
+      `${Number(resumen.totalHorasTrabajadas || 0).toFixed(2)} h`,
+    ],
     ['Pago ordinario', formatearPrecioCuenta(resumen.pagoOrdinario)],
     ['Pago horas extra', formatearPrecioCuenta(resumen.pagoExtra)],
     [
