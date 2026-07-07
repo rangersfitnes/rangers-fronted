@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 async function parseJsonResponse(response, fallbackError) {
   const data = await response.json().catch(() => ({}))
@@ -9,9 +9,8 @@ async function parseJsonResponse(response, fallbackError) {
   return data
 }
 
-function authHeaders() {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+async function authHeaders() {
+  const token = await requerirAdminToken()
   return { Authorization: `Bearer ${token}` }
 }
 
@@ -22,7 +21,7 @@ export async function obtenerEstadoLiquidacionColaboradores() {
       `${API_BASE_URL}/api/nominas/liquidaciones/colaboradores`,
       {
         method: 'GET',
-        headers: authHeaders(),
+        headers: await authHeaders(),
       },
     )
   } catch {
@@ -44,7 +43,7 @@ export async function obtenerPreviewColaborador({ colaboradorUid }) {
       `${API_BASE_URL}/api/nominas/liquidaciones/colaborador/preview?${params}`,
       {
         method: 'GET',
-        headers: authHeaders(),
+        headers: await authHeaders(),
       },
     )
   } catch {
@@ -66,7 +65,7 @@ export async function ejecutarLiquidacionColaborador({ colaboradorUid }) {
       {
         method: 'POST',
         headers: {
-          ...authHeaders(),
+          ...(await authHeaders()),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ colaboradorUid }),
@@ -94,7 +93,7 @@ export async function revertirLiquidacionColaborador({
       {
         method: 'POST',
         headers: {
-          ...authHeaders(),
+          ...(await authHeaders()),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ colaboradorUid, liquidacionId }),
@@ -116,7 +115,7 @@ export async function obtenerLiquidacionesNomina() {
   try {
     response = await fetch(`${API_BASE_URL}/api/nominas/liquidaciones`, {
       method: 'GET',
-      headers: authHeaders(),
+      headers: await authHeaders(),
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')
@@ -136,7 +135,7 @@ export async function obtenerHistorialLiquidacionesColaborador({ colaboradorUid 
       `${API_BASE_URL}/api/nominas/liquidaciones/colaborador/${encodeURIComponent(colaboradorUid)}/historial`,
       {
         method: 'GET',
-        headers: authHeaders(),
+        headers: await authHeaders(),
       },
     )
   } catch {
@@ -160,7 +159,7 @@ export async function obtenerDesprendibleNomina({
       `${API_BASE_URL}/api/nominas/liquidaciones/${encodeURIComponent(liquidacionId)}/desprendibles/${encodeURIComponent(colaboradorUid)}`,
       {
         method: 'GET',
-        headers: authHeaders(),
+        headers: await authHeaders(),
       },
     )
   } catch {

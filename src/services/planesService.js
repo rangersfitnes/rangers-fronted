@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 const PLANES_CACHE_MS = 10_000
 
@@ -70,11 +70,7 @@ export async function obtenerPlanes({ force = false, signal } = {}) {
     return planesCache.data
   }
 
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -110,11 +106,7 @@ export async function obtenerPlanes({ force = false, signal } = {}) {
 }
 
 export async function crearPlan(plan) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -144,11 +136,7 @@ export async function crearPlan(plan) {
 }
 
 export async function actualizarPlan(id, cambios) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -178,11 +166,7 @@ export async function actualizarPlan(id, cambios) {
 }
 
 export async function eliminarPlan(id) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -210,11 +194,7 @@ export async function eliminarPlan(id) {
 }
 
 export async function consultarUsuarioVigencia(documento) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   const docLimpio = String(documento || '').trim().replace(/\s/g, '')
   if (!docLimpio) {
@@ -258,11 +238,7 @@ export async function modificarVigenciaUsuario({
   nuevaFechaInicio,
   causal,
 }) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -300,11 +276,7 @@ export async function modificarVigenciaUsuario({
 }
 
 export async function revertirModificacionVigencia(modificacionId) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   const id = String(modificacionId || '').trim()
   if (!id) {

@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 export const SEDE_HORARIOS = 'alta-suiza'
 
@@ -46,10 +46,7 @@ export async function obtenerHorariosPublicos(sede = SEDE_HORARIOS, { signal } =
 }
 
 export async function obtenerHorariosAdmin(sede = SEDE_HORARIOS, { signal } = {}) {
-  const token = getAdminToken()
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -84,10 +81,7 @@ export async function obtenerHorariosAdmin(sede = SEDE_HORARIOS, { signal } = {}
 }
 
 export async function guardarHorariosAdmin(sede, horarios, anotacion = '') {
-  const token = getAdminToken()
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 

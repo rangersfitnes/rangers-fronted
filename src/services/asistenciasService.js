@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 import { getUserToken } from './userService.js'
 import { SEDE_HORARIOS } from './horariosService.js'
 
@@ -28,8 +28,7 @@ export async function obtenerMisAsistencias({ signal } = {}) {
 }
 
 export async function registrarAsistencia({ cedula, sede = SEDE_HORARIOS }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -62,8 +61,7 @@ export async function obtenerAsistenciasAdmin({
   limite,
   signal,
 } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams()
   if (sede) params.set('sede', sede)
@@ -92,8 +90,7 @@ export async function obtenerAsistenciasAdmin({
 }
 
 export async function eliminarAsistenciaAdmin({ sedeId, asistenciaId, origen = 'asistencia' }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams()
   if (origen) params.set('origen', origen)

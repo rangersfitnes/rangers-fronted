@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 import { SEDE_HORARIOS } from './horariosService.js'
 
 export async function obtenerCierreDiario({
@@ -7,8 +7,7 @@ export async function obtenerCierreDiario({
   sede = SEDE_HORARIOS,
   signal,
 } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams({ sede })
   if (fecha) params.set('fecha', fecha)
@@ -41,8 +40,7 @@ export async function obtenerMovimientosRango({
   sede = SEDE_HORARIOS,
   signal,
 } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams({ sede, desde, hasta })
 
@@ -74,8 +72,7 @@ export async function eliminarMovimiento({
   titularUid,
   sede = SEDE_HORARIOS,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

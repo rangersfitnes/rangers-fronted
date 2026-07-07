@@ -10,7 +10,7 @@ import CronometroTurnoWidget from '../components/CronometroTurnoWidget.jsx'
 import FinJornadaTurnoModal from '../components/FinJornadaTurnoModal.jsx'
 import IniciarJornadaModal from '../components/IniciarJornadaModal.jsx'
 import { useToast } from '../components/Toast.jsx'
-import { getAdminToken } from '../services/authService.js'
+import { obtenerAdminToken } from '../services/authService.js'
 import {
   finalizarTurnoLaboral,
   iniciarTurnoLaboral,
@@ -36,7 +36,7 @@ export function ColaboradorTurnoProvider({ children }) {
   const [ahora, setAhora] = useState(Date.now())
 
   const cargarEstadoTurno = useCallback(async () => {
-    const token = getAdminToken()
+    const token = await obtenerAdminToken()
     if (!token) {
       setPerfil(null)
       setEsquemaLaboral(null)

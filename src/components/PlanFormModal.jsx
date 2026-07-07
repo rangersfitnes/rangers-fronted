@@ -13,6 +13,7 @@ const estadoInicial = {
   duracion: '1 mes',
   pos: '',
   cantidadPersonas: '1',
+  entradasIncluidas: '',
   oferta: false,
   soloPuntoFisico: false,
   motivo: '',
@@ -43,8 +44,11 @@ function PlanFormModal({
   submitLabel = 'Guardar',
   initialValues = null,
   disableNombre = false,
+  variant = 'normal',
 }) {
   const [form, setForm] = useState(estadoInicial)
+  const esTiquetera =
+    variant === 'tiquetera' || initialValues?.tipo === 'tiquetera'
 
   useEffect(() => {
     if (open) {
@@ -70,6 +74,11 @@ function PlanFormModal({
                 initialValues.cantidadPersonas !== null
                   ? String(initialValues.cantidadPersonas)
                   : '1',
+              entradasIncluidas:
+                initialValues.entradasIncluidas !== undefined &&
+                initialValues.entradasIncluidas !== null
+                  ? String(initialValues.entradasIncluidas)
+                  : '',
               oferta: Boolean(initialValues.oferta),
               soloPuntoFisico: Boolean(initialValues.soloPuntoFisico),
               motivo: initialValues.motivo ?? '',
@@ -117,15 +126,29 @@ function PlanFormModal({
     setForm((prev) => ({ ...prev, pos: soloDigitos }))
   }
 
+  const handleEntradasChange = (event) => {
+    const soloDigitos = event.target.value.replace(/\D/g, '')
+    setForm((prev) => ({ ...prev, entradasIncluidas: soloDigitos }))
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
     const motivo = form.motivo.trim()
     onSubmit?.({
       ...form,
+      tipo: esTiquetera ? 'tiquetera' : 'normal',
       precio: form.precio === '' ? 0 : Number(form.precio),
       pos: form.pos === '' ? 0 : Number(form.pos),
-      cantidadPersonas:
-        form.cantidadPersonas === '' ? 1 : Number(form.cantidadPersonas),
+      cantidadPersonas: esTiquetera
+        ? 1
+        : form.cantidadPersonas === ''
+          ? 1
+          : Number(form.cantidadPersonas),
+      entradasIncluidas: esTiquetera
+        ? form.entradasIncluidas === ''
+          ? 0
+          : Number(form.entradasIncluidas)
+        : undefined,
       motivo: form.soloPuntoFisico ? motivo : '',
       personalizarFechaInicio: form.personalizarFechaInicio,
       fechaInicioPersonalizada: form.personalizarFechaInicio
@@ -248,25 +271,45 @@ function PlanFormModal({
             />
           </label>
 
-          <label className="crear-plan__field">
-            <span className="crear-plan__label">Personas con beneficio</span>
-            <select
-              className="crear-plan__input crear-plan__select"
-              value={form.cantidadPersonas}
-              onChange={handleChange('cantidadPersonas')}
-              disabled={submitting}
-              required
-            >
-              {Array.from(
-                { length: CANTIDAD_PERSONAS_MAX - CANTIDAD_PERSONAS_MIN + 1 },
-                (_, i) => CANTIDAD_PERSONAS_MIN + i,
-              ).map((n) => (
-                <option key={n} value={n}>
-                  {n} {n === 1 ? 'persona' : 'personas'}
-                </option>
-              ))}
-            </select>
-          </label>
+          {esTiquetera ? (
+            <label className="crear-plan__field">
+              <span className="crear-plan__label">Entradas incluidas</span>
+              <input
+                type="text"
+                className="crear-plan__input"
+                placeholder="Ej. 15"
+                value={form.entradasIncluidas}
+                onChange={handleEntradasChange}
+                inputMode="numeric"
+                disabled={submitting}
+                required
+              />
+              <span className="crear-plan__hint">
+                Número de asistencias que el atleta puede registrar durante la
+                vigencia del plan.
+              </span>
+            </label>
+          ) : (
+            <label className="crear-plan__field">
+              <span className="crear-plan__label">Personas con beneficio</span>
+              <select
+                className="crear-plan__input crear-plan__select"
+                value={form.cantidadPersonas}
+                onChange={handleChange('cantidadPersonas')}
+                disabled={submitting}
+                required
+              >
+                {Array.from(
+                  { length: CANTIDAD_PERSONAS_MAX - CANTIDAD_PERSONAS_MIN + 1 },
+                  (_, i) => CANTIDAD_PERSONAS_MIN + i,
+                ).map((n) => (
+                  <option key={n} value={n}>
+                    {n} {n === 1 ? 'persona' : 'personas'}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
 
         <label className="crear-plan__switch">

@@ -24,6 +24,29 @@ function obtenerPrimerNombre(nombre) {
   return nombre.trim().split(/\s+/)[0]
 }
 
+function BloqueTiqueteraSaldo({ entradasRestantes, entradasIncluidas }) {
+  if (!Number.isFinite(entradasIncluidas)) return null
+
+  const restantes = Number.isFinite(entradasRestantes) ? entradasRestantes : 0
+
+  return (
+    <div className="pf-control-acceso__tiquetera">
+      <p className="pf-control-acceso__tiquetera-etiqueta">Entradas de tu tiquetera</p>
+      <p className="pf-control-acceso__tiquetera-valor">
+        <strong>{restantes}</strong>
+        <span> de {entradasIncluidas}</span>
+      </p>
+      <p className="pf-control-acceso__tiquetera-hint">
+        {restantes === 0
+          ? 'Usaste tu última entrada de esta tiquetera'
+          : restantes === 1
+            ? 'Te queda 1 entrada para entrenar'
+            : `Te quedan ${restantes} entradas para entrenar`}
+      </p>
+    </div>
+  )
+}
+
 function BloqueRutinaHoy({ rutinaHoy }) {
   if (!rutinaHoy?.titulo) return null
 
@@ -41,7 +64,13 @@ function BloqueRutinaHoy({ rutinaHoy }) {
   )
 }
 
-function PantallaCumpleanos({ nombre, planNombre, rutinaHoy }) {
+function PantallaCumpleanos({
+  nombre,
+  planNombre,
+  rutinaHoy,
+  entradasRestantes,
+  entradasIncluidas,
+}) {
   const primerNombre = obtenerPrimerNombre(nombre)
 
   return (
@@ -92,6 +121,10 @@ function PantallaCumpleanos({ nombre, planNombre, rutinaHoy }) {
           Ingreso admitido · Plan{' '}
           <strong>{planNombre || 'Membresía'}</strong>
         </p>
+        <BloqueTiqueteraSaldo
+          entradasRestantes={entradasRestantes}
+          entradasIncluidas={entradasIncluidas}
+        />
         <BloqueRutinaHoy rutinaHoy={rutinaHoy} />
       </div>
     </section>
@@ -236,6 +269,8 @@ function VistaControlAcceso({
         nombre={resultado.nombre}
         planNombre={resultado.planNombre}
         rutinaHoy={resultado.rutinaHoy}
+        entradasRestantes={resultado.entradasRestantes}
+        entradasIncluidas={resultado.entradasIncluidas}
       />
     )
   } else if (resultado?.tipo === 'admitido') {
@@ -256,6 +291,10 @@ function VistaControlAcceso({
             Plan activo:{' '}
             <strong>{resultado.planNombre || 'Membresía'}</strong>
           </p>
+          <BloqueTiqueteraSaldo
+            entradasRestantes={resultado.entradasRestantes}
+            entradasIncluidas={resultado.entradasIncluidas}
+          />
           <BloqueRutinaHoy rutinaHoy={resultado.rutinaHoy} />
         </div>
       </section>
@@ -278,6 +317,11 @@ function VistaControlAcceso({
           {resultado.planVencido ? (
             <p className="pf-control-acceso__denegado-plan-vencido">Plan vencido</p>
           ) : null}
+          {resultado.tiqueteraAgotada ? (
+            <p className="pf-control-acceso__denegado-plan-vencido">
+              Tiquetera sin entradas
+            </p>
+          ) : null}
           <h1 className="pf-control-acceso__denegado-titulo">
             {resultado.usuarioEncontrado
               ? resultado.nombre || 'Membresía no activa'
@@ -285,7 +329,12 @@ function VistaControlAcceso({
           </h1>
 
           {resultado.usuarioEncontrado ? (
-            resultado.planVencido && resultado.fechaVencimientoUltimoPlan ? (
+            resultado.tiqueteraAgotada ? (
+              <p className="pf-control-acceso__denegado-detalle">
+                Tu tiquetera sigue vigente, pero ya usaste todas las entradas
+                incluidas.
+              </p>
+            ) : resultado.planVencido && resultado.fechaVencimientoUltimoPlan ? (
               <p className="pf-control-acceso__denegado-detalle">
                 Tu plan
                 {resultado.planNombreUltimo ? (

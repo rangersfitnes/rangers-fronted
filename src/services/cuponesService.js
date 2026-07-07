@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 import { getUserToken } from './userService.js'
 
 async function parseJsonResponse(response, fallbackError) {
@@ -11,8 +11,7 @@ async function parseJsonResponse(response, fallbackError) {
 }
 
 export async function obtenerCupones({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -31,8 +30,7 @@ export async function obtenerCupones({ signal } = {}) {
 }
 
 export async function crearCupon(cupon) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

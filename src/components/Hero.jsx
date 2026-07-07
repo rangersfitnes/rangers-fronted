@@ -11,6 +11,8 @@ import InicioVideoYoutube from './InicioVideoYoutube.jsx'
 import heroBg from '../assets/images/hero/bk_home_user.webp'
 import trainingIcon from '../assets/images/icons/training.svg'
 import ChevronRightIcon from './icons/ChevronRightIcon.jsx'
+import TiqueteraSaldoBox from './TiqueteraSaldoBox.jsx'
+import { usuarioPuedeComprarPlan } from '../utils/planTiqueteraUtils.js'
 import './Hero.css'
 
 function obtenerPrimerNombre(nombre) {
@@ -160,13 +162,16 @@ function Hero() {
                     <dt>Vigencia</dt>
                     <dd>{formatearFecha(planActivo.vigencia)}</dd>
                   </div>
-                  {Number.isFinite(planActivo.cantidadPersonas) && (
+                  {Number.isFinite(planActivo.cantidadPersonas) &&
+                    planActivo.tipo !== 'tiquetera' && (
                     <div>
                       <dt>Atletas</dt>
                       <dd>{planActivo.cantidadPersonas}</dd>
                     </div>
                   )}
                 </dl>
+
+                <TiqueteraSaldoBox plan={planActivo} />
 
                 <PlanGrupoMiembros
                   titular={planActivo.titular}
@@ -179,10 +184,17 @@ function Hero() {
                       <strong>{diasRestantes}</strong>{' '}
                       {diasRestantes === 1 ? 'día restante' : 'días restantes'}
                     </span>
-                    <Link to="/planes" className="hero__plan-card-link">
-                      Ver todos los planes
-                      <ChevronRightIcon className="hero__plan-card-link-chevron" />
-                    </Link>
+                    {planActivo.puedeRenovar ? (
+                      <Link to="/planes" className="hero__plan-card-link">
+                        Renovar tiquetera
+                        <ChevronRightIcon className="hero__plan-card-link-chevron" />
+                      </Link>
+                    ) : (
+                      <Link to="/planes" className="hero__plan-card-link">
+                        Ver todos los planes
+                        <ChevronRightIcon className="hero__plan-card-link-chevron" />
+                      </Link>
+                    )}
                   </footer>
                 )}
               </article>

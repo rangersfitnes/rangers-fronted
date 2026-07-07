@@ -20,7 +20,10 @@ import {
 } from '../services/usuariosService.js'
 import trashIcon from '../assets/images/icons/trash.svg'
 
-const tienePlanActivo = (u) => u?.planEstado === 'activo'
+const tienePlanActivo = (u) =>
+  u?.planEstado === 'activo' && !u?.puedeRenovarPlan
+const puedeActivarPlan = (u) =>
+  u?.planEstado !== 'activo' || Boolean(u?.puedeRenovarPlan)
 const planEstaVencido = (u) => u?.planEstado === 'vencido'
 
 const ABREV_DIA = {
@@ -296,16 +299,7 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
             >
               Eliminar usuario
             </button>
-            {tienePlanActivo(usuario) ? (
-              <button
-                type="button"
-                className="pf-action-btn pf-action-btn--ghost"
-                onClick={() => setEliminarPlanOpen(true)}
-                disabled={loadingVisible}
-              >
-                Eliminar plan
-              </button>
-            ) : (
+            {puedeActivarPlan(usuario) ? (
               <button
                 type="button"
                 className="pf-action-btn"
@@ -315,9 +309,19 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
                 }}
                 disabled={loadingVisible}
               >
-                Activar plan
+                {usuario.puedeRenovarPlan ? 'Renovar tiquetera' : 'Activar plan'}
               </button>
-            )}
+            ) : null}
+            {usuario.planEstado === 'activo' ? (
+              <button
+                type="button"
+                className="pf-action-btn pf-action-btn--ghost"
+                onClick={() => setEliminarPlanOpen(true)}
+                disabled={loadingVisible}
+              >
+                Eliminar plan
+              </button>
+            ) : null}
           </div>
         </div>
 

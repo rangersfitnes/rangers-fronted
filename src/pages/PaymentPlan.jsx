@@ -10,6 +10,8 @@ import { validarCuponParaPlan } from '../services/cuponesService.js'
 import { consultarBeneficiarios } from '../services/userService.js'
 import { cargarWidgetWompi } from '../services/wompiService.js'
 import { useWompiCheckout } from '../hooks/useWompiCheckout.js'
+import TiqueteraSaldoBox from '../components/TiqueteraSaldoBox.jsx'
+import { usuarioPuedeComprarPlan } from '../utils/planTiqueteraUtils.js'
 import planesBg from '../assets/images/hero/plans-background.webp'
 import './PaymentPlan.css'
 
@@ -44,6 +46,8 @@ function PaymentPlan() {
   const navigate = useNavigate()
   const { usuario } = useUsuario()
   const planActivoUsuario = usuario?.planesActivos?.[0] ?? null
+  const bloquearCompraPorPlanActivo =
+    Boolean(planActivoUsuario) && !usuarioPuedeComprarPlan(usuario)
 
   const {
     pagar,
@@ -57,14 +61,19 @@ function PaymentPlan() {
   const planFromState = location.state?.plan
   const [plan, setPlan] = useState(planFromState || null)
   const [loading, setLoading] = useState(
-    !planFromState && !planActivoUsuario,
+    !planFromState && !bloquearCompraPorPlanActivo,
   )
   const [error, setError] = useState('')
 
-  const cantidadPersonas = Number.isFinite(plan?.cantidadPersonas)
-    ? plan.cantidadPersonas
-    : 1
-  const beneficiariosRequeridos = Math.max(0, cantidadPersonas - 1)
+  const esTiquetera = plan?.tipo === 'tiquetera'
+  const cantidadPersonas = esTiquetera
+    ? 1
+    : Number.isFinite(plan?.cantidadPersonas)
+      ? plan.cantidadPersonas
+      : 1
+  const beneficiariosRequeridos = esTiquetera
+    ? 0
+    : Math.max(0, cantidadPersonas - 1)
 
   const [beneficiarios, setBeneficiarios] = useState([])
   const [resultados, setResultados] = useState({})
@@ -117,7 +126,7 @@ function PaymentPlan() {
 
   useEffect(() => {
     if (plan) return
-    if (planActivoUsuario) return
+    if (bloquearCompraPorPlanActivo) return
     const controller = new AbortController()
 
     const cargar = async () => {
@@ -143,7 +152,7 @@ function PaymentPlan() {
     cargar()
 
     return () => controller.abort()
-  }, [plan, planId, planActivoUsuario])
+  }, [plan, planId, bloquearCompraPorPlanActivo])
 
   useEffect(() => {
     cargarWidgetWompi().catch(() => {})
@@ -287,7 +296,7 @@ function PaymentPlan() {
     })
   }
 
-  if (planActivoUsuario) {
+  if (bloquearCompraPorPlanActivo) {
     return (
       <main
         className="payment-page"
@@ -340,13 +349,16 @@ function PaymentPlan() {
                 <dd>{formatearFecha(planActivoUsuario.vigencia)}</dd>
               </div>
             )}
-            {Number.isFinite(planActivoUsuario.cantidadPersonas) && (
+            {Number.isFinite(planActivoUsuario.cantidadPersonas) &&
+              planActivoUsuario.tipo !== 'tiquetera' && (
               <div>
                 <dt>Atletas</dt>
                 <dd>{planActivoUsuario.cantidadPersonas}</dd>
               </div>
             )}
           </dl>
+
+          <TiqueteraSaldoBox plan={planActivoUsuario} />
 
           <div className="payment-card__actions">
             <Link to="/planes" className="payment-card__back">
@@ -383,6 +395,13 @@ function PaymentPlan() {
           </h1>
         </header>
 
+        {planActivoUsuario?.puedeRenovar && (
+          <p className="payment-card__tiquetera-info">
+            Renovarás tu tiquetera: se reinician las entradas y la vigencia
+            contará desde la activación del pago.
+          </p>
+        )}
+
         <div className="payment-card__user">
           <span className="payment-card__user-label">Titular</span>
           <span className="payment-card__user-name">{usuario.nombre}</span>
@@ -395,6 +414,14 @@ function PaymentPlan() {
           <div className="payment-card__details">
             {plan.descripcion && (
               <p className="payment-card__description">{plan.descripcion}</p>
+            )}
+
+            {esTiquetera && Number.isFinite(plan.entradasIncluidas) && (
+              <p className="payment-card__tiquetera-info">
+                Esta tiquetera incluye <strong>{plan.entradasIncluidas}</strong>{' '}
+                {plan.entradasIncluidas === 1 ? 'entrada' : 'entradas'} durante
+                la vigencia del plan.
+              </p>
             )}
 
             <div className="payment-card__cupon">

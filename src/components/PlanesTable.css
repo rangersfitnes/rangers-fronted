@@ -122,3 +122,9 @@
   background-color: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.4);
 }
+
+.planes-table__badge--tiquetera {
+  color: #fde68a;
+  background-color: rgba(255, 193, 7, 0.12);
+  border-color: rgba(255, 193, 7, 0.35);
+}

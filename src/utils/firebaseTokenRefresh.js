@@ -3,6 +3,7 @@ import { auth } from '../variables/firebase.jsx'
 import {
   esAdminTokenPersistente,
   getAdminToken,
+  obtenerAdminToken,
   saveAdminToken,
 } from '../services/authService.js'
 import {
@@ -57,7 +58,11 @@ async function renovarToken(user) {
   try {
     const idToken = await user.getIdToken(true)
     if (getAdminToken() || getUserToken()) {
-      guardarTokenActivo(idToken)
+      if (getAdminToken()) {
+        await obtenerAdminToken()
+      } else {
+        guardarTokenActivo(idToken)
+      }
     }
     programarRenovacion(user, idToken)
     return idToken
@@ -86,8 +91,16 @@ async function sincronizarToken(user) {
   if (!user) return
 
   try {
+    if (getAdminToken()) {
+      const idToken = await obtenerAdminToken()
+      if (idToken) {
+        programarRenovacion(user, idToken)
+      }
+      return
+    }
+
     const idToken = await user.getIdToken()
-    if (getAdminToken() || getUserToken()) {
+    if (getUserToken()) {
       guardarTokenActivo(idToken)
     }
     programarRenovacion(user, idToken)

@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 export function urlEmbedYoutube(videoId) {
   const id = String(videoId || '').trim()
@@ -28,8 +28,7 @@ export async function obtenerContenidoWebPublico({ signal } = {}) {
 }
 
 export async function obtenerContenidoWebAdmin({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -52,8 +51,7 @@ export async function obtenerContenidoWebAdmin({ signal } = {}) {
 }
 
 export async function actualizarContenidoWebAdmin({ inicio }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

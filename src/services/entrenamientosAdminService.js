@@ -1,9 +1,8 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 export async function obtenerEntrenamientosUsuario(uid, { signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -28,8 +27,7 @@ export async function obtenerEntrenamientosUsuario(uid, { signal } = {}) {
 }
 
 export async function guardarEntrenamientoUsuarioAdmin(uid, datos) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -56,8 +54,7 @@ export async function guardarEntrenamientoUsuarioAdmin(uid, datos) {
 }
 
 export async function eliminarEntrenamientoUsuarioAdmin(uid, dia) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

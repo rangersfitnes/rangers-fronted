@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Modal from './Modal.jsx'
 import { useUsuario } from '../contexts/UsuarioContext.jsx'
+import { usuarioPuedeComprarPlan } from '../utils/planTiqueteraUtils.js'
 import './PlanCard.css'
 
 function formatearPrecio(valor) {
@@ -18,7 +19,8 @@ function PlanCard({ plan }) {
   const { usuario } = useUsuario()
   const [showPuntoFisicoModal, setShowPuntoFisicoModal] = useState(false)
 
-  const tienePlanActivo = Boolean(usuario?.planesActivos?.length)
+  const tienePlanActivo =
+    Boolean(usuario?.planesActivos?.length) && !usuarioPuedeComprarPlan(usuario)
   const soloPuntoFisico = Boolean(plan.soloPuntoFisico)
 
   const handleClick = (event) => {
@@ -69,6 +71,12 @@ function PlanCard({ plan }) {
             : undefined
         }
       >
+      {plan.tipo === 'tiquetera' && Number.isFinite(plan.entradasIncluidas) && (
+        <div className="plan-card__ribbon plan-card__ribbon--tiquetera">
+          <span className="plan-card__ribbon-text">Tiquetera</span>
+        </div>
+      )}
+
       {plan.oferta && (
         <div className="plan-card__ribbon">
           <span className="plan-card__ribbon-text">En oferta</span>
@@ -88,7 +96,14 @@ function PlanCard({ plan }) {
         )}
       </div>
 
-      {Number.isFinite(plan.cantidadPersonas) && (
+      {plan.tipo === 'tiquetera' && Number.isFinite(plan.entradasIncluidas) && (
+        <p className="plan-card__personas">
+          Incluye {plan.entradasIncluidas}{' '}
+          {plan.entradasIncluidas === 1 ? 'entrada' : 'entradas'}
+        </p>
+      )}
+
+      {Number.isFinite(plan.cantidadPersonas) && plan.tipo !== 'tiquetera' && (
         <p className="plan-card__personas">
           Atletas: {plan.cantidadPersonas}
         </p>

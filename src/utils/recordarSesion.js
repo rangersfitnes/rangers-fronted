@@ -80,6 +80,15 @@ export async function aplicarPersistenciaFirebase(authInstance, persistente) {
   )
 }
 
+export async function inicializarPersistenciaActiva() {
+  const { auth } = await import('../variables/firebase.jsx')
+  const { getAdminToken } = await import('../services/authService.js')
+  const { getUserToken } = await import('../services/userService.js')
+
+  const alcance = getAdminToken() ? 'admin' : getUserToken() ? 'user' : 'admin'
+  await inicializarPersistenciaFirebase(auth, alcance)
+}
+
 export async function inicializarPersistenciaFirebase(
   authInstance,
   alcance = 'user',

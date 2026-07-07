@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 function errorSubidaImagen(err) {
   if (err?.name === 'AbortError') throw err
@@ -45,11 +45,7 @@ export async function obtenerEventosPublicos({ signal } = {}) {
 }
 
 export async function obtenerEventos({ signal } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -76,11 +72,7 @@ export async function obtenerEventos({ signal } = {}) {
 }
 
 export async function crearEvento({ nombre, descripcion, pos, accionUrl, imagen }) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   if (!imagen) {
     throw new Error('Selecciona una imagen para el banner')
@@ -118,11 +110,7 @@ export async function actualizarEvento(
   id,
   { descripcion, pos, accionUrl, imagen },
 ) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   const formData = new FormData()
   formData.append('descripcion', descripcion.trim())
@@ -155,11 +143,7 @@ export async function actualizarEvento(
 }
 
 export async function eliminarEvento(id) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 

@@ -30,6 +30,7 @@ function PlanesTable({ planes, onRowClick }) {
           <tr>
             <th>Pos</th>
             <th>Nombre</th>
+            <th>Tipo</th>
             <th>Descripción</th>
             <th>Precio</th>
             <th>Duración</th>
@@ -53,6 +54,18 @@ function PlanesTable({ planes, onRowClick }) {
                   {Number.isFinite(plan.pos) ? plan.pos : '—'}
                 </td>
                 <td className="planes-table__nombre">{plan.nombre}</td>
+                <td>
+                  {plan.tipo === 'tiquetera' ? (
+                    <span className="planes-table__badge planes-table__badge--tiquetera">
+                      Tiquetera
+                      {Number.isFinite(plan.entradasIncluidas)
+                        ? ` (${plan.entradasIncluidas})`
+                        : ''}
+                    </span>
+                  ) : (
+                    'Plan'
+                  )}
+                </td>
                 <td className="planes-table__descripcion">{plan.descripcion}</td>
                 <td className="planes-table__precio">
                   {formatearPrecio(plan.precio)}

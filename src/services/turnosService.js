@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 async function parseJsonResponse(response, fallbackError) {
   const data = await response.json().catch(() => ({}))
@@ -10,8 +10,7 @@ async function parseJsonResponse(response, fallbackError) {
 }
 
 export async function obtenerPerfilColaborador({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -36,8 +35,7 @@ export async function obtenerPerfilColaborador({ signal } = {}) {
 }
 
 export async function obtenerTurnoActivo({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -59,8 +57,7 @@ export async function obtenerTurnoActivo({ signal } = {}) {
 }
 
 export async function iniciarTurnoLaboral() {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -77,8 +74,7 @@ export async function iniciarTurnoLaboral() {
 }
 
 export async function finalizarTurnoLaboral({ turnoId }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -99,8 +95,7 @@ export async function finalizarTurnoLaboral({ turnoId }) {
 }
 
 export async function obtenerTurnosActivos({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -122,8 +117,7 @@ export async function obtenerTurnosActivos({ signal } = {}) {
 }
 
 export async function eliminarTurnoLaboral({ sede, turnoId }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

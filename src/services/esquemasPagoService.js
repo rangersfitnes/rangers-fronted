@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 async function parseJsonResponse(response, fallbackError) {
   const data = await response.json().catch(() => ({}))
@@ -10,8 +10,7 @@ async function parseJsonResponse(response, fallbackError) {
 }
 
 export async function obtenerEsquemasPago({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -41,8 +40,7 @@ export async function crearEsquemaPago({
   porcentajeRecargoDominical,
   porcentajeRecargoNocturno,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -83,8 +81,7 @@ export async function actualizarEsquemaPago({
   porcentajeRecargoDominical,
   porcentajeRecargoNocturno,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -118,8 +115,7 @@ export async function actualizarEsquemaPago({
 }
 
 export async function eliminarEsquemaPago({ id } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

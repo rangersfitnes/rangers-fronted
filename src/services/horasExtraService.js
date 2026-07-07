@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 async function parseJsonResponse(response, fallbackError) {
   const data = await response.json().catch(() => ({}))
@@ -9,9 +9,8 @@ async function parseJsonResponse(response, fallbackError) {
   return data
 }
 
-function authHeaders() {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+async function authHeaders() {
+  const token = await requerirAdminToken()
   return { Authorization: `Bearer ${token}` }
 }
 
@@ -22,7 +21,7 @@ export async function contarHorasExtraPendientes({ signal } = {}) {
       `${API_BASE_URL}/api/nominas/horas-extra/pendientes/contador`,
       {
         method: 'GET',
-        headers: authHeaders(),
+        headers: await authHeaders(),
         signal,
       },
     )
@@ -43,7 +42,7 @@ export async function obtenerHorasExtraPendientes({ signal } = {}) {
   try {
     response = await fetch(`${API_BASE_URL}/api/nominas/horas-extra/pendientes`, {
       method: 'GET',
-      headers: authHeaders(),
+      headers: await authHeaders(),
       signal,
     })
   } catch (err) {
@@ -63,7 +62,7 @@ export async function obtenerHorasExtraAprobadas({ signal } = {}) {
   try {
     response = await fetch(`${API_BASE_URL}/api/nominas/horas-extra/aprobadas`, {
       method: 'GET',
-      headers: authHeaders(),
+      headers: await authHeaders(),
       signal,
     })
   } catch (err) {
@@ -83,7 +82,7 @@ export async function sincronizarHorasExtraPendientes() {
   try {
     response = await fetch(`${API_BASE_URL}/api/nominas/horas-extra/sincronizar`, {
       method: 'POST',
-      headers: authHeaders(),
+      headers: await authHeaders(),
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')
@@ -103,7 +102,7 @@ export async function aprobarHorasExtra({ id }) {
       `${API_BASE_URL}/api/nominas/horas-extra/${encodeURIComponent(id)}/aprobar`,
       {
         method: 'POST',
-        headers: authHeaders(),
+        headers: await authHeaders(),
       },
     )
   } catch {
@@ -125,7 +124,7 @@ export async function rechazarHorasExtra({ id, causal }) {
       {
         method: 'POST',
         headers: {
-          ...authHeaders(),
+          ...(await authHeaders()),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ causal }),

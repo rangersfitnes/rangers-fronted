@@ -1,12 +1,8 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 export async function obtenerPlantillas({ signal } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -33,11 +29,7 @@ export async function obtenerPlantillas({ signal } = {}) {
 }
 
 export async function crearPlantilla({ nombre, contenido }) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -69,11 +61,7 @@ export async function crearPlantilla({ nombre, contenido }) {
 }
 
 export async function obtenerPlantillasAutomaticas({ signal } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -100,11 +88,7 @@ export async function obtenerPlantillasAutomaticas({ signal } = {}) {
 }
 
 export async function guardarPlantillaAutomatica({ id, contenido }) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 

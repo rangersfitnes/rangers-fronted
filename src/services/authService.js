@@ -1,4 +1,23 @@
 import { API_BASE_URL } from '../variables/api.jsx'
+import { auth } from '../variables/firebase.jsx'
+import { resolverPersistenciaSesion } from '../utils/recordarSesion.js'
+const MARGEN_TOKEN_MS = 60 * 1000
+
+function obtenerExpiracionToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null
+  } catch {
+    return null
+  }
+}
+
+export function tokenAdminExpirado(token, ahora = Date.now()) {
+  if (!token) return true
+  const expiraEn = obtenerExpiracionToken(token)
+  if (!expiraEn) return false
+  return expiraEn <= ahora + MARGEN_TOKEN_MS
+}
 
 export async function verifyAdminAccess(idToken) {
   let response
@@ -12,15 +31,21 @@ export async function verifyAdminAccess(idToken) {
       },
     })
   } catch {
-    throw new Error(
+    const error = new Error(
       'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
     )
+    error.status = 0
+    throw error
   }
 
   const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    throw new Error(data.error || 'No se pudo verificar el acceso de administrador')
+    const error = new Error(
+      data.error || 'No se pudo verificar el acceso de administrador',
+    )
+    error.status = response.status
+    throw error
   }
 
   return data
@@ -73,4 +98,43 @@ export function clearAdminSession() {
   localStorage.removeItem(ADMIN_ROLE_KEY)
   sessionStorage.removeItem(ADMIN_TOKEN_KEY)
   sessionStorage.removeItem(ADMIN_ROLE_KEY)
+}
+
+function guardarTokenAdminDesdeFirebase(idToken) {
+  saveAdminToken(idToken, {
+    persistente: resolverPersistenciaSesion(
+      'admin',
+      esAdminTokenPersistente(),
+    ),
+  })
+}
+
+/** Token fresco de Firebase o almacenado si aún es válido. */
+export async function obtenerAdminToken() {
+  const user = auth.currentUser
+
+  if (user) {
+    try {
+      const idToken = await user.getIdToken()
+      guardarTokenAdminDesdeFirebase(idToken)
+      return idToken
+    } catch {
+      // Continúa con token almacenado si Firebase falla momentáneamente.
+    }
+  }
+
+  const almacenado = getAdminToken()
+  if (almacenado && !tokenAdminExpirado(almacenado)) {
+    return almacenado
+  }
+
+  return null
+}
+
+export async function requerirAdminToken() {
+  const token = await obtenerAdminToken()
+  if (!token) {
+    throw new Error('No hay sesión activa de administrador')
+  }
+  return token
 }

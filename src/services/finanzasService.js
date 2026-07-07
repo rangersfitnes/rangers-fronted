@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 import { SEDE_HORARIOS } from './horariosService.js'
 
 export async function registrarSalida({
@@ -10,8 +10,7 @@ export async function registrarSalida({
   cuentaOrigen,
   sede = SEDE_HORARIOS,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

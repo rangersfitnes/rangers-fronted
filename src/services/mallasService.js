@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 async function parseJsonResponse(response, fallbackError) {
   const data = await response.json().catch(() => ({}))
@@ -17,8 +17,7 @@ function errorRutaMallasNoDisponible(response) {
 }
 
 export async function obtenerMallasSemana({ sede, semanaInicio, signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams({
     sede: sede || '',
@@ -49,8 +48,7 @@ export async function obtenerMallasSemana({ sede, semanaInicio, signal } = {}) {
 }
 
 export async function guardarMallasSemana({ sede, semanaInicio, items }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -75,8 +73,7 @@ export async function guardarMallasSemana({ sede, semanaInicio, items }) {
 }
 
 export async function obtenerPlantillasSede({ sede, signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams({ sede: sede || '' })
 
@@ -114,8 +111,7 @@ export async function guardarPlantillasSede({
   numeroColaboradores,
   slots,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -147,8 +143,7 @@ export async function aplicarPlantillasSemana({
   semanaInicio,
   sobrescribir = false,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -180,8 +175,7 @@ export async function aplicarPlantillasSemana({
 }
 
 export async function copiarSemanaAnteriorMallas({ sede, semanaInicio }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

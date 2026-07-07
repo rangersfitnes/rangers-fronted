@@ -18,7 +18,6 @@ import {
   saveUserToken,
 } from '../services/userService.js'
 import {
-  inicializarPersistenciaFirebase,
   resolverPersistenciaSesion,
 } from '../utils/recordarSesion.js'
 import { esUsuarioCliente } from '../utils/usuarioRol.js'
@@ -117,7 +116,6 @@ export function UsuarioProvider({ children }) {
 
     const iniciar = async () => {
       try {
-        await inicializarPersistenciaFirebase(auth, 'user')
         await auth.authStateReady()
       } catch {
         // Si falla la persistencia, onIdTokenChanged intentará recuperar la sesión.

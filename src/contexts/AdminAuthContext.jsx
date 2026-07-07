@@ -15,13 +15,13 @@ import {
   saveAdminRole,
   saveAdminToken,
   verifyAdminAccess,
+  tokenAdminExpirado,
 } from '../services/authService.js'
 import {
   clearUserToken,
-  getUserToken,
 } from '../services/userService.js'
+
 import {
-  inicializarPersistenciaFirebase,
   resolverPersistenciaSesion,
 } from '../utils/recordarSesion.js'
 
@@ -29,21 +29,13 @@ const AdminAuthContext = createContext(null)
 
 export function AdminAuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true)
-  const [autenticado, setAutenticado] = useState(Boolean(getAdminToken()))
+  const [autenticado, setAutenticado] = useState(false)
 
   const syncToken = useCallback(async (user) => {
     if (!user) {
-      setAutenticado(Boolean(getAdminToken()))
-      return
-    }
-
-    // Sesión de cliente activa: no intentar verificar admin.
-    if (getUserToken()) {
-      setAutenticado(false)
-      return
-    }
-
-    if (!getAdminToken()) {
+      if (getAdminToken()) {
+        clearAdminSession()
+      }
       setAutenticado(false)
       return
     }
@@ -59,9 +51,15 @@ export function AdminAuthProvider({ children }) {
       saveAdminRole(result.rol, { persistente })
       clearUserToken()
       setAutenticado(true)
-    } catch {
-      clearAdminSession()
-      setAutenticado(false)
+    } catch (err) {
+      const status = err?.status
+      if (status === 401 || status === 403) {
+        clearAdminSession()
+        setAutenticado(false)
+        return
+      }
+
+      setAutenticado(Boolean(getAdminToken()) && !tokenAdminExpirado(getAdminToken()))
     }
   }, [])
 
@@ -70,7 +68,6 @@ export function AdminAuthProvider({ children }) {
 
     const iniciar = async () => {
       try {
-        await inicializarPersistenciaFirebase(auth, 'admin')
         await auth.authStateReady()
       } catch {
         // onIdTokenChanged intentará recuperar la sesión.

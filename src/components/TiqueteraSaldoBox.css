@@ -1,0 +1,72 @@
+.tiquetera-saldo {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.tiquetera-saldo__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.tiquetera-saldo__valor {
+  margin: 0.35rem 0 0;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.tiquetera-saldo__valor strong {
+  font-size: 2rem;
+  color: #ffc107;
+}
+
+.tiquetera-saldo__total {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tiquetera-saldo__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.cuenta-page .tiquetera-saldo {
+  margin-top: 0.75rem;
+  border-color: rgba(255, 193, 7, 0.45);
+  background: rgba(255, 193, 7, 0.12);
+}
+
+.cuenta-page .tiquetera-saldo__label,
+.cuenta-page .tiquetera-saldo__hint {
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.cuenta-page .tiquetera-saldo__valor {
+  color: #1a1a1a;
+}
+
+.cuenta-page .tiquetera-saldo__valor strong {
+  color: #b8860b;
+}
+
+.cuenta-page .tiquetera-saldo__total {
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.payment-card .tiquetera-saldo {
+  border-color: rgba(255, 193, 7, 0.4);
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.payment-card .tiquetera-saldo__label,
+.payment-card .tiquetera-saldo__hint {
+  color: rgba(255, 255, 255, 0.7);
+}

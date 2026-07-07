@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 async function parseJsonResponse(response, fallbackError) {
   const data = await response.json().catch(() => ({}))
@@ -10,8 +10,7 @@ async function parseJsonResponse(response, fallbackError) {
 }
 
 export async function obtenerMiPerfilLaboral({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const url = `${API_BASE_URL}/api/nominas/mi-perfil?_=${Date.now()}`
 

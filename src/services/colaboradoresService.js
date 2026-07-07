@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 async function parseJsonResponse(response, fallbackError) {
   const data = await response.json().catch(() => ({}))
@@ -10,8 +10,7 @@ async function parseJsonResponse(response, fallbackError) {
 }
 
 export async function obtenerColaboradores({ signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -43,8 +42,7 @@ export async function crearColaborador({
   metodoPago,
   numeroCuenta,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -89,8 +87,7 @@ export async function actualizarColaborador({
   metodoPago,
   numeroCuenta,
 }) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -127,8 +124,7 @@ export async function actualizarColaborador({
 }
 
 export async function eliminarColaborador({ uid } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -151,8 +147,7 @@ export async function eliminarColaborador({ uid } = {}) {
 }
 
 export async function reestablecerDatosLaboralesColaborador({ uid } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

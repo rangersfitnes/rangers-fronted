@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 import { SEDE_HORARIOS } from './horariosService.js'
 
 export { SEDE_HORARIOS }
@@ -8,8 +8,7 @@ export async function obtenerClasesGrupalesAdmin(
   sede = SEDE_HORARIOS,
   { signal } = {},
 ) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {
@@ -39,8 +38,7 @@ export async function obtenerClasesGrupalesAdmin(
 }
 
 export async function guardarClasesGrupalesAdmin(sede, dias) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   let response
   try {

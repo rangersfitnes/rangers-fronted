@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 import { SEDE_HORARIOS } from './horariosService.js'
 
 export async function obtenerReporteFinanciero({
@@ -9,8 +9,7 @@ export async function obtenerReporteFinanciero({
   sede = SEDE_HORARIOS,
   signal,
 } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams({ sede })
   if (todoHistorial) {
@@ -43,8 +42,7 @@ export async function obtenerReporteFinanciero({
 }
 
 export async function obtenerLiquidezHistorica({ sede = SEDE_HORARIOS, signal } = {}) {
-  const token = getAdminToken()
-  if (!token) throw new Error('No hay sesión activa de administrador')
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams({ sede })
 

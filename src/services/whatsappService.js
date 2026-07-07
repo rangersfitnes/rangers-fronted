@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 export const WHATSAPP_SESSION_CLOSED_CODE = 'WHATSAPP_SESSION_CLOSED'
 
@@ -7,11 +7,7 @@ export const MENSAJE_WHATSAPP_SIN_SESION =
   'Error, la sesión de WhatsApp está cerrada en el servidor. Inicia sesión nuevamente'
 
 export async function obtenerEstadoWhatsApp({ signal } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -42,11 +38,7 @@ export async function obtenerEstadoWhatsApp({ signal } = {}) {
 }
 
 export async function enviarMensajeWhatsApp({ telefono, mensaje }) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -84,11 +76,7 @@ export async function enviarMensajeWhatsApp({ telefono, mensaje }) {
 }
 
 async function whatsappFetch(path, { method = 'GET', body, signal } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 

@@ -130,6 +130,21 @@
   color: #d4d4d4;
 }
 
+.payment-card__tiquetera-info {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  background: rgba(255, 193, 7, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.payment-card__tiquetera-info strong {
+  color: #ffc107;
+}
+
 .payment-card__cupon {
   display: flex;
   flex-direction: column;

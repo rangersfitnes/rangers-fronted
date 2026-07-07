@@ -12,24 +12,39 @@ export function useWompiCheckout({ sede } = {}) {
   const [pagoExito, setPagoExito] = useState(false)
   const [error, setError] = useState('')
   const confirmacionRef = useRef(false)
+  const renovacionTiqueteraRef = useRef(false)
 
   const esperarActivacion = useCallback(async () => {
     setConfirmando(true)
     for (let intento = 0; intento < MAX_INTENTOS_CONFIRMACION; intento += 1) {
       // eslint-disable-next-line no-await-in-loop
       const datos = await refresh().catch(() => null)
-      const activo = datos?.planesActivos?.length || datos?.plan
-      if (activo) {
+      const activo = datos?.planesActivos?.[0] ?? null
+
+      if (renovacionTiqueteraRef.current) {
+        if (
+          activo &&
+          activo.tipo === 'tiquetera' &&
+          Number(activo.entradasRestantes) > 0
+        ) {
+          setConfirmando(false)
+          setPagoExito(true)
+          renovacionTiqueteraRef.current = false
+          return
+        }
+      } else if (activo || datos?.planesActivos?.length) {
         setConfirmando(false)
         setPagoExito(true)
         return
       }
+
       // eslint-disable-next-line no-await-in-loop
       await new Promise((resolve) =>
         setTimeout(resolve, INTERVALO_CONFIRMACION_MS),
       )
     }
     setConfirmando(false)
+    renovacionTiqueteraRef.current = false
     setError(
       'Tu pago se está procesando. Si ya pagaste, tu plan se activará en unos minutos.',
     )
@@ -46,6 +61,13 @@ export function useWompiCheckout({ sede } = {}) {
 
       setProcesando(true)
       try {
+        const planPrevio = usuario?.planesActivos?.[0] ?? null
+        renovacionTiqueteraRef.current = Boolean(
+          planPrevio?.puedeRenovar ||
+            (planPrevio?.tipo === 'tiquetera' &&
+              Number(planPrevio.entradasRestantes) === 0),
+        )
+
         await cargarWidgetWompi()
 
         if (!window.WidgetCheckout) {

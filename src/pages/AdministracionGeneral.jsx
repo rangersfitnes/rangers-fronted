@@ -61,6 +61,7 @@ function VistaPlanes() {
   const [loading, setLoading] = useState(true)
 
   const [crearOpen, setCrearOpen] = useState(false)
+  const [crearTiqueteraOpen, setCrearTiqueteraOpen] = useState(false)
   const [cuponOpen, setCuponOpen] = useState(false)
   const [vigenciaOpen, setVigenciaOpen] = useState(false)
   const [guardandoVigencia, setGuardandoVigencia] = useState(false)
@@ -149,6 +150,12 @@ function VistaPlanes() {
     setCrearOpen(false)
   }
 
+  const handleCloseCrearTiquetera = () => {
+    if (submitting) return
+    setFormError('')
+    setCrearTiqueteraOpen(false)
+  }
+
   const handleCloseEditar = () => {
     if (submitting) return
     setFormError('')
@@ -160,8 +167,11 @@ function VistaPlanes() {
     setSubmitting(true)
     try {
       const res = await crearPlan(datos)
-      toast.success(`Plan "${res.plan.nombre}" creado correctamente`)
+      toast.success(
+        `${datos.tipo === 'tiquetera' ? 'Tiquetera' : 'Plan'} "${res.plan.nombre}" creada correctamente`,
+      )
       setCrearOpen(false)
+      setCrearTiqueteraOpen(false)
       cargarPlanes({ force: true })
     } catch (err) {
       setFormError(err.message || 'No se pudo crear el plan')
@@ -291,6 +301,13 @@ function VistaPlanes() {
           </button>
           <button
             type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => setCrearTiqueteraOpen(true)}
+          >
+            + Crear tiquetera
+          </button>
+          <button
+            type="button"
             className="ag-action-btn"
             onClick={() => setCrearOpen(true)}
           >
@@ -327,6 +344,18 @@ function VistaPlanes() {
         error={formError}
         title="Crear plan"
         submitLabel="Crear plan"
+        variant="normal"
+      />
+
+      <PlanFormModal
+        open={crearTiqueteraOpen}
+        onClose={handleCloseCrearTiquetera}
+        onSubmit={handleCrear}
+        submitting={submitting}
+        error={formError}
+        title="Crear tiquetera"
+        submitLabel="Crear tiquetera"
+        variant="tiquetera"
       />
 
       <PlanFormModal
@@ -335,10 +364,11 @@ function VistaPlanes() {
         onSubmit={handleEditar}
         submitting={submitting}
         error={formError}
-        title="Editar plan"
+        title={editarPlan?.tipo === 'tiquetera' ? 'Editar tiquetera' : 'Editar plan'}
         submitLabel="Guardar cambios"
         initialValues={editarPlan}
         disableNombre
+        variant={editarPlan?.tipo === 'tiquetera' ? 'tiquetera' : 'normal'}
       />
 
       <CuponFormModal

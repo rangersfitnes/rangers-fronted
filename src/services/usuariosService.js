@@ -1,12 +1,8 @@
 import { API_BASE_URL } from '../variables/api.jsx'
-import { getAdminToken } from './authService.js'
+import { requerirAdminToken } from './authService.js'
 
 export async function obtenerEstadisticasUsuarios({ signal } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -48,11 +44,7 @@ export async function obtenerUsuarios({
   estadoPlan,
   signal,
 } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   const params = new URLSearchParams()
   const documentoLimpio = String(documento || '')
@@ -112,11 +104,7 @@ export async function obtenerUsuarios({
 }
 
 export async function obtenerReporteCompletoUsuarios({ signal } = {}) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -154,11 +142,7 @@ export async function obtenerReporteCompletoUsuarios({ signal } = {}) {
 }
 
 export async function actualizarUsuario(uid, datos) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -190,11 +174,7 @@ export async function actualizarUsuario(uid, datos) {
 }
 
 export async function eliminarUsuario(uid) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -224,11 +204,7 @@ export async function eliminarUsuario(uid) {
 }
 
 export async function eliminarPlanUsuario(uid) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -263,11 +239,7 @@ export async function activarPlanUsuario(
   acompanantes = [],
   metodoPago,
 ) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 
@@ -299,11 +271,7 @@ export async function activarPlanUsuario(
 }
 
 export async function registrarUsuario(datos) {
-  const token = getAdminToken()
-
-  if (!token) {
-    throw new Error('No hay sesión activa de administrador')
-  }
+  const token = await requerirAdminToken()
 
   let response
 

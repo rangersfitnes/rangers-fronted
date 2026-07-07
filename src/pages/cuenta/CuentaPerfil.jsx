@@ -13,6 +13,7 @@ import {
   formatearFechaNacimiento,
   inicialesNombre,
 } from './cuentaUtils.js'
+import TiqueteraSaldoBox from '../../components/TiqueteraSaldoBox.jsx'
 import './Cuenta.css'
 
 function CuentaPerfil() {
@@ -220,6 +221,7 @@ function CuentaPerfil() {
                   {formatearFechaCuenta(planActivo.vigencia)}
                 </span>
               </div>
+              <TiqueteraSaldoBox plan={planActivo} />
             </>
           ) : usuario?.planVencido ? (
             <>
