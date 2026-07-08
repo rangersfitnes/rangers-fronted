@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import LiquidezHistoricaPanel from '../components/LiquidezHistoricaPanel.jsx'
+import { useLiquidezHistorica } from '../hooks/useLiquidezHistorica.js'
 import VistaReportesFinancieros from './AdministracionGeneralReportesFinancieros.jsx'
 import FinanzasResumenIngresosEgresos from './FinanzasResumenIngresosEgresos.jsx'
 import FinanzasRegistrarSalidas from './FinanzasRegistrarSalidas.jsx'
@@ -25,7 +27,7 @@ const FINANZAS_CARDS = [
   },
 ]
 
-function VistaFinanzasHub({ onSeleccionar }) {
+function VistaFinanzasHub({ onSeleccionar, liquidez, loadingLiquidez, errorLiquidez, ultimaActualizacionLiquidez }) {
   return (
     <section className="ag-page__view">
       <header className="ag-page__view-header">
@@ -34,6 +36,13 @@ function VistaFinanzasHub({ onSeleccionar }) {
           Accesos rápidos para ingresos, egresos y control del box
         </p>
       </header>
+
+      <LiquidezHistoricaPanel
+        liquidez={liquidez}
+        loading={loadingLiquidez}
+        error={errorLiquidez}
+        ultimaActualizacion={ultimaActualizacionLiquidez}
+      />
 
       <div className="ag-finanzas__grid">
         {FINANZAS_CARDS.map((card) => (
@@ -57,6 +66,12 @@ function VistaFinanzasHub({ onSeleccionar }) {
 
 function VistaFinanzas() {
   const [seccion, setSeccion] = useState(null)
+  const {
+    liquidez,
+    loading: loadingLiquidez,
+    error: errorLiquidez,
+    ultimaActualizacion: ultimaActualizacionLiquidez,
+  } = useLiquidezHistorica({ activo: seccion === null })
 
   const volver = () => setSeccion(null)
 
@@ -72,7 +87,15 @@ function VistaFinanzas() {
     return <FinanzasResumenIngresosEgresos onVolver={volver} />
   }
 
-  return <VistaFinanzasHub onSeleccionar={setSeccion} />
+  return (
+    <VistaFinanzasHub
+      onSeleccionar={setSeccion}
+      liquidez={liquidez}
+      loadingLiquidez={loadingLiquidez}
+      errorLiquidez={errorLiquidez}
+      ultimaActualizacionLiquidez={ultimaActualizacionLiquidez}
+    />
+  )
 }
 
 export default VistaFinanzas

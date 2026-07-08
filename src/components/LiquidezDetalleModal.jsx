@@ -23,7 +23,18 @@ function FilaDesglose({ label, valor, tipo = 'neutral' }) {
 function LiquidezDetalleModal({ open, onClose, liquidez }) {
   if (!liquidez) return null
 
-  const { efectivo, banco, otro, liquidezTotal } = liquidez
+  const { efectivo, transferencia, wompi, banco, otro, liquidezTotal } = liquidez
+  const transferenciaData = transferencia ?? {
+    ingresos: banco?.ingresosTransferencia ?? 0,
+    egresos: banco?.egresosTransferencia ?? 0,
+    disponible:
+      (banco?.ingresosTransferencia ?? 0) - (banco?.egresosTransferencia ?? 0),
+  }
+  const wompiData = wompi ?? {
+    ingresos: banco?.ingresosWompi ?? 0,
+    egresos: banco?.egresosWompi ?? 0,
+    disponible: (banco?.ingresosWompi ?? 0) - (banco?.egresosWompi ?? 0),
+  }
   const muestraOtro = (otro?.ingresos ?? 0) > 0 || (otro?.egresos ?? 0) > 0
 
   return (
@@ -68,30 +79,38 @@ function LiquidezDetalleModal({ open, onClose, liquidez }) {
         </section>
 
         <section className="ag-liquidez-modal__bloque">
-          <h3 className="ag-liquidez-modal__bloque-title">Cuenta bancaria</h3>
+          <h3 className="ag-liquidez-modal__bloque-title">Transferencia</h3>
           <FilaDesglose
             label="Ingresos por transferencia"
-            valor={banco.ingresosTransferencia}
-            tipo="ingreso"
-          />
-          <FilaDesglose
-            label="Ingresos por Wompi"
-            valor={banco.ingresosWompi}
+            valor={transferenciaData.ingresos}
             tipo="ingreso"
           />
           <FilaDesglose
             label="Egresos por transferencia"
-            valor={banco.egresosTransferencia}
+            valor={transferenciaData.egresos}
             tipo="egreso"
+          />
+          <FilaDesglose
+            label="Debería haber por transferencia"
+            valor={transferenciaData.disponible}
+          />
+        </section>
+
+        <section className="ag-liquidez-modal__bloque">
+          <h3 className="ag-liquidez-modal__bloque-title">Wompi</h3>
+          <FilaDesglose
+            label="Ingresos por Wompi"
+            valor={wompiData.ingresos}
+            tipo="ingreso"
           />
           <FilaDesglose
             label="Egresos por Wompi"
-            valor={banco.egresosWompi}
+            valor={wompiData.egresos}
             tipo="egreso"
           />
           <FilaDesglose
-            label="Debería haber en el banco"
-            valor={banco.disponible}
+            label="Debería haber en Wompi"
+            valor={wompiData.disponible}
           />
         </section>
 

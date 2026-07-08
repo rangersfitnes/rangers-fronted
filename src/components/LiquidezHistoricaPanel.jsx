@@ -79,10 +79,26 @@ function LiquidezHistoricaPanel({ liquidez, loading, error, ultimaActualizacion 
               variante="egreso"
             />
             <TarjetaContador
-              label="Liquidez disponible"
-              valor={liquidez.liquidezTotal}
-              hint="Ingresos − egresos · Efectivo + banco"
-              variante="total"
+              label="Disponible en efectivo"
+              valor={liquidez.efectivo?.disponible ?? 0}
+              hint="Ingresos − egresos en efectivo"
+              variante="efectivo"
+              clickable
+              onClick={() => setModalAbierto(true)}
+            />
+            <TarjetaContador
+              label="Disponible por transferencia"
+              valor={liquidez.transferencia?.disponible ?? 0}
+              hint="Ingresos − egresos por transferencia"
+              variante="transferencia"
+              clickable
+              onClick={() => setModalAbierto(true)}
+            />
+            <TarjetaContador
+              label="Disponible en Wompi"
+              valor={liquidez.wompi?.disponible ?? 0}
+              hint="Ingresos − egresos en Wompi"
+              variante="wompi"
               clickable
               onClick={() => setModalAbierto(true)}
             />

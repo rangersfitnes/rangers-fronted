@@ -132,6 +132,39 @@ button.ag-liquidez__card {
   );
 }
 
+.ag-liquidez__card--efectivo {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: linear-gradient(
+    145deg,
+    rgba(34, 197, 94, 0.14),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+.ag-liquidez__card--transferencia {
+  border-color: rgba(96, 165, 250, 0.4);
+  background: linear-gradient(
+    145deg,
+    rgba(59, 130, 246, 0.14),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+.ag-liquidez__card--wompi {
+  border-color: rgba(192, 132, 252, 0.4);
+  background: linear-gradient(
+    145deg,
+    rgba(168, 85, 247, 0.14),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+.ag-liquidez__card--efectivo .ag-liquidez__card-valor,
+.ag-liquidez__card--transferencia .ag-liquidez__card-valor,
+.ag-liquidez__card--wompi .ag-liquidez__card-valor {
+  color: #ffffff;
+}
+
 .ag-liquidez__card-label {
   font-size: 0.72rem;
   font-weight: 700;
