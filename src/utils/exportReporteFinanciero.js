@@ -348,6 +348,133 @@ export function exportarReporteIngresosEgresosPdf(reporte) {
   )
 }
 
+function montoNumericoMovimiento(mov) {
+  const monto = Number(mov.monto)
+  return Number.isFinite(monto) ? monto : 0
+}
+
+function filaEstadoFinancieroDetalle(mov) {
+  const esEgreso = mov.naturalezaMov === 'egreso'
+
+  return [
+    esEgreso ? 'Egreso' : 'Ingreso',
+    mov.fecha || '—',
+    formatearFechaHoraCuenta(mov.creadoEn),
+    mov.descripcion || mov.concepto || '—',
+    mov.categoriaLabel || mov.categoria || '—',
+    canalLabelMovimiento(mov, esEgreso),
+    mov.cedula || '—',
+    mov.nombre || '—',
+    montoNumericoMovimiento(mov),
+  ]
+}
+
+function filasResumenEstadoFinanciero(liquidez, reporte) {
+  const resumen = reporte?.resumen ?? {}
+  const efectivo = liquidez?.efectivo ?? {}
+  const transferencia = liquidez?.transferencia ?? {
+    ingresos: liquidez?.banco?.ingresosTransferencia ?? 0,
+    egresos: liquidez?.banco?.egresosTransferencia ?? 0,
+    disponible:
+      (liquidez?.banco?.ingresosTransferencia ?? 0) -
+      (liquidez?.banco?.egresosTransferencia ?? 0),
+  }
+  const wompi = liquidez?.wompi ?? {
+    ingresos: liquidez?.banco?.ingresosWompi ?? 0,
+    egresos: liquidez?.banco?.egresosWompi ?? 0,
+    disponible:
+      (liquidez?.banco?.ingresosWompi ?? 0) -
+      (liquidez?.banco?.egresosWompi ?? 0),
+  }
+
+  const totalIngresos = liquidez?.totalIngresos ?? resumen.totalGeneral ?? 0
+  const totalEgresos = liquidez?.totalEgresos ?? resumen.totalEgresos ?? 0
+  const liquidezTotal =
+    liquidez?.liquidezTotal ?? resumen.balanceNeto ?? totalIngresos - totalEgresos
+
+  return [
+    ['Concepto', 'Monto'],
+    ['Total ingresos históricos', totalIngresos],
+    ['Total egresos históricos', totalEgresos],
+    ['Liquidez total', liquidezTotal],
+    [],
+    ['Medio de pago', 'Ingresos', 'Egresos', 'Disponible'],
+    [
+      'Efectivo',
+      efectivo.ingresos ?? resumen.totalEfectivo ?? 0,
+      efectivo.egresos ?? resumen.egresosPorMetodo?.efectivo ?? 0,
+      efectivo.disponible ?? 0,
+    ],
+    [
+      'Transferencia',
+      transferencia.ingresos ?? resumen.totalTransferencia ?? 0,
+      transferencia.egresos ?? resumen.egresosPorMetodo?.transferencia ?? 0,
+      transferencia.disponible ?? 0,
+    ],
+    [
+      'Wompi',
+      wompi.ingresos ?? resumen.totalWompi ?? 0,
+      wompi.egresos ?? resumen.egresosPorMetodo?.wompi ?? 0,
+      wompi.disponible ?? 0,
+    ],
+  ]
+}
+
+function etiquetaPeriodoReporte(reporte) {
+  if (reporte?.historialCompleto) return 'Historial completo'
+  if (reporte?.desde && reporte?.hasta) {
+    const desdeLabel = formatearFechaCuenta(
+      new Date(`${reporte.desde}T12:00:00-05:00`).getTime(),
+    )
+    const hastaLabel = formatearFechaCuenta(
+      new Date(`${reporte.hasta}T12:00:00-05:00`).getTime(),
+    )
+    return `${desdeLabel} – ${hastaLabel}`
+  }
+  return '—'
+}
+
+export function exportarEstadoFinancieroExcel({ reporte, liquidez } = {}) {
+  if (!reporte) {
+    throw new Error('No hay datos para exportar el estado financiero')
+  }
+
+  const generadoEn = new Date()
+  const fechaArchivo = generadoEn.toLocaleDateString('en-CA', {
+    timeZone: 'America/Bogota',
+  })
+
+  const estadoSheet = XLSX.utils.aoa_to_sheet([
+    ['Rangers Box — Estado financiero'],
+    ['Periodo', etiquetaPeriodoReporte(reporte)],
+    ['Sede', reporte.sedeId ?? '—'],
+    ['Generado', generadoEn.toLocaleString('es-CO')],
+    ['Movimientos en detalle', combinarMovimientosReporte(reporte).length],
+    [],
+    ...filasResumenEstadoFinanciero(liquidez, reporte),
+  ])
+
+  const movimientosSheet = XLSX.utils.aoa_to_sheet([
+    [
+      'Tipo',
+      'Fecha',
+      'Fecha y hora registro',
+      'Concepto',
+      'Categoría',
+      'Método / canal',
+      'Cédula',
+      'Nombre',
+      'Monto',
+    ],
+    ...combinarMovimientosReporte(reporte).map(filaEstadoFinancieroDetalle),
+  ])
+
+  const libro = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(libro, estadoSheet, 'Estado financiero')
+  XLSX.utils.book_append_sheet(libro, movimientosSheet, 'Movimientos')
+  XLSX.writeFile(libro, `estado-financiero-${fechaArchivo}.xlsx`)
+}
+
 export function exportarReporteExcel(reporte) {
   const desdeLabel = formatearFechaCuenta(
     new Date(`${reporte.desde}T12:00:00-05:00`).getTime(),

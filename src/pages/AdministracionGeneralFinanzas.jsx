@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import LiquidezHistoricaPanel from '../components/LiquidezHistoricaPanel.jsx'
+import { useToast } from '../components/Toast.jsx'
 import { useLiquidezHistorica } from '../hooks/useLiquidezHistorica.js'
+import { obtenerReporteFinanciero } from '../services/reportesFinancierosService.js'
+import { exportarEstadoFinancieroExcel } from '../utils/exportReporteFinanciero.js'
 import VistaReportesFinancieros from './AdministracionGeneralReportesFinancieros.jsx'
 import FinanzasResumenIngresosEgresos from './FinanzasResumenIngresosEgresos.jsx'
 import FinanzasRegistrarSalidas from './FinanzasRegistrarSalidas.jsx'
@@ -27,7 +30,15 @@ const FINANZAS_CARDS = [
   },
 ]
 
-function VistaFinanzasHub({ onSeleccionar, liquidez, loadingLiquidez, errorLiquidez, ultimaActualizacionLiquidez }) {
+function VistaFinanzasHub({
+  onSeleccionar,
+  liquidez,
+  loadingLiquidez,
+  errorLiquidez,
+  ultimaActualizacionLiquidez,
+  onExportarEstadoFinanciero,
+  exportandoEstadoFinanciero,
+}) {
   return (
     <section className="ag-page__view">
       <header className="ag-page__view-header">
@@ -42,6 +53,8 @@ function VistaFinanzasHub({ onSeleccionar, liquidez, loadingLiquidez, errorLiqui
         loading={loadingLiquidez}
         error={errorLiquidez}
         ultimaActualizacion={ultimaActualizacionLiquidez}
+        onExportarExcel={onExportarEstadoFinanciero}
+        exportandoExcel={exportandoEstadoFinanciero}
       />
 
       <div className="ag-finanzas__grid">
@@ -65,7 +78,9 @@ function VistaFinanzasHub({ onSeleccionar, liquidez, loadingLiquidez, errorLiqui
 }
 
 function VistaFinanzas() {
+  const toast = useToast()
   const [seccion, setSeccion] = useState(null)
+  const [exportandoEstadoFinanciero, setExportandoEstadoFinanciero] = useState(false)
   const {
     liquidez,
     loading: loadingLiquidez,
@@ -74,6 +89,21 @@ function VistaFinanzas() {
   } = useLiquidezHistorica({ activo: seccion === null })
 
   const volver = () => setSeccion(null)
+
+  const handleExportarEstadoFinanciero = useCallback(async () => {
+    setExportandoEstadoFinanciero(true)
+    try {
+      const reporte = await obtenerReporteFinanciero({ todoHistorial: true })
+      exportarEstadoFinancieroExcel({ reporte, liquidez })
+      toast.success(
+        `Excel exportado con ${combinarConteoMovimientos(reporte)} movimiento(s)`,
+      )
+    } catch (err) {
+      toast.error(err.message || 'No se pudo exportar el estado financiero')
+    } finally {
+      setExportandoEstadoFinanciero(false)
+    }
+  }, [liquidez, toast])
 
   if (seccion === 'reportes') {
     return <VistaReportesFinancieros onVolver={volver} />
@@ -94,8 +124,14 @@ function VistaFinanzas() {
       loadingLiquidez={loadingLiquidez}
       errorLiquidez={errorLiquidez}
       ultimaActualizacionLiquidez={ultimaActualizacionLiquidez}
+      onExportarEstadoFinanciero={handleExportarEstadoFinanciero}
+      exportandoEstadoFinanciero={exportandoEstadoFinanciero}
     />
   )
+}
+
+function combinarConteoMovimientos(reporte) {
+  return (reporte?.movimientos?.length ?? 0) + (reporte?.egresos?.length ?? 0)
 }
 
 export default VistaFinanzas

@@ -1,8 +1,10 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import * as XLSX from 'xlsx'
 import {
   formatearFechaHoraCuenta,
   formatearFechaTabla,
+  formatearPrecioCuenta,
 } from '../pages/cuenta/cuentaUtils.js'
 
 const PLAN_ESTADO_LABEL = {
@@ -53,6 +55,122 @@ function resumenGrupoPlan(usuario) {
   return rolEtiqueta ? `${rolEtiqueta}: ${miembros}` : miembros
 }
 
+function etiquetaTipoPlan(usuario) {
+  if (usuario.planTipo === 'tiquetera') return 'Tiquetera'
+  if ((usuario.planEstado ?? 'sin_plan') !== 'sin_plan') return 'Membresía'
+  return '—'
+}
+
+function formatearFechaNacimiento(valor) {
+  if (!valor) return '—'
+  if (typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    const [y, m, d] = valor.split('-')
+    return `${d}/${m}/${y}`
+  }
+  return formatearFechaTabla(valor)
+}
+
+function textoVigenciaModificada(usuario) {
+  if (!usuario.vigenciaModificada) return 'No'
+  const causal = usuario.ultimaModificacionVigencia?.causal
+  return causal ? `Sí — ${causal}` : 'Sí'
+}
+
+function formatearValorPagado(usuario) {
+  const monto = usuario.valorPagadoActivacion
+  if (monto == null || !Number.isFinite(Number(monto))) return '—'
+  return formatearPrecioCuenta(monto)
+}
+
+function valorPagadoNumerico(usuario) {
+  const monto = usuario.valorPagadoActivacion
+  if (monto == null || !Number.isFinite(Number(monto))) return '—'
+  return Number(monto)
+}
+
+function valorMonetarioNumerico(valor) {
+  if (valor == null || !Number.isFinite(Number(valor))) return '—'
+  return Number(valor)
+}
+
+function usuarioCuentaEnResumenFinanciero(usuario) {
+  return usuario.rolEnPlan !== 'beneficiario'
+}
+
+function calcularResumenFinancieroUsuarios(usuarios) {
+  let totalPagado = 0
+  let totalEfectivo = 0
+  let totalTransferencia = 0
+  let totalWompi = 0
+  let activacionesConPago = 0
+
+  for (const usuario of usuarios) {
+    if (!usuarioCuentaEnResumenFinanciero(usuario)) continue
+
+    const monto = Number(usuario.valorPagadoActivacion)
+    if (!Number.isFinite(monto) || monto <= 0) continue
+
+    activacionesConPago += 1
+    totalPagado += monto
+
+    const metodo = String(usuario.metodoPagoActivacion || '').toLowerCase()
+    if (metodo === 'efectivo') totalEfectivo += monto
+    else if (metodo === 'transferencia') totalTransferencia += monto
+    else if (metodo === 'wompi') totalWompi += monto
+  }
+
+  return {
+    totalPagado,
+    totalEfectivo,
+    totalTransferencia,
+    totalWompi,
+    activacionesConPago,
+  }
+}
+
+function filasResumenFinanciero(usuarios) {
+  const resumen = calcularResumenFinancieroUsuarios(usuarios)
+
+  return [
+    ['Activaciones con pago registrado', resumen.activacionesConPago],
+    ['Total pagado (sin duplicar beneficiarios)', resumen.totalPagado],
+    ['Total en efectivo', resumen.totalEfectivo],
+    ['Total por transferencia', resumen.totalTransferencia],
+    ['Total por Wompi', resumen.totalWompi],
+  ]
+}
+
+const ENCABEZADOS_DETALLE = [
+  'ID',
+  'UID',
+  'Nombre',
+  'Tipo documento',
+  'Documento',
+  'Celular',
+  'Fecha nacimiento',
+  'Membresía / plan',
+  'Estado del plan',
+  'Tipo de plan',
+  'Entradas restantes',
+  'Entradas incluidas',
+  'Método de pago',
+  'Valor pagado',
+  'Valor esperado plan',
+  'Descuento cupón',
+  'Código cupón',
+  'Fecha pago activación',
+  'Origen del pago',
+  'Referencia transferencia',
+  'Fecha inicio membresía',
+  'Fecha vigencia',
+  'Vigencia modificada (admin)',
+  'Rol en plan',
+  'Grupo del plan',
+  'Registrado por',
+  'Plan activado por',
+  'Fecha de registro',
+]
+
 function filaUsuario(usuario) {
   const planEstado = usuario.planEstado ?? 'sin_plan'
 
@@ -65,6 +183,7 @@ function filaUsuario(usuario) {
     etiquetaPlan(usuario),
     PLAN_ESTADO_LABEL[planEstado] || planEstado,
     usuario.metodoPagoActivacion || '—',
+    formatearValorPagado(usuario),
     usuario.registroPor || '—',
     usuario.activacionPor || '—',
     usuario.vigenciaModificada ? 'Sí' : '—',
@@ -72,6 +191,48 @@ function filaUsuario(usuario) {
     planEstado === 'sin_plan' ? '—' : formatearFechaTabla(usuario.fechaInicio),
     planEstado === 'sin_plan' ? '—' : formatearFechaTabla(usuario.vigencia),
     formatearFechaTabla(usuario.fechaCreacion),
+  ]
+}
+
+function filaUsuarioDetallada(usuario) {
+  const planEstado = usuario.planEstado ?? 'sin_plan'
+  const sinPlan = planEstado === 'sin_plan'
+
+  return [
+    usuario.id ?? '—',
+    usuario.uid ?? '—',
+    usuario.nombre || '—',
+    usuario.tipoDocumento || '—',
+    usuario.documento || '—',
+    usuario.celular || '—',
+    formatearFechaNacimiento(usuario.fechaNacimiento),
+    etiquetaPlan(usuario),
+    PLAN_ESTADO_LABEL[planEstado] || planEstado,
+    etiquetaTipoPlan(usuario),
+    usuario.planTipo === 'tiquetera' ? (usuario.entradasRestantes ?? '—') : '—',
+    usuario.planTipo === 'tiquetera' ? (usuario.entradasIncluidas ?? '—') : '—',
+    usuario.metodoPagoActivacion || '—',
+    valorPagadoNumerico(usuario),
+    valorMonetarioNumerico(usuario.valorEsperadoActivacion),
+    valorMonetarioNumerico(usuario.descuentoCupon),
+    usuario.codigoCupon || '—',
+    usuario.fechaPagoActivacion
+      ? formatearFechaHoraCuenta(usuario.fechaPagoActivacion)
+      : '—',
+    usuario.origenPago || '—',
+    usuario.referenciaPago || '—',
+    sinPlan ? '—' : formatearFechaTabla(usuario.fechaInicio),
+    sinPlan ? '—' : formatearFechaTabla(usuario.vigencia),
+    textoVigenciaModificada(usuario),
+    usuario.rolEnPlan === 'titular'
+      ? 'Titular'
+      : usuario.rolEnPlan === 'beneficiario'
+        ? 'Beneficiario'
+        : '—',
+    resumenGrupoPlan(usuario),
+    usuario.registroPor || '—',
+    usuario.activacionPor || '—',
+    formatearFechaHoraCuenta(usuario.fechaCreacion),
   ]
 }
 
@@ -127,6 +288,7 @@ export function exportarReporteUsuariosPdf(reporte) {
         'Plan',
         'Estado',
         'Método pago',
+        'Valor pagado',
         'Registrado por',
         'Plan activado por',
         'Vig. modificada',
@@ -140,24 +302,53 @@ export function exportarReporteUsuariosPdf(reporte) {
     styles: { fontSize: 6, cellPadding: 1.2, overflow: 'linebreak' },
     headStyles: { fillColor: [38, 38, 38], fontSize: 6 },
     columnStyles: {
-      0: { cellWidth: 8 },
-      1: { cellWidth: 24 },
-      2: { cellWidth: 8 },
-      3: { cellWidth: 16 },
-      4: { cellWidth: 16 },
-      5: { cellWidth: 18 },
-      6: { cellWidth: 11 },
-      7: { cellWidth: 14 },
-      8: { cellWidth: 22 },
-      9: { cellWidth: 22 },
-      10: { cellWidth: 14 },
-      11: { cellWidth: 24 },
-      12: { cellWidth: 14 },
-      13: { cellWidth: 14 },
-      14: { cellWidth: 14 },
+      0: { cellWidth: 7 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 7 },
+      3: { cellWidth: 14 },
+      4: { cellWidth: 14 },
+      5: { cellWidth: 16 },
+      6: { cellWidth: 10 },
+      7: { cellWidth: 12 },
+      8: { cellWidth: 14 },
+      9: { cellWidth: 20 },
+      10: { cellWidth: 20 },
+      11: { cellWidth: 12 },
+      12: { cellWidth: 22 },
+      13: { cellWidth: 12 },
+      14: { cellWidth: 12 },
+      15: { cellWidth: 12 },
     },
     margin: { left: margen, right: margen },
   })
 
   doc.save(`reporte-usuarios-${fechaArchivoReporte(generadoEn)}.pdf`)
+}
+
+export function exportarReporteUsuariosExcel(reporte) {
+  const generadoEn = reporte?.generadoEn ?? Date.now()
+  const usuarios = reporte?.usuarios ?? []
+  const estadisticas = reporte?.estadisticas ?? {}
+
+  const resumenSheet = XLSX.utils.aoa_to_sheet([
+    ['Rangers Box — Reporte de usuarios'],
+    ['Generado', formatearFechaHoraCuenta(generadoEn)],
+    ['Total en reporte', usuarios.length],
+    [],
+    ['Concepto', 'Cantidad'],
+    ...filasResumen(estadisticas),
+    [],
+    ['Resumen financiero', 'Valor'],
+    ...filasResumenFinanciero(usuarios),
+  ])
+
+  const detalleSheet = XLSX.utils.aoa_to_sheet([
+    ENCABEZADOS_DETALLE,
+    ...usuarios.map(filaUsuarioDetallada),
+  ])
+
+  const libro = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(libro, resumenSheet, 'Resumen')
+  XLSX.utils.book_append_sheet(libro, detalleSheet, 'Usuarios')
+  XLSX.writeFile(libro, `reporte-usuarios-${fechaArchivoReporte(generadoEn)}.xlsx`)
 }

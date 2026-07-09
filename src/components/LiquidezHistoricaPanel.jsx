@@ -27,7 +27,14 @@ function TarjetaContador({ label, valor, hint, variante, onClick, clickable }) {
   )
 }
 
-function LiquidezHistoricaPanel({ liquidez, loading, error, ultimaActualizacion }) {
+function LiquidezHistoricaPanel({
+  liquidez,
+  loading,
+  error,
+  ultimaActualizacion,
+  onExportarExcel,
+  exportandoExcel = false,
+}) {
   const [modalAbierto, setModalAbierto] = useState(false)
 
   const horaActualizacion = ultimaActualizacion
@@ -53,9 +60,21 @@ function LiquidezHistoricaPanel({ liquidez, loading, error, ultimaActualizacion 
               {horaActualizacion ? ` · Actualizado ${horaActualizacion}` : ''}
             </p>
           </div>
-          {loading && !liquidez ? (
-            <span className="ag-liquidez__estado">Calculando…</span>
-          ) : null}
+          <div className="ag-liquidez__actions">
+            {onExportarExcel ? (
+              <button
+                type="button"
+                className="ag-action-btn"
+                onClick={onExportarExcel}
+                disabled={loading || exportandoExcel || !liquidez}
+              >
+                {exportandoExcel ? 'Generando Excel…' : 'Exportar estado financiero'}
+              </button>
+            ) : null}
+            {loading && !liquidez ? (
+              <span className="ag-liquidez__estado">Calculando…</span>
+            ) : null}
+          </div>
         </header>
 
         {error ? (

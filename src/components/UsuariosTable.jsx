@@ -1,4 +1,5 @@
 import UserIcon from './icons/UserIcon.jsx'
+import { formatearPrecioCuenta } from '../pages/cuenta/cuentaUtils.js'
 import './UsuariosTable.css'
 
 const TIPO_LABEL = {
@@ -16,6 +17,26 @@ function formatearFecha(ms) {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+function formatearPagoUsuario(usuario) {
+  const monto = usuario.valorPagadoActivacion
+  if (monto == null || !Number.isFinite(Number(monto))) return '—'
+  return formatearPrecioCuenta(monto)
+}
+
+function tituloPagoUsuario(usuario) {
+  const partes = []
+  if (usuario.metodoPagoActivacion) {
+    partes.push(`Método: ${usuario.metodoPagoActivacion}`)
+  }
+  if (usuario.origenPago) {
+    partes.push(`Origen: ${usuario.origenPago}`)
+  }
+  if (usuario.rolEnPlan === 'beneficiario') {
+    partes.push('Pago registrado en el titular del plan')
+  }
+  return partes.length ? partes.join(' · ') : undefined
 }
 
 function UsuarioAvatar({ profileImage, nombre, small = false }) {
@@ -93,6 +114,8 @@ function UsuariosTable({ usuarios, onRowClick }) {
             <th>Documento</th>
             <th>Celular</th>
             <th>Plan</th>
+            <th>Método pago</th>
+            <th>Valor pagado</th>
             <th>Grupo del plan</th>
             <th>Inicio</th>
             <th>Vigencia</th>
@@ -148,6 +171,12 @@ function UsuariosTable({ usuarios, onRowClick }) {
                   >
                     {planLabel}
                   </span>
+                </td>
+                <td className="usuarios-table__pago-metodo">
+                  {u.metodoPagoActivacion || '—'}
+                </td>
+                <td className="usuarios-table__pago-monto" title={tituloPagoUsuario(u)}>
+                  {formatearPagoUsuario(u)}
                 </td>
                 <td className="usuarios-table__grupo-cell">
                   <PlanGrupoCelda

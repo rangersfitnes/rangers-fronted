@@ -130,6 +130,18 @@
   white-space: nowrap;
 }
 
+.usuarios-table__pago-metodo {
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: #d4d4d4;
+}
+
+.usuarios-table__pago-monto {
+  font-weight: 700;
+  white-space: nowrap;
+  color: #86efac;
+}
+
 .usuarios-table__badge {
   display: inline-flex;
   align-items: center;

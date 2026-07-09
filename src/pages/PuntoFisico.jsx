@@ -16,7 +16,10 @@ import {
   obtenerUsuarios,
   registrarUsuario,
 } from '../services/usuariosService.js'
-import { exportarReporteUsuariosPdf } from '../utils/exportReporteUsuarios.js'
+import {
+  exportarReporteUsuariosExcel,
+  exportarReporteUsuariosPdf,
+} from '../utils/exportReporteUsuarios.js'
 import { abrirKioscoAcceso } from '../utils/abrirKioscoAcceso.js'
 import UsuarioDetalleGestion from './UsuarioDetalleGestion.jsx'
 import VistaPagoClases from './PuntoFisicoPagoClases.jsx'
@@ -104,7 +107,7 @@ function VistaUsuarios() {
 
   const [submitting, setSubmitting] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
-  const [exportandoPdf, setExportandoPdf] = useState(false)
+  const [exportandoReporte, setExportandoReporte] = useState(false)
   const [error, setError] = useState('')
 
   const [usuarios, setUsuarios] = useState([])
@@ -260,20 +263,26 @@ function VistaUsuarios() {
     }
   }
 
-  const handleExportarPdf = async () => {
-    setExportandoPdf(true)
+  const handleExportarReporte = async (formato) => {
+    setExportandoReporte(true)
     try {
       const reporte = await obtenerReporteCompletoUsuarios()
-      exportarReporteUsuariosPdf(reporte)
+      if (formato === 'xlsx') {
+        exportarReporteUsuariosExcel(reporte)
+      } else {
+        exportarReporteUsuariosPdf(reporte)
+      }
+      const etiquetaFormato = formato === 'xlsx' ? 'Excel' : 'PDF'
       toast.success(
-        `PDF exportado con ${reporte.usuarios.length} usuario${
+        `${etiquetaFormato} exportado con ${reporte.usuarios.length} usuario${
           reporte.usuarios.length === 1 ? '' : 's'
         }`,
       )
     } catch (err) {
-      toast.error(err.message || 'No se pudo exportar el PDF')
+      const etiquetaFormato = formato === 'xlsx' ? 'Excel' : 'PDF'
+      toast.error(err.message || `No se pudo exportar el ${etiquetaFormato}`)
     } finally {
-      setExportandoPdf(false)
+      setExportandoReporte(false)
     }
   }
 
@@ -421,16 +430,24 @@ function VistaUsuarios() {
           <button
             type="button"
             className="pf-action-btn pf-action-btn--ghost"
-            onClick={handleExportarPdf}
-            disabled={loading || exportandoPdf}
+            onClick={() => handleExportarReporte('pdf')}
+            disabled={loading || exportandoReporte}
           >
-            {exportandoPdf ? 'Generando PDF…' : 'Exportar PDF'}
+            {exportandoReporte ? 'Generando reporte…' : 'Exportar PDF'}
+          </button>
+          <button
+            type="button"
+            className="pf-action-btn pf-action-btn--ghost"
+            onClick={() => handleExportarReporte('xlsx')}
+            disabled={loading || exportandoReporte}
+          >
+            {exportandoReporte ? 'Generando reporte…' : 'Exportar Excel'}
           </button>
           <button
             type="button"
             className="pf-action-btn pf-action-btn--ghost"
             onClick={() => recargarListado(page)}
-            disabled={loading || exportandoPdf}
+            disabled={loading || exportandoReporte}
           >
             Actualizar
           </button>
@@ -611,10 +628,10 @@ function VistaUsuarios() {
       />
 
       <LoadingOverlay
-        visible={loading || submitting || actionLoading || exportandoPdf}
+        visible={loading || submitting || actionLoading || exportandoReporte}
         label={
-          exportandoPdf
-            ? 'Generando reporte PDF'
+          exportandoReporte
+            ? 'Generando reporte'
             : submitting
               ? editarUsuario
                 ? 'Guardando cambios'

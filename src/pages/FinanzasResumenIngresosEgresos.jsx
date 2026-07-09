@@ -69,6 +69,7 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
     loading: loadingLiquidez,
     error: errorLiquidez,
     ultimaActualizacion: ultimaActualizacionLiquidez,
+    recargar: recargarLiquidez,
   } = useLiquidezHistorica()
   const [verTodoHistorial, setVerTodoHistorial] = useState(false)
 
@@ -103,8 +104,8 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
 
   const recargarTrasEliminar = useCallback(async () => {
     await cargar()
-    await cargarLiquidez()
-  }, [cargar, cargarLiquidez])
+    await recargarLiquidez()
+  }, [cargar, recargarLiquidez])
 
   const { solicitarEliminar, modalEliminar, eliminando } = useEliminarMovimiento({
     onEliminado: recargarTrasEliminar,

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import logo from '../assets/images/logos/logo.webp'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { registrarAsistencia } from '../services/asistenciasService.js'
+import { registrarPagoClaseDia } from '../services/pagosClasesService.js'
 import { formatearFechaCuenta } from './cuenta/cuentaUtils.js'
+import '../components/ActivarPlanModal.css'
 import './PuntoFisico.css'
 
 const PANTALLA_MS = 3000
@@ -22,6 +24,289 @@ const CONFETTI_PARTICULAS = Array.from({ length: 28 }, (_, indice) => ({
 function obtenerPrimerNombre(nombre) {
   if (!nombre) return 'atleta'
   return nombre.trim().split(/\s+/)[0]
+}
+
+function etiquetaAccesoAdmitido(resultado) {
+  if (resultado.tipoAcceso === 'clase-cortesia') return 'Clase de cortesía'
+  if (resultado.tipoAcceso === 'clase-dia') return 'Clase del día'
+  return resultado.planNombre || 'Membresía'
+}
+
+function PantallaRegistroPagoClase({ datos, onCancelar, onIngresoAdmitido }) {
+  const [metodoPago, setMetodoPago] = useState('')
+  const [valorPagado, setValorPagado] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
+  const [recordatorioWhatsapp, setRecordatorioWhatsapp] = useState(null)
+
+  const esCortesia = metodoPago === 'cortesia'
+  const requiereValor = Boolean(metodoPago) && !esCortesia
+  const valorPagadoValido =
+    !requiereValor ||
+    (valorPagado.trim() !== '' &&
+      Number(valorPagado.trim().replace(/\./g, '').replace(/,/g, '.')) > 0)
+  const puedeRegistrar =
+    Boolean(metodoPago && valorPagadoValido) && !guardando && !recordatorioWhatsapp
+
+  const seleccionarMetodo = (valor) => {
+    setMetodoPago(valor)
+    setError('')
+    if (valor === 'cortesia') setValorPagado('')
+  }
+
+  const ejecutarRegistro = async () => {
+    if (!metodoPago) {
+      setError('Selecciona cómo se registra la clase de hoy')
+      return
+    }
+    if (requiereValor && !valorPagadoValido) {
+      setError('Ingresa el valor pagado por la clase del día')
+      return
+    }
+
+    setError('')
+    setGuardando(true)
+
+    try {
+      const pago = await registrarPagoClaseDia({
+        cedula: datos.cedula,
+        metodoPago,
+        valorPagado: requiereValor ? valorPagado : undefined,
+      })
+
+      if (pago?.metodoPago === 'transferencia' || pago?.requiereCapturaWhatsapp) {
+        setRecordatorioWhatsapp({
+          cedula: pago.cedula ?? datos.cedula,
+          valorPagado: pago.valorPagado ?? pago.valorTransferencia,
+        })
+        return
+      }
+
+      const ingreso = await registrarAsistencia({ cedula: datos.cedula })
+      onIngresoAdmitido({ tipo: 'admitido', ...ingreso })
+    } catch (err) {
+      setError(err.message || 'No se pudo registrar el pago')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  const continuarTrasWhatsapp = async () => {
+    setGuardando(true)
+    setError('')
+    try {
+      const ingreso = await registrarAsistencia({ cedula: datos.cedula })
+      onIngresoAdmitido({ tipo: 'admitido', ...ingreso })
+    } catch (err) {
+      setError(err.message || 'Pago registrado, pero no se pudo validar el ingreso')
+      setRecordatorioWhatsapp(null)
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  if (recordatorioWhatsapp) {
+    return (
+      <section className="pf-control-acceso pf-control-acceso--pago" aria-live="polite">
+        <div className="pf-control-acceso__pago-card">
+          <p className="pf-pago-clase__anuncio-etiqueta">Importante</p>
+          <h1 className="pf-control-acceso__pago-titulo">
+            Envía el comprobante al grupo de WhatsApp
+          </h1>
+          <p className="pf-control-acceso__pago-detalle">
+            El pago por <strong>transferencia</strong> de la cédula{' '}
+            <strong>{recordatorioWhatsapp.cedula}</strong>
+            {recordatorioWhatsapp.valorPagado != null ? (
+              <>
+                {' '}
+                por{' '}
+                <strong>
+                  ${Number(recordatorioWhatsapp.valorPagado).toLocaleString('es-CO')}
+                </strong>
+              </>
+            ) : null}{' '}
+            quedó registrado. Envía la captura al grupo de Rangers Box y luego
+            confirma el ingreso.
+          </p>
+          {error ? (
+            <p className="pf-control-acceso__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="pf-control-acceso__pago-acciones">
+            <button
+              type="button"
+              className="pf-action-btn pf-action-btn--ghost"
+              onClick={onCancelar}
+              disabled={guardando}
+            >
+              Cancelar
+            </button>
+          <button
+            type="button"
+            className="pf-action-btn"
+            onClick={continuarTrasWhatsapp}
+            disabled={guardando}
+          >
+            Confirmar ingreso
+          </button>
+        </div>
+        <LoadingOverlay visible={guardando} label="Validando ingreso" />
+      </div>
+    </section>
+  )
+}
+
+  return (
+    <section className="pf-control-acceso pf-control-acceso--pago" aria-live="polite">
+      <div className="pf-control-acceso__pago-card">
+        <p className="pf-control-acceso__pago-etiqueta">Pago del día</p>
+        <h1 className="pf-control-acceso__pago-titulo">
+          {datos.usuarioEncontrado
+            ? datos.nombre || 'Sin membresía activa'
+            : 'Visitante sin membresía'}
+        </h1>
+        <p className="pf-control-acceso__pago-detalle">
+          Cédula <strong>{datos.cedula}</strong>
+          {datos.tiqueteraAgotada
+            ? ' · Tiquetera sin entradas disponibles'
+            : datos.planVencido
+              ? ' · Plan vencido'
+              : datos.usuarioEncontrado
+                ? ' · Sin plan activo'
+                : ' · Usuario no registrado en el sistema'}
+        </p>
+        <p className="pf-control-acceso__pago-hint">
+          El staff debe registrar el pago de la clase o marcar una cortesía para
+          admitir el ingreso.
+        </p>
+
+        <div className="activar-plan__metodo-pago pf-pago-clase__metodo">
+          <p className="activar-plan__metodo-pago-title">
+            Tipo de registro <span className="activar-plan__required">*</span>
+          </p>
+          <div className="activar-plan__metodo-pago-options pf-pago-clase__opciones">
+            <label
+              className={`activar-plan__metodo-option${
+                metodoPago === 'efectivo'
+                  ? ' activar-plan__metodo-option--checked'
+                  : ''
+              }`}
+            >
+              <input
+                type="radio"
+                name="metodoPagoClaseAcceso"
+                className="activar-plan__radio"
+                value="efectivo"
+                checked={metodoPago === 'efectivo'}
+                onChange={() => seleccionarMetodo('efectivo')}
+                disabled={guardando}
+              />
+              <span>Efectivo</span>
+            </label>
+            <label
+              className={`activar-plan__metodo-option${
+                metodoPago === 'transferencia'
+                  ? ' activar-plan__metodo-option--checked'
+                  : ''
+              }`}
+            >
+              <input
+                type="radio"
+                name="metodoPagoClaseAcceso"
+                className="activar-plan__radio"
+                value="transferencia"
+                checked={metodoPago === 'transferencia'}
+                onChange={() => seleccionarMetodo('transferencia')}
+                disabled={guardando}
+              />
+              <span>Transferencia</span>
+            </label>
+            <label
+              className={`activar-plan__metodo-option activar-plan__metodo-option--cortesia${
+                metodoPago === 'cortesia'
+                  ? ' activar-plan__metodo-option--checked'
+                  : ''
+              }${datos.cortesiaDisponible === false ? ' activar-plan__metodo-option--disabled' : ''}`}
+            >
+              <input
+                type="radio"
+                name="metodoPagoClaseAcceso"
+                className="activar-plan__radio"
+                value="cortesia"
+                checked={metodoPago === 'cortesia'}
+                onChange={() => seleccionarMetodo('cortesia')}
+                disabled={guardando || datos.cortesiaDisponible === false}
+              />
+              <span>Clase de cortesía</span>
+            </label>
+          </div>
+          {datos.cortesiaDisponible === false ? (
+            <p className="pf-pago-clase__cortesia-hint">
+              Esta cédula ya utilizó su clase de cortesía.
+            </p>
+          ) : metodoPago === 'cortesia' ? (
+            <p className="pf-pago-clase__cortesia-hint">
+              Solo una cortesía por cédula en el historial del box.
+            </p>
+          ) : null}
+        </div>
+
+        {requiereValor ? (
+          <label className="pf-control-acceso__field pf-control-acceso__field--pago">
+            <span className="pf-control-acceso__label">
+              Valor pagado por la clase del día{' '}
+              <span className="pf-pago-clase__required">*</span>
+            </span>
+            <div className="pf-pago-clase__valor-wrap">
+              <span className="pf-pago-clase__valor-prefix" aria-hidden="true">
+                $
+              </span>
+              <input
+                type="text"
+                className="pf-control-acceso__input pf-pago-clase__valor-input"
+                value={valorPagado}
+                onChange={(e) => {
+                  setValorPagado(e.target.value.replace(/[^\d.,]/g, ''))
+                  setError('')
+                }}
+                placeholder="Ej. 25000"
+                inputMode="decimal"
+                autoComplete="off"
+                disabled={guardando}
+              />
+            </div>
+          </label>
+        ) : null}
+
+        {error ? (
+          <p className="pf-control-acceso__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <div className="pf-control-acceso__pago-acciones">
+          <button
+            type="button"
+            className="pf-action-btn pf-action-btn--ghost"
+            onClick={onCancelar}
+            disabled={guardando}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="pf-action-btn"
+            onClick={ejecutarRegistro}
+            disabled={!puedeRegistrar}
+          >
+            Registrar y admitir
+          </button>
+        </div>
+      </div>
+      <LoadingOverlay visible={guardando} label="Registrando pago" />
+    </section>
+  )
 }
 
 function BloqueTiqueteraSaldo({ entradasRestantes, entradasIncluidas }) {
@@ -196,6 +481,7 @@ function VistaControlAcceso({
   const [validando, setValidando] = useState(false)
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState(null)
+  const [pagoPendiente, setPagoPendiente] = useState(null)
 
   const enfocarInput = useCallback(() => {
     requestAnimationFrame(() => inputRef.current?.focus())
@@ -205,6 +491,7 @@ function VistaControlAcceso({
     setCedula('')
     setError('')
     setResultado(null)
+    setPagoPendiente(null)
     enfocarInput()
   }, [enfocarInput])
 
@@ -240,6 +527,13 @@ function VistaControlAcceso({
       const res = await registrarAsistencia({ cedula: doc })
       mostrarResultadoTemporal({ tipo: 'admitido', ...res })
     } catch (err) {
+      if (err.codigo === 'requiere_pago_clase' && err.accesoDenegado) {
+        setPagoPendiente({
+          cedula: doc,
+          ...err.accesoDenegado,
+        })
+        return
+      }
       if (err.codigo === 'acceso_denegado' && err.accesoDenegado) {
         mostrarResultadoTemporal({
           tipo: 'denegado',
@@ -255,7 +549,7 @@ function VistaControlAcceso({
   }
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Enter' && !validando && !resultado) {
+    if (event.key === 'Enter' && !validando && !resultado && !pagoPendiente) {
       event.preventDefault()
       ejecutarValidacion()
     }
@@ -263,7 +557,15 @@ function VistaControlAcceso({
 
   let contenido = null
 
-  if (resultado?.tipo === 'admitido' && resultado.esCumpleanos) {
+  if (pagoPendiente) {
+    contenido = (
+      <PantallaRegistroPagoClase
+        datos={pagoPendiente}
+        onCancelar={reiniciar}
+        onIngresoAdmitido={mostrarResultadoTemporal}
+      />
+    )
+  } else if (resultado?.tipo === 'admitido' && resultado.esCumpleanos) {
     contenido = (
       <PantallaCumpleanos
         nombre={resultado.nombre}
@@ -288,8 +590,8 @@ function VistaControlAcceso({
             ¡Bienvenido/a, {resultado.nombre || 'atleta'}!
           </h1>
           <p className="pf-control-acceso__bienvenida-plan">
-            Plan activo:{' '}
-            <strong>{resultado.planNombre || 'Membresía'}</strong>
+            {resultado.tipoAcceso === 'membresia' ? 'Plan activo: ' : 'Acceso: '}
+            <strong>{etiquetaAccesoAdmitido(resultado)}</strong>
           </p>
           <BloqueTiqueteraSaldo
             entradasRestantes={resultado.entradasRestantes}
@@ -423,7 +725,7 @@ function VistaControlAcceso({
         fullscreen || modoKiosco ? ' pf-control-acceso__shell--fullscreen' : ''
       }${modoKiosco ? ' pf-control-acceso__shell--kiosco' : ''}`}
     >
-      {!resultado ? (
+      {!resultado && !pagoPendiente ? (
         <header className="pf-control-acceso__banner" aria-label="Bienvenida">
           <p className="pf-control-acceso__banner-eyebrow">Bienvenido</p>
           <h1 className="pf-control-acceso__banner-titulo">

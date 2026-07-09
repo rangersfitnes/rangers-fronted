@@ -1880,6 +1880,74 @@
   line-height: 1.5;
 }
 
+.pf-control-acceso--pago {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 1.5rem 1rem;
+}
+
+.pf-control-acceso__pago-card {
+  width: min(100%, 520px);
+  padding: 1.5rem 1.35rem;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.pf-control-acceso__pago-etiqueta {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.pf-control-acceso__pago-titulo {
+  margin: 0 0 0.5rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+}
+
+.pf-control-acceso__pago-detalle,
+.pf-control-acceso__pago-hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #d4d4d4;
+}
+
+.pf-control-acceso__pago-hint {
+  color: #a3a3a3;
+  font-size: 0.88rem;
+}
+
+.pf-control-acceso__field--pago {
+  margin-top: 0.5rem;
+}
+
+.pf-control-acceso__pago-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.15rem;
+}
+
+.pf-control-acceso__pago-acciones .pf-action-btn {
+  flex: 1 1 140px;
+}
+
+.activar-plan__metodo-option--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 @keyframes pf-control-acceso-fade-in {
   from {
     opacity: 0;
