@@ -27,6 +27,9 @@ function obtenerPrimerNombre(nombre) {
 }
 
 function etiquetaAccesoAdmitido(resultado) {
+  if (resultado.tipoPlan === 'tiquetera') {
+    return resultado.planNombre || 'Tiquetera'
+  }
   if (resultado.tipoAcceso === 'clase-cortesia') return 'Clase de cortesía'
   if (resultado.tipoAcceso === 'clase-dia') return 'Clase del día'
   return resultado.planNombre || 'Membresía'
@@ -590,7 +593,11 @@ function VistaControlAcceso({
             ¡Bienvenido/a, {resultado.nombre || 'atleta'}!
           </h1>
           <p className="pf-control-acceso__bienvenida-plan">
-            {resultado.tipoAcceso === 'membresia' ? 'Plan activo: ' : 'Acceso: '}
+            {resultado.tipoPlan === 'tiquetera'
+              ? 'Tiquetera: '
+              : resultado.tipoAcceso === 'membresia'
+                ? 'Plan activo: '
+                : 'Acceso: '}
             <strong>{etiquetaAccesoAdmitido(resultado)}</strong>
           </p>
           <BloqueTiqueteraSaldo

@@ -98,6 +98,45 @@ function PlanGrupoCelda({ planGrupo, rolEnPlan }) {
   )
 }
 
+function TiqueteraSaldoCelda({ usuario, planEstado }) {
+  const esTiqueteraActiva =
+    planEstado === 'activo' &&
+    (usuario.planTipo === 'tiquetera' ||
+      Number.isFinite(usuario.entradasIncluidas))
+
+  if (!esTiqueteraActiva || !Number.isFinite(usuario.entradasIncluidas)) {
+    return <span className="usuarios-table__tiquetera-empty">—</span>
+  }
+
+  const incluidas = Number(usuario.entradasIncluidas) || 0
+  const usadas = Number.isFinite(usuario.entradasUsadas)
+    ? Number(usuario.entradasUsadas)
+    : Math.max(0, incluidas - (Number(usuario.entradasRestantes) || 0))
+  const disponibles = Number.isFinite(usuario.entradasRestantes)
+    ? Number(usuario.entradasRestantes)
+    : Math.max(0, incluidas - usadas)
+
+  return (
+    <div
+      className="usuarios-table__tiquetera"
+      title={`Tiquetera: ${usadas} consumida${usadas === 1 ? '' : 's'} · ${disponibles} disponible${disponibles === 1 ? '' : 's'} de ${incluidas}`}
+    >
+      <span className="usuarios-table__tiquetera-badge">Tiquetera</span>
+      <span className="usuarios-table__tiquetera-line">
+        <strong>{usadas}</strong> consumida{usadas === 1 ? '' : 's'}
+      </span>
+      <span
+        className={`usuarios-table__tiquetera-line${
+          disponibles === 0 ? ' usuarios-table__tiquetera-line--agotada' : ''
+        }`}
+      >
+        <strong>{disponibles}</strong> disponible{disponibles === 1 ? '' : 's'}
+      </span>
+      <span className="usuarios-table__tiquetera-meta">de {incluidas}</span>
+    </div>
+  )
+}
+
 function UsuariosTable({ usuarios, onRowClick }) {
   const handleClick = (event, usuario) => {
     onRowClick?.(usuario, { x: event.clientX, y: event.clientY })
@@ -114,6 +153,7 @@ function UsuariosTable({ usuarios, onRowClick }) {
             <th>Documento</th>
             <th>Celular</th>
             <th>Plan</th>
+            <th>Tiquetera</th>
             <th>Método pago</th>
             <th>Valor pagado</th>
             <th>Grupo del plan</th>
@@ -171,6 +211,9 @@ function UsuariosTable({ usuarios, onRowClick }) {
                   >
                     {planLabel}
                   </span>
+                </td>
+                <td className="usuarios-table__tiquetera-cell">
+                  <TiqueteraSaldoCelda usuario={u} planEstado={planEstado} />
                 </td>
                 <td className="usuarios-table__pago-metodo">
                   {u.metodoPagoActivacion || '—'}

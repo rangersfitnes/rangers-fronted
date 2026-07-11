@@ -172,6 +172,56 @@
   border-color: rgba(239, 68, 68, 0.4);
 }
 
+.usuarios-table__tiquetera-cell {
+  min-width: 140px;
+  white-space: nowrap;
+}
+
+.usuarios-table__tiquetera-empty {
+  color: #737373;
+}
+
+.usuarios-table__tiquetera {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.usuarios-table__tiquetera-badge {
+  display: inline-flex;
+  padding: 0.12rem 0.45rem;
+  margin-bottom: 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fdba74;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  border-radius: 9999px;
+}
+
+.usuarios-table__tiquetera-line {
+  font-size: 0.82rem;
+  color: #d4d4d4;
+}
+
+.usuarios-table__tiquetera-line strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.usuarios-table__tiquetera-line--agotada,
+.usuarios-table__tiquetera-line--agotada strong {
+  color: #fca5a5;
+}
+
+.usuarios-table__tiquetera-meta {
+  font-size: 0.72rem;
+  color: #737373;
+}
+
 .usuarios-table__grupo-cell {
   min-width: 180px;
   max-width: 260px;
