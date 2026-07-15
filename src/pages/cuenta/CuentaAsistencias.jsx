@@ -4,6 +4,7 @@ import LoadingOverlay from '../../components/LoadingOverlay.jsx'
 import { obtenerMisAsistencias } from '../../services/asistenciasService.js'
 import {
   claseFilaAsistencia,
+  deduplicarRegistrosAsistencia,
   etiquetaTipoAcceso,
   keyRegistroAsistencia,
 } from '../../utils/asistenciasUtils.js'
@@ -40,7 +41,7 @@ function CuentaAsistencias() {
       setError('')
       try {
         const data = await obtenerMisAsistencias({ signal: controller.signal })
-        setAsistencias(data)
+        setAsistencias(deduplicarRegistrosAsistencia(data))
       } catch (err) {
         if (err?.name === 'AbortError') return
         setError(err.message || 'No se pudieron cargar las asistencias')

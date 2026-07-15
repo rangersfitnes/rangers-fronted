@@ -14,6 +14,7 @@ import {
 } from './cuenta/cuentaUtils.js'
 import {
   claseFilaAsistencia,
+  deduplicarRegistrosAsistencia,
   etiquetaTipoAcceso,
   keyRegistroAsistencia,
   mensajeEliminarRegistro,
@@ -60,7 +61,7 @@ function AdministracionGeneralAsistencias() {
           limite: verTodoHistorial ? 1000 : 500,
           signal,
         })
-        setAsistencias(data)
+        setAsistencias(deduplicarRegistrosAsistencia(data))
       } catch (err) {
         if (err?.name === 'AbortError') return
         toast.error(err.message || 'No se pudieron cargar las asistencias')

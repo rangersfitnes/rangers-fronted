@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { onIdTokenChanged, signOut } from 'firebase/auth'
@@ -30,18 +31,27 @@ const AdminAuthContext = createContext(null)
 export function AdminAuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true)
   const [autenticado, setAutenticado] = useState(false)
+  const ultimoTokenVerificadoRef = useRef(null)
 
   const syncToken = useCallback(async (user) => {
     if (!user) {
       if (getAdminToken()) {
         clearAdminSession()
       }
+      ultimoTokenVerificadoRef.current = null
       setAutenticado(false)
       return
     }
 
     try {
       const idToken = await user.getIdToken()
+
+      // Si el login ya verificó este token, no vuelvas a pegarle al backend.
+      if (ultimoTokenVerificadoRef.current === idToken) {
+        setAutenticado(true)
+        return
+      }
+
       const result = await verifyAdminAccess(idToken)
       const persistente = resolverPersistenciaSesion(
         'admin',
@@ -50,11 +60,13 @@ export function AdminAuthProvider({ children }) {
       saveAdminToken(result.token || idToken, { persistente })
       saveAdminRole(result.rol, { persistente })
       clearUserToken()
+      ultimoTokenVerificadoRef.current = result.token || idToken
       setAutenticado(true)
     } catch (err) {
       const status = err?.status
       if (status === 401 || status === 403) {
         clearAdminSession()
+        ultimoTokenVerificadoRef.current = null
         setAutenticado(false)
         return
       }
@@ -103,12 +115,14 @@ export function AdminAuthProvider({ children }) {
     clearUserToken()
     saveAdminToken(token, { persistente })
     saveAdminRole(rol, { persistente })
+    ultimoTokenVerificadoRef.current = token
     setAutenticado(true)
     setInitializing(false)
   }, [])
 
   const logout = useCallback(async () => {
     clearAdminSession()
+    ultimoTokenVerificadoRef.current = null
     setAutenticado(false)
     await signOut(auth).catch(() => {})
   }, [])

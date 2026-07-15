@@ -19,36 +19,61 @@ export function tokenAdminExpirado(token, ahora = Date.now()) {
   return expiraEn <= ahora + MARGEN_TOKEN_MS
 }
 
+let verifyAdminEnVuelo = null
+
 export async function verifyAdminAccess(idToken) {
-  let response
+  if (!idToken) {
+    const error = new Error('Token de autenticación requerido')
+    error.status = 401
+    throw error
+  }
+
+  // Evita llamadas duplicadas (login + onIdTokenChanged) con el mismo token.
+  if (verifyAdminEnVuelo?.token === idToken) {
+    return verifyAdminEnVuelo.promise
+  }
+
+  const promise = (async () => {
+    let response
+
+    try {
+      response = await fetch(`${API_BASE_URL}/api/auth/verify-admin`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+    } catch {
+      const error = new Error(
+        'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+      )
+      error.status = 0
+      throw error
+    }
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      const error = new Error(
+        data.error || 'No se pudo verificar el acceso de administrador',
+      )
+      error.status = response.status
+      throw error
+    }
+
+    return data
+  })()
+
+  verifyAdminEnVuelo = { token: idToken, promise }
 
   try {
-    response = await fetch(`${API_BASE_URL}/api/auth/verify-admin`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${idToken}`,
-        'Content-Type': 'application/json',
-      },
-    })
-  } catch {
-    const error = new Error(
-      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
-    )
-    error.status = 0
-    throw error
+    return await promise
+  } finally {
+    if (verifyAdminEnVuelo?.token === idToken) {
+      verifyAdminEnVuelo = null
+    }
   }
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    const error = new Error(
-      data.error || 'No se pudo verificar el acceso de administrador',
-    )
-    error.status = response.status
-    throw error
-  }
-
-  return data
 }
 
 export const ADMIN_TOKEN_KEY = 'adminToken'
