@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast.jsx'
 import { etiquetaMetodoPagoColaborador } from '../constants/metodosPagoColaborador.js'
 import { SEDES } from '../services/horariosService.js'
 import {
+  actualizarPresupuestoExternoLiquidacion,
   ejecutarLiquidacionColaborador,
   obtenerEstadoLiquidacionColaboradores,
   obtenerLiquidacionesNomina,
@@ -52,8 +53,10 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
   const [loading, setLoading] = useState(true)
   const [liquidando, setLiquidando] = useState(false)
   const [revertiendo, setRevertiendo] = useState(false)
+  const [editandoPresupuesto, setEditandoPresupuesto] = useState(false)
   const [colaboradorLiquidar, setColaboradorLiquidar] = useState(null)
   const [colaboradorRevertir, setColaboradorRevertir] = useState(null)
+  const [liquidacionEditar, setLiquidacionEditar] = useState(null)
 
   const cargarHistorial = useCallback(async () => {
     try {
@@ -97,21 +100,60 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
     [estado, colaboradores],
   )
 
-  const handleLiquidar = async (colaborador) => {
+  const handleLiquidar = async (colaborador, opciones = {}) => {
     if (!colaborador?.uid) return
 
     setLiquidando(true)
     try {
       await ejecutarLiquidacionColaborador({
         colaboradorUid: colaborador.uid,
+        presupuestoExterno: Boolean(opciones.presupuestoExterno),
       })
-      toast.success(`Nómina de ${colaborador.nombre} liquidada`)
+      toast.success(
+        opciones.presupuestoExterno
+          ? `Nómina de ${colaborador.nombre} liquidada con presupuesto externo (sin salida en caja)`
+          : `Nómina de ${colaborador.nombre} liquidada`,
+      )
       setColaboradorLiquidar(null)
       await Promise.all([cargarEstado(), cargarHistorial()])
     } catch (err) {
       toast.error(err.message || 'No se pudo liquidar la nómina')
     } finally {
       setLiquidando(false)
+    }
+  }
+
+  const handleConfirmarPresupuestoExterno = async () => {
+    if (!liquidacionEditar?.id) return
+
+    const marcarExterno = !liquidacionEditar.presupuestoExterno
+    setEditandoPresupuesto(true)
+    try {
+      const resultado = await actualizarPresupuestoExternoLiquidacion({
+        liquidacionId: liquidacionEditar.id,
+        presupuestoExterno: marcarExterno,
+      })
+
+      if (marcarExterno) {
+        toast.success(
+          resultado.movimientoEliminado
+            ? 'Liquidación marcada como presupuesto externo. Se eliminó el movimiento de caja.'
+            : 'Liquidación marcada como presupuesto externo.',
+        )
+      } else {
+        toast.success(
+          resultado.movimientoCreado
+            ? 'Liquidación vuelve a caja del box. Se registró la salida en finanzas.'
+            : 'Liquidación actualizada.',
+        )
+      }
+
+      setLiquidacionEditar(null)
+      await cargarHistorial()
+    } catch (err) {
+      toast.error(err.message || 'No se pudo actualizar la liquidación')
+    } finally {
+      setEditandoPresupuesto(false)
     }
   }
 
@@ -141,8 +183,12 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
     }
   }
 
-  const accionesDeshabilitadas = loading || liquidando || revertiendo
+  const accionesDeshabilitadas =
+    loading || liquidando || revertiendo || editandoPresupuesto
   const ultima = colaboradorRevertir?.ultimaLiquidacion
+  const editandoAExterno = Boolean(
+    liquidacionEditar && !liquidacionEditar.presupuestoExterno,
+  )
 
   return (
     <section className="ag-page__view">
@@ -316,10 +362,12 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
                   <th>Colaborador</th>
                   <th>Turnos liquidados</th>
                   <th>Método de pago</th>
+                  <th>Origen del pago</th>
                   <th>Turnos</th>
                   <th>Total</th>
                   <th>Liquidado</th>
                   <th>Por</th>
+                  <th aria-label="Acciones" />
                 </tr>
               </thead>
               <tbody>
@@ -332,10 +380,31 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
                         ? etiquetaMetodoPagoColaborador(item.metodoPago)
                         : '—'}
                     </td>
+                    <td>
+                      {item.presupuestoExterno ? (
+                        <span className="ag-liquidacion__badge ag-liquidacion__badge--externo">
+                          Presupuesto externo
+                        </span>
+                      ) : (
+                        <span className="ag-liquidacion__badge">Caja del box</span>
+                      )}
+                    </td>
                     <td>{item.totalTurnos}</td>
                     <td>{formatearPrecioCuenta(item.totalPago)}</td>
                     <td>{formatearFechaHoraCuenta(item.liquidadoEn)}</td>
                     <td>{item.liquidadoPorNombre || '—'}</td>
+                    <td className="ag-finanzas__tabla-acciones">
+                      <button
+                        type="button"
+                        className="ag-action-btn ag-action-btn--ghost"
+                        onClick={() => setLiquidacionEditar(item)}
+                        disabled={accionesDeshabilitadas}
+                      >
+                        {item.presupuestoExterno
+                          ? 'Pasar a caja del box'
+                          : 'Marcar presupuesto externo'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -374,14 +443,40 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
         loading={revertiendo}
       />
 
+      <ConfirmModal
+        open={Boolean(liquidacionEditar)}
+        onClose={() => {
+          if (editandoPresupuesto) return
+          setLiquidacionEditar(null)
+        }}
+        onConfirm={handleConfirmarPresupuestoExterno}
+        title={
+          editandoAExterno
+            ? 'Marcar como presupuesto externo'
+            : 'Pasar a caja del box'
+        }
+        message={
+          liquidacionEditar
+            ? editandoAExterno
+              ? `¿Marcar la liquidación de ${liquidacionEditar.colaboradorNombre} (${formatearPrecioCuenta(liquidacionEditar.totalPago)}) como presupuesto externo? Se eliminará el movimiento de caja y dejará de aparecer en egresos/salidas.`
+              : `¿Registrar de nuevo la liquidación de ${liquidacionEditar.colaboradorNombre} (${formatearPrecioCuenta(liquidacionEditar.totalPago)}) como salida de la caja del box? Volverá a contar en egresos y liquidez.`
+            : ''
+        }
+        confirmLabel={editandoAExterno ? 'Marcar externo' : 'Registrar en caja'}
+        variant={editandoAExterno ? 'danger' : 'default'}
+        loading={editandoPresupuesto}
+      />
+
       <LoadingOverlay
-        visible={loading || liquidando || revertiendo}
+        visible={loading || liquidando || revertiendo || editandoPresupuesto}
         label={
           liquidando
             ? 'Registrando liquidación'
             : revertiendo
               ? 'Revirtiendo liquidación'
-              : 'Cargando colaboradores'
+              : editandoPresupuesto
+                ? 'Actualizando liquidación'
+                : 'Cargando colaboradores'
         }
       />
     </section>

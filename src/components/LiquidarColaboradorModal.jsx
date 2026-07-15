@@ -29,6 +29,7 @@ function LiquidarColaboradorModal({
   const [error, setError] = useState('')
   const [turnoEliminar, setTurnoEliminar] = useState(null)
   const [eliminando, setEliminando] = useState(false)
+  const [presupuestoExterno, setPresupuestoExterno] = useState(false)
 
   const cargarPreview = useCallback(async () => {
     if (!colaborador?.uid) return
@@ -53,6 +54,7 @@ function LiquidarColaboradorModal({
       setPreview(null)
       setError('')
       setTurnoEliminar(null)
+      setPresupuestoExterno(false)
       return
     }
 
@@ -120,7 +122,7 @@ function LiquidarColaboradorModal({
       <button
         type="button"
         className="modal__btn modal__btn--primary"
-        onClick={() => onLiquidar?.(colaborador)}
+        onClick={() => onLiquidar?.(colaborador, { presupuestoExterno })}
         disabled={!puedeLiquidar}
       >
         {liquidando ? 'Liquidando…' : 'Liquidar'}
@@ -184,6 +186,22 @@ function LiquidarColaboradorModal({
                     hasta resolverlos en «Aprobar horas extra».
                   </p>
                 ) : null}
+
+                <label className="liquidar-colaborador__externo">
+                  <input
+                    type="checkbox"
+                    checked={presupuestoExterno}
+                    onChange={(e) => setPresupuestoExterno(e.target.checked)}
+                    disabled={ocupado}
+                  />
+                  <span>
+                    Pagado con <strong>presupuesto externo</strong> al box
+                    <small>
+                      No crea salida en finanzas ni afecta el disponible de
+                      efectivo, transferencia o Wompi.
+                    </small>
+                  </span>
+                </label>
               </section>
 
               <section className="liquidar-colaborador__desglose">

@@ -7,6 +7,7 @@ import { exportarEstadoFinancieroExcel } from '../utils/exportReporteFinanciero.
 import VistaReportesFinancieros from './AdministracionGeneralReportesFinancieros.jsx'
 import FinanzasResumenIngresosEgresos from './FinanzasResumenIngresosEgresos.jsx'
 import FinanzasRegistrarSalidas from './FinanzasRegistrarSalidas.jsx'
+import FinanzasTraspasos from './FinanzasTraspasos.jsx'
 import './AdministracionGeneral.css'
 
 const FINANZAS_CARDS = [
@@ -21,6 +22,13 @@ const FINANZAS_CARDS = [
     titulo: 'Registrar salidas',
     descripcion: 'Registra egresos, gastos operativos y pagos salientes del box.',
     icono: '↘',
+  },
+  {
+    id: 'traspasos',
+    titulo: 'Traspasos entre cuentas',
+    descripcion:
+      'Mueve dinero entre efectivo, transferencia y Wompi sin alterar la liquidez total.',
+    icono: '⇄',
   },
   {
     id: 'resumen',
@@ -111,6 +119,10 @@ function VistaFinanzas() {
 
   if (seccion === 'salidas') {
     return <FinanzasRegistrarSalidas onVolver={volver} />
+  }
+
+  if (seccion === 'traspasos') {
+    return <FinanzasTraspasos onVolver={volver} />
   }
 
   if (seccion === 'resumen') {

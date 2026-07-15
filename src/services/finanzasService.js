@@ -32,3 +32,34 @@ export async function registrarSalida({
   }
   return data.salida
 }
+
+export async function registrarTraspaso({
+  fecha,
+  desde,
+  hacia,
+  monto,
+  concepto,
+  sede = SEDE_HORARIOS,
+}) {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/cierre-diario/traspasos`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sede, fecha, desde, hacia, monto, concepto }),
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo registrar el traspaso')
+  }
+  return data.traspaso
+}

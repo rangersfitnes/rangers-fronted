@@ -26,6 +26,13 @@ function obtenerPrimerNombre(nombre) {
   return nombre.trim().split(/\s+/)[0]
 }
 
+/** Formatea el valor con puntos de miles (ej. 25000 → 25.000). */
+function formatearValorMiles(valor) {
+  const digitos = String(valor ?? '').replace(/\D/g, '')
+  if (!digitos) return ''
+  return Number(digitos).toLocaleString('es-CO')
+}
+
 function etiquetaAccesoAdmitido(resultado) {
   if (resultado.tipoPlan === 'tiquetera') {
     return resultado.planNombre || 'Tiquetera'
@@ -270,11 +277,11 @@ function PantallaRegistroPagoClase({ datos, onCancelar, onIngresoAdmitido }) {
                 className="pf-control-acceso__input pf-pago-clase__valor-input"
                 value={valorPagado}
                 onChange={(e) => {
-                  setValorPagado(e.target.value.replace(/[^\d.,]/g, ''))
+                  setValorPagado(formatearValorMiles(e.target.value))
                   setError('')
                 }}
-                placeholder="Ej. 25000"
-                inputMode="decimal"
+                placeholder="Ej. 25.000"
+                inputMode="numeric"
                 autoComplete="off"
                 disabled={guardando}
               />

@@ -48,7 +48,9 @@ export function useEliminarMovimiento({ onEliminado }) {
       title="Eliminar movimiento"
       message={
         target
-          ? `¿Eliminar "${target.descripcion || 'este movimiento'}"? Se borrará de Firestore y ya no aparecerá en los reportes.`
+          ? target.categoria === 'traspaso' || target.descripcion?.includes?.('Traspaso')
+            ? `¿Eliminar el traspaso "${target.descripcion || 'entre cuentas'}"? Se borrarán ambos lados (origen y destino) y se actualizará el disponible.`
+            : `¿Eliminar "${target.descripcion || 'este movimiento'}"? Se borrará de Firestore y ya no aparecerá en los reportes.`
           : ''
       }
       confirmLabel="Eliminar"

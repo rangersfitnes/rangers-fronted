@@ -12,6 +12,13 @@ function etiquetaPlanEstado(planEstado) {
   return 'Sin membresía activa'
 }
 
+/** Formatea el valor con puntos de miles (ej. 25000 → 25.000). */
+function formatearValorMiles(valor) {
+  const digitos = String(valor ?? '').replace(/\D/g, '')
+  if (!digitos) return ''
+  return Number(digitos).toLocaleString('es-CO')
+}
+
 function PanelUsuarioRegistrado({ usuario, onCerrar }) {
   const documentoCompleto = [usuario.tipoDocumento, usuario.documento]
     .filter(Boolean)
@@ -352,12 +359,12 @@ function VistaPagoClases() {
                 className="pf-usuarios-busqueda__input pf-pago-clase__valor-input"
                 value={valorPagado}
                 onChange={(e) => {
-                  setValorPagado(e.target.value.replace(/[^\d.,]/g, ''))
+                  setValorPagado(formatearValorMiles(e.target.value))
                   setError('')
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Ej. 25000"
-                inputMode="decimal"
+                placeholder="Ej. 25.000"
+                inputMode="numeric"
                 autoComplete="off"
                 disabled={guardando}
               />

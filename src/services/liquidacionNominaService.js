@@ -57,7 +57,10 @@ export async function obtenerPreviewColaborador({ colaboradorUid }) {
   return data.preview
 }
 
-export async function ejecutarLiquidacionColaborador({ colaboradorUid }) {
+export async function ejecutarLiquidacionColaborador({
+  colaboradorUid,
+  presupuestoExterno = false,
+}) {
   let response
   try {
     response = await fetch(
@@ -68,7 +71,10 @@ export async function ejecutarLiquidacionColaborador({ colaboradorUid }) {
           ...(await authHeaders()),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ colaboradorUid }),
+        body: JSON.stringify({
+          colaboradorUid,
+          presupuestoExterno: Boolean(presupuestoExterno),
+        }),
       },
     )
   } catch {
@@ -78,6 +84,34 @@ export async function ejecutarLiquidacionColaborador({ colaboradorUid }) {
   const data = await parseJsonResponse(
     response,
     'No se pudo ejecutar la liquidación',
+  )
+  return data
+}
+
+export async function actualizarPresupuestoExternoLiquidacion({
+  liquidacionId,
+  presupuestoExterno,
+}) {
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nominas/liquidaciones/${encodeURIComponent(liquidacionId)}/presupuesto-externo`,
+      {
+        method: 'PATCH',
+        headers: {
+          ...(await authHeaders()),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ presupuestoExterno: Boolean(presupuestoExterno) }),
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await parseJsonResponse(
+    response,
+    'No se pudo actualizar la liquidación',
   )
   return data
 }
