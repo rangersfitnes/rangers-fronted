@@ -44,7 +44,10 @@ function etiquetaAccesoAdmitido(resultado) {
 
 function PantallaRegistroPagoClase({ datos, onCancelar, onIngresoAdmitido }) {
   const [metodoPago, setMetodoPago] = useState('')
-  const [valorPagado, setValorPagado] = useState('')
+  const [valorPagado, setValorPagado] = useState(() => formatearValorMiles('10000'))
+  const [nombreCliente, setNombreCliente] = useState(() =>
+    String(datos?.nombre ?? '').trim(),
+  )
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [recordatorioWhatsapp, setRecordatorioWhatsapp] = useState(null)
@@ -61,7 +64,11 @@ function PantallaRegistroPagoClase({ datos, onCancelar, onIngresoAdmitido }) {
   const seleccionarMetodo = (valor) => {
     setMetodoPago(valor)
     setError('')
-    if (valor === 'cortesia') setValorPagado('')
+    if (valor === 'cortesia') {
+      setValorPagado('')
+    } else if (!valorPagado.trim()) {
+      setValorPagado(formatearValorMiles('10000'))
+    }
   }
 
   const ejecutarRegistro = async () => {
@@ -82,6 +89,7 @@ function PantallaRegistroPagoClase({ datos, onCancelar, onIngresoAdmitido }) {
         cedula: datos.cedula,
         metodoPago,
         valorPagado: requiereValor ? valorPagado : undefined,
+        nombre: nombreCliente.trim() || undefined,
       })
 
       if (pago?.metodoPago === 'transferencia' || pago?.requiereCapturaWhatsapp) {
@@ -190,6 +198,26 @@ function PantallaRegistroPagoClase({ datos, onCancelar, onIngresoAdmitido }) {
           El staff debe registrar el pago de la clase o marcar una cortesía para
           admitir el ingreso.
         </p>
+
+        <label className="pf-control-acceso__field pf-control-acceso__field--pago">
+          <span className="pf-control-acceso__label">
+            Nombre del visitante{' '}
+            <span className="pf-pago-clase__opcional">(opcional)</span>
+          </span>
+          <input
+            type="text"
+            className="pf-control-acceso__input"
+            value={nombreCliente}
+            onChange={(e) => {
+              setNombreCliente(e.target.value)
+              setError('')
+            }}
+            placeholder="Ej. Juan Pérez"
+            autoComplete="off"
+            maxLength={120}
+            disabled={guardando}
+          />
+        </label>
 
         <div className="activar-plan__metodo-pago pf-pago-clase__metodo">
           <p className="activar-plan__metodo-pago-title">

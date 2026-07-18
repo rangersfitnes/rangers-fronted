@@ -51,21 +51,53 @@ function renderEstadoExtra({ horasTurno, estadoHorasExtra }) {
   )
 }
 
+function renderEstadoDominical(estadoRecargoDominical) {
+  if (!estadoRecargoDominical?.etiqueta) return null
+
+  const horas = Number(estadoRecargoDominical.horasDominicales) || 0
+  const detalleHoras =
+    horas > 0 ? ` · ${horas.toFixed(2)} h dominicales` : ''
+
+  return (
+    <span
+      className={
+        estadoRecargoDominical.activoAhora
+          ? 'cronometro-turno__dominical cronometro-turno__dominical--activo'
+          : 'cronometro-turno__dominical'
+      }
+    >
+      {estadoRecargoDominical.etiqueta}
+      {detalleHoras}
+    </span>
+  )
+}
+
 function CronometroTurnoWidget({
   tiempoMs,
   horasTurno = 0,
   estadoHorasExtra,
+  estadoRecargoDominical,
   onFinalizar,
   finalizando,
 }) {
+  const enDominical = Boolean(estadoRecargoDominical?.activoAhora)
+
   return (
-    <aside className="cronometro-turno" aria-live="polite">
+    <aside
+      className={
+        enDominical
+          ? 'cronometro-turno cronometro-turno--dominical'
+          : 'cronometro-turno'
+      }
+      aria-live="polite"
+    >
       <div className="cronometro-turno__info">
         <span className="cronometro-turno__estado">En turno</span>
         <span className="cronometro-turno__tiempo">
           {formatearTiempoLaborado(tiempoMs)}
         </span>
         {renderEstadoExtra({ horasTurno, estadoHorasExtra })}
+        {renderEstadoDominical(estadoRecargoDominical)}
       </div>
       <button
         type="button"

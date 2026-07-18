@@ -75,8 +75,9 @@ function PanelUsuarioRegistrado({ usuario, onCerrar }) {
 function VistaPagoClases() {
   const toast = useToast()
   const [cedula, setCedula] = useState('')
+  const [nombreCliente, setNombreCliente] = useState('')
   const [metodoPago, setMetodoPago] = useState('')
-  const [valorPagado, setValorPagado] = useState('')
+  const [valorPagado, setValorPagado] = useState(() => formatearValorMiles('10000'))
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [recordatorioOpen, setRecordatorioOpen] = useState(false)
@@ -96,14 +97,19 @@ function VistaPagoClases() {
 
   const limpiarFormulario = () => {
     setCedula('')
+    setNombreCliente('')
     setMetodoPago('')
-    setValorPagado('')
+    setValorPagado(formatearValorMiles('10000'))
   }
 
   const seleccionarMetodo = (valor) => {
     setMetodoPago(valor)
     setError('')
-    if (valor === 'cortesia') setValorPagado('')
+    if (valor === 'cortesia') {
+      setValorPagado('')
+    } else if (!valorPagado.trim()) {
+      setValorPagado(formatearValorMiles('10000'))
+    }
   }
 
   const handleGuardar = async () => {
@@ -132,6 +138,7 @@ function VistaPagoClases() {
         cedula: doc,
         metodoPago,
         valorPagado: requiereValor ? valorPagado : undefined,
+        nombre: nombreCliente.trim() || undefined,
       })
 
       setUltimoPago({
@@ -269,6 +276,27 @@ function VistaPagoClases() {
             placeholder="Número de cédula"
             inputMode="numeric"
             autoComplete="off"
+            disabled={guardando}
+          />
+        </label>
+
+        <label className="pf-usuarios-busqueda__field pf-pago-clase__field">
+          <span className="pf-usuarios-busqueda__label">
+            Nombre del visitante{' '}
+            <span className="pf-pago-clase__opcional">(opcional)</span>
+          </span>
+          <input
+            type="text"
+            className="pf-usuarios-busqueda__input"
+            value={nombreCliente}
+            onChange={(e) => {
+              setNombreCliente(e.target.value)
+              setError('')
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Ej. Juan Pérez"
+            autoComplete="off"
+            maxLength={120}
             disabled={guardando}
           />
         </label>

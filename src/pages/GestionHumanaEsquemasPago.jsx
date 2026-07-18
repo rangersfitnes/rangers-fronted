@@ -35,7 +35,7 @@ function validarDatosEsquema(datos) {
 
   const camposPorcentaje = [
     ['porcentajeHoraExtra', 'hora extra'],
-    ['porcentajeRecargoDominical', 'recargo dominical'],
+    ['porcentajeRecargoDominical', 'recargo dominical / festivo'],
     ['porcentajeRecargoNocturno', 'recargo nocturno'],
   ]
 

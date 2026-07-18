@@ -39,6 +39,7 @@ function CampoPorcentajeConCalculo({
   ariaLabel,
   submitting,
   required,
+  hint,
 }) {
   return (
     <label className="crear-plan__field">
@@ -66,7 +67,7 @@ function CampoPorcentajeConCalculo({
         </div>
       </div>
       <span className="ag-esquema-pago__hint">
-        Porcentaje sobre la hora ordinaria.
+        {hint || 'Porcentaje sobre la hora ordinaria.'}
         {preview
           ? ` Incremento: +${formatearPrecioCuenta(preview.incremento)}`
           : ''}
@@ -252,7 +253,7 @@ function EsquemaPagoFormModal({
         />
 
         <CampoPorcentajeConCalculo
-          label="Recargo dominical (%) *"
+          label="Recargo dominical / festivo (%) *"
           value={form.porcentajeRecargoDominical}
           onChange={handleChange('porcentajeRecargoDominical')}
           placeholder="Ej. 75"
@@ -260,6 +261,7 @@ function EsquemaPagoFormModal({
           ariaLabel="Valor hora con recargo dominical calculado"
           submitting={submitting}
           required
+          hint="Se aplica a horas ordinarias en domingo o festivo oficial de Colombia."
         />
 
         <CampoPorcentajeConCalculo

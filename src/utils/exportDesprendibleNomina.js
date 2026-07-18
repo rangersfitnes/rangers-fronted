@@ -29,12 +29,15 @@ function nombreArchivoDesprendible(desprendible) {
 }
 
 function filaTurno(linea) {
+  const horasDom = Number(linea.horasDominicales) || 0
+  const etiquetaDom = horasDom > 0 ? `${horasDom.toFixed(2)} h` : '—'
+
   return [
     formatearFechaTabla(linea.inicioEn),
     `${formatearHoraCuenta(linea.inicioEn)} – ${formatearHoraCuenta(linea.finEn)}`,
     formatearDuracionMs(linea.duracionMs),
     Number(linea.horasTrabajadas) > 0 ? `${Number(linea.horasTrabajadas).toFixed(2)} h` : '—',
-    linea.esDomingo ? 'Sí' : 'No',
+    etiquetaDom,
     linea.horasNocturnas > 0 ? `${linea.horasNocturnas} h` : '—',
     linea.horasExtra > 0 ? `${linea.horasExtra} h` : '—',
     formatearPrecioCuenta(linea.pagoOrdinario),
@@ -109,7 +112,7 @@ export function exportarDesprendibleNominaPdf(desprendible) {
         'Horario',
         'Tiempo',
         'Horas',
-        'Dom.',
+        'H. dom.',
         'H. noct.',
         'H. extra',
         'Ordinario',
@@ -132,6 +135,14 @@ export function exportarDesprendibleNominaPdf(desprendible) {
       'Horas trabajadas',
       `${Number(resumen.totalHorasTrabajadas || 0).toFixed(2)} h`,
     ],
+    ...(Number(resumen.totalHorasDominicales) > 0
+      ? [
+          [
+            'Horas dominicales / festivo',
+            `${Number(resumen.totalHorasDominicales).toFixed(2)} h`,
+          ],
+        ]
+      : []),
     ['Pago ordinario', formatearPrecioCuenta(resumen.pagoOrdinario)],
     ['Pago horas extra', formatearPrecioCuenta(resumen.pagoExtra)],
     [

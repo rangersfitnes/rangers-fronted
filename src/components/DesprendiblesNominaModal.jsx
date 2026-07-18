@@ -51,6 +51,9 @@ function DesprendiblesNominaModal({ open, onClose, desprendibles = [] }) {
                       {resumen.totalHorasTrabajadas > 0
                         ? ` · ${Number(resumen.totalHorasTrabajadas).toFixed(2)} h`
                         : ''}
+                      {resumen.totalHorasDominicales > 0
+                        ? ` · ${Number(resumen.totalHorasDominicales).toFixed(2)} h dominicales`
+                        : ''}
                       {resumen.totalHorasExtra > 0
                         ? ` · ${resumen.totalHorasExtra} h extra`
                         : ''}
@@ -63,8 +66,14 @@ function DesprendiblesNominaModal({ open, onClose, desprendibles = [] }) {
                         ? ` · Extra ${formatearPrecioCuenta(resumen.pagoExtra)}`
                         : ''}
                       {resumen.pagoRecargoDominical > 0
-                        ? ` · Dom. ${formatearPrecioCuenta(resumen.pagoRecargoDominical)}`
-                        : ''}
+                        ? ` · Dom. ${formatearPrecioCuenta(resumen.pagoRecargoDominical)}${
+                            resumen.totalHorasDominicales > 0
+                              ? ` (${Number(resumen.totalHorasDominicales).toFixed(2)} h)`
+                              : ''
+                          }`
+                        : resumen.totalHorasDominicales > 0
+                          ? ` · ${Number(resumen.totalHorasDominicales).toFixed(2)} h dominicales`
+                          : ''}
                       {resumen.pagoRecargoNocturno > 0
                         ? ` · Noct. ${formatearPrecioCuenta(resumen.pagoRecargoNocturno)}`
                         : ''}
@@ -103,7 +112,15 @@ function DesprendiblesNominaModal({ open, onClose, desprendibles = [] }) {
                             {turno.horasExtra > 0
                               ? `${turno.horasExtra} h extra · `
                               : ''}
-                            {turno.esDomingo ? 'Dominical · ' : ''}
+                            {turno.horasDominicales > 0
+                              ? `${Number(turno.horasDominicales).toFixed(2)} h dominicales · `
+                              : turno.esDomingo
+                                ? turno.esFestivo && !turno.esDiaDominical
+                                  ? 'Festivo · '
+                                  : turno.esFestivo
+                                    ? 'Dominical/festivo · '
+                                    : 'Dominical · '
+                                : ''}
                             {turno.horasNocturnas > 0
                               ? `${turno.horasNocturnas} h noct. · `
                               : ''}

@@ -223,9 +223,15 @@ function LiquidarColaboradorModal({
                       <strong>{formatearPrecioCuenta(resumen.pagoExtra)}</strong>
                     </li>
                   ) : null}
-                  {resumen.pagoRecargoDominical > 0 ? (
+                  {resumen.pagoRecargoDominical > 0 ||
+                  resumen.totalHorasDominicales > 0 ? (
                     <li>
-                      <span>Recargo dominical</span>
+                      <span>
+                        Recargo dominical / festivo
+                        {resumen.totalHorasDominicales > 0
+                          ? ` (${formatearHoras(resumen.totalHorasDominicales)})`
+                          : ''}
+                      </span>
                       <strong>
                         {formatearPrecioCuenta(resumen.pagoRecargoDominical)}
                       </strong>
@@ -254,6 +260,7 @@ function LiquidarColaboradorModal({
                           <th>Fecha</th>
                           <th>Horario</th>
                           <th>Horas</th>
+                          <th>Dominicales</th>
                           <th>Extra</th>
                           <th>Pago</th>
                           <th aria-label="Acciones" />
@@ -268,6 +275,11 @@ function LiquidarColaboradorModal({
                               {formatearHoraCuenta(turno.finEn)}
                             </td>
                             <td>{formatearHoras(turno.horasTrabajadas)}</td>
+                            <td>
+                              {turno.horasDominicales > 0
+                                ? formatearHoras(turno.horasDominicales)
+                                : '—'}
+                            </td>
                             <td>
                               {turno.horasExtra > 0
                                 ? formatearHoras(turno.horasExtra)

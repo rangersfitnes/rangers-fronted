@@ -17,7 +17,10 @@ import {
   obtenerPerfilColaborador,
   obtenerTurnoActivo,
 } from '../services/turnosService.js'
-import { obtenerEstadoHorasExtra } from '../utils/calculoPagoTurnoUtils.js'
+import {
+  obtenerEstadoHorasExtra,
+  obtenerEstadoRecargoDominical,
+} from '../utils/calculoPagoTurnoUtils.js'
 import { normalizarTimestampMs } from '../pages/cuenta/cuentaUtils.js'
 
 const ColaboradorTurnoContext = createContext(null)
@@ -120,6 +123,25 @@ export function ColaboradorTurnoProvider({ children }) {
     return obtenerEstadoHorasExtra(tiempoTranscurridoMs, horasTurnoJornada)
   }, [horasTurnoJornada, tiempoTranscurridoMs])
 
+  const estadoRecargoDominical = useMemo(() => {
+    if (!inicioTurnoMs) {
+      return {
+        activoAhora: false,
+        esDomingoAhora: false,
+        esFestivoAhora: false,
+        horasDominicales: 0,
+        tocaDomingo: false,
+        tocaFestivo: false,
+        etiqueta: '',
+      }
+    }
+    return obtenerEstadoRecargoDominical(
+      inicioTurnoMs,
+      tiempoTranscurridoMs,
+      horasTurnoJornada,
+    )
+  }, [inicioTurnoMs, tiempoTranscurridoMs, horasTurnoJornada])
+
   const jornadaCompleta =
     horasTurnoJornada > 0 && !estadoHorasExtra.enJornada
 
@@ -215,12 +237,13 @@ export function ColaboradorTurnoProvider({ children }) {
                 finalizando={finalizando}
               />
               <CronometroTurnoWidget
-              tiempoMs={tiempoTranscurridoMs}
-              horasTurno={horasTurnoJornada}
-              estadoHorasExtra={estadoHorasExtra}
-              onFinalizar={handleFinalizarTurno}
-              finalizando={finalizando}
-            />
+                tiempoMs={tiempoTranscurridoMs}
+                horasTurno={horasTurnoJornada}
+                estadoHorasExtra={estadoHorasExtra}
+                estadoRecargoDominical={estadoRecargoDominical}
+                onFinalizar={handleFinalizarTurno}
+                finalizando={finalizando}
+              />
             </>
           ) : null}
         </>

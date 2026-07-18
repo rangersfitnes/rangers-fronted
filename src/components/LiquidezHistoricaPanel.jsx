@@ -121,6 +121,18 @@ function LiquidezHistoricaPanel({
               clickable
               onClick={() => setModalAbierto(true)}
             />
+            <TarjetaContador
+              label="Liquidez disponible"
+              valor={
+                (Number(liquidez.efectivo?.disponible) || 0) +
+                (Number(liquidez.transferencia?.disponible) || 0) +
+                (Number(liquidez.wompi?.disponible) || 0)
+              }
+              hint="Efectivo + transferencia + Wompi"
+              variante="total"
+              clickable
+              onClick={() => setModalAbierto(true)}
+            />
           </div>
         ) : null}
       </section>

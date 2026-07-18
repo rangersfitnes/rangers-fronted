@@ -6,6 +6,7 @@ export async function registrarPagoClaseDia({
   cedula,
   metodoPago,
   valorPagado,
+  nombre,
   sede = SEDE_HORARIOS,
 }) {
   const token = await requerirAdminToken()
@@ -18,7 +19,7 @@ export async function registrarPagoClaseDia({
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ cedula, metodoPago, valorPagado, sede }),
+      body: JSON.stringify({ cedula, metodoPago, valorPagado, nombre, sede }),
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')

@@ -757,6 +757,13 @@
   color: #f97316;
 }
 
+.pf-pago-clase__opcional {
+  color: #a3a3a3;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .pf-pago-clase__metodo {
   margin: 0;
 }

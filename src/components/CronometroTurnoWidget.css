@@ -56,6 +56,23 @@
   color: #fb923c;
 }
 
+.cronometro-turno--dominical {
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(251, 146, 60, 0.2);
+}
+
+.cronometro-turno__dominical {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #fdba74;
+}
+
+.cronometro-turno__dominical--activo {
+  color: #fb923c;
+}
+
 .cronometro-turno__btn {
   padding: 0.55rem 0.85rem;
   font-size: 0.72rem;
