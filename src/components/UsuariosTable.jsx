@@ -1,4 +1,9 @@
 import UserIcon from './icons/UserIcon.jsx'
+import { useDiaColombia } from '../hooks/useDiaColombia.js'
+import {
+  DIAS_PROXIMO_A_VENCER,
+  obtenerEstadoDiasVigencia,
+} from '../utils/planVigenciaUtils.js'
 import { formatearPrecioCuenta } from '../pages/cuenta/cuentaUtils.js'
 import './UsuariosTable.css'
 
@@ -137,13 +142,47 @@ function TiqueteraSaldoCelda({ usuario, planEstado }) {
   )
 }
 
+function DiasVigenciaCelda({ planEstado, vigencia }) {
+  const info = obtenerEstadoDiasVigencia(planEstado, vigencia)
+
+  if (info.estado === 'sin_plan') {
+    return <span className="usuarios-table__dias-empty">—</span>
+  }
+
+  const claseEstado =
+    info.estado === 'vencido'
+      ? 'usuarios-table__dias--vencido'
+      : info.estado === 'proximo'
+        ? 'usuarios-table__dias--proximo'
+        : 'usuarios-table__dias--ok'
+
+  return (
+    <div
+      className={`usuarios-table__dias ${claseEstado}`}
+      title={
+        info.estado === 'proximo'
+          ? `Quedan ${info.etiquetaDias} · próximo a vencer (≤ ${DIAS_PROXIMO_A_VENCER} días)`
+          : info.estado === 'vencido'
+            ? 'El plan ya no está vigente'
+            : `Quedan ${info.etiquetaDias} de vigencia`
+      }
+    >
+      <strong>{info.etiquetaDias}</strong>
+      <span className="usuarios-table__dias-estado">{info.etiquetaEstado}</span>
+    </div>
+  )
+}
+
 function UsuariosTable({ usuarios, onRowClick }) {
+  // Fuerza recálculo visual cuando cambia el día en Colombia.
+  const diaColombia = useDiaColombia()
+
   const handleClick = (event, usuario) => {
     onRowClick?.(usuario, { x: event.clientX, y: event.clientY })
   }
 
   return (
-    <div className="usuarios-table-wrapper">
+    <div className="usuarios-table-wrapper" data-dia-colombia={diaColombia}>
       <table className="usuarios-table">
         <thead>
           <tr>
@@ -159,6 +198,7 @@ function UsuariosTable({ usuarios, onRowClick }) {
             <th>Grupo del plan</th>
             <th>Inicio</th>
             <th>Vigencia</th>
+            <th>Días restantes</th>
             <th>Vigencia admin.</th>
             <th>Creado</th>
           </tr>
@@ -175,7 +215,7 @@ function UsuariosTable({ usuarios, onRowClick }) {
 
             return (
               <tr
-                key={u.uid}
+                key={`${u.uid}-${diaColombia}`}
                 className="usuarios-table__row"
                 onClick={(e) => handleClick(e, u)}
               >
@@ -236,6 +276,12 @@ function UsuariosTable({ usuarios, onRowClick }) {
                   <span className="usuarios-table__fecha-cell">
                     {planEstado === 'sin_plan' ? '—' : formatearFecha(u.vigencia)}
                   </span>
+                </td>
+                <td className="usuarios-table__dias-cell">
+                  <DiasVigenciaCelda
+                    planEstado={planEstado}
+                    vigencia={u.vigencia}
+                  />
                 </td>
                 <td>
                   {planEstado === 'activo' && u.vigenciaModificada ? (

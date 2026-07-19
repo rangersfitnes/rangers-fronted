@@ -6,6 +6,7 @@ import {
   formatearFechaTabla,
   formatearPrecioCuenta,
 } from '../pages/cuenta/cuentaUtils.js'
+import { textoDiasRestantesReporte } from './planVigenciaUtils.js'
 
 const PLAN_ESTADO_LABEL = {
   activo: 'Activo',
@@ -163,6 +164,7 @@ const ENCABEZADOS_DETALLE = [
   'Referencia transferencia',
   'Fecha inicio membresía',
   'Fecha vigencia',
+  'Días restantes',
   'Vigencia modificada (admin)',
   'Rol en plan',
   'Grupo del plan',
@@ -190,6 +192,7 @@ function filaUsuario(usuario) {
     resumenGrupoPlan(usuario),
     planEstado === 'sin_plan' ? '—' : formatearFechaTabla(usuario.fechaInicio),
     planEstado === 'sin_plan' ? '—' : formatearFechaTabla(usuario.vigencia),
+    textoDiasRestantesReporte(planEstado, usuario.vigencia),
     formatearFechaTabla(usuario.fechaCreacion),
   ]
 }
@@ -223,6 +226,7 @@ function filaUsuarioDetallada(usuario) {
     usuario.referenciaPago || '—',
     sinPlan ? '—' : formatearFechaTabla(usuario.fechaInicio),
     sinPlan ? '—' : formatearFechaTabla(usuario.vigencia),
+    textoDiasRestantesReporte(planEstado, usuario.vigencia),
     textoVigenciaModificada(usuario),
     usuario.rolEnPlan === 'titular'
       ? 'Titular'
@@ -295,29 +299,31 @@ export function exportarReporteUsuariosPdf(reporte) {
         'Grupo',
         'Inicio',
         'Vigencia',
+        'Días rest.',
         'Creado',
       ],
     ],
     body: usuarios.map(filaUsuario),
-    styles: { fontSize: 6, cellPadding: 1.2, overflow: 'linebreak' },
-    headStyles: { fillColor: [38, 38, 38], fontSize: 6 },
+    styles: { fontSize: 5.5, cellPadding: 1.1, overflow: 'linebreak' },
+    headStyles: { fillColor: [38, 38, 38], fontSize: 5.5 },
     columnStyles: {
       0: { cellWidth: 7 },
-      1: { cellWidth: 22 },
+      1: { cellWidth: 20 },
       2: { cellWidth: 7 },
-      3: { cellWidth: 14 },
-      4: { cellWidth: 14 },
-      5: { cellWidth: 16 },
+      3: { cellWidth: 13 },
+      4: { cellWidth: 13 },
+      5: { cellWidth: 15 },
       6: { cellWidth: 10 },
-      7: { cellWidth: 12 },
-      8: { cellWidth: 14 },
-      9: { cellWidth: 20 },
-      10: { cellWidth: 20 },
-      11: { cellWidth: 12 },
-      12: { cellWidth: 22 },
-      13: { cellWidth: 12 },
-      14: { cellWidth: 12 },
-      15: { cellWidth: 12 },
+      7: { cellWidth: 11 },
+      8: { cellWidth: 12 },
+      9: { cellWidth: 16 },
+      10: { cellWidth: 16 },
+      11: { cellWidth: 10 },
+      12: { cellWidth: 18 },
+      13: { cellWidth: 11 },
+      14: { cellWidth: 11 },
+      15: { cellWidth: 16 },
+      16: { cellWidth: 11 },
     },
     margin: { left: margen, right: margen },
   })

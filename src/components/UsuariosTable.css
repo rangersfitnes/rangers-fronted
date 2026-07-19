@@ -313,6 +313,55 @@
   white-space: nowrap;
 }
 
+.usuarios-table__dias-cell {
+  min-width: 7.5rem;
+}
+
+.usuarios-table__dias-empty {
+  color: #737373;
+}
+
+.usuarios-table__dias {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  line-height: 1.25;
+}
+
+.usuarios-table__dias strong {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #e5e5e5;
+}
+
+.usuarios-table__dias-estado {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.usuarios-table__dias--ok .usuarios-table__dias-estado {
+  color: #4ade80;
+}
+
+.usuarios-table__dias--proximo strong {
+  color: #fdba74;
+}
+
+.usuarios-table__dias--proximo .usuarios-table__dias-estado {
+  color: #fb923c;
+}
+
+.usuarios-table__dias--vencido strong {
+  color: #fca5a5;
+}
+
+.usuarios-table__dias--vencido .usuarios-table__dias-estado {
+  color: #f87171;
+}
+
 @media (max-width: 768px) {
   .usuarios-table-wrapper {
     -webkit-overflow-scrolling: touch;

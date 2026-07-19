@@ -42,9 +42,11 @@ import VistaFinanzas from './AdministracionGeneralFinanzas.jsx'
 import VistaGestionHumana from './AdministracionGeneralGestionHumana.jsx'
 import VistaAsistencias from './AdministracionGeneralAsistencias.jsx'
 import VistaContenidoWeb from './AdministracionGeneralContenidoWeb.jsx'
+import VistaUsuariosAdmin from './VistaUsuariosAdmin.jsx'
 import './AdministracionGeneral.css'
 
 const tabs = [
+  { id: 'usuarios', label: 'Usuarios' },
   { id: 'planes', label: 'Planes' },
   { id: 'horarios', label: 'Horarios' },
   { id: 'clases-grupales', label: 'Clases grupales' },
@@ -804,7 +806,7 @@ function VistaEventos() {
 }
 
 function AdministracionGeneral() {
-  const [activeTab, setActiveTab] = useState('planes')
+  const [activeTab, setActiveTab] = useState('usuarios')
 
   return (
     <div
@@ -819,6 +821,7 @@ function AdministracionGeneral() {
       />
 
       <main className="ag-page__main">
+        {activeTab === 'usuarios' && <VistaUsuariosAdmin />}
         {activeTab === 'planes' && <VistaPlanes />}
         {activeTab === 'horarios' && <ConfiguracionHorarios />}
         {activeTab === 'clases-grupales' && <ConfiguracionClasesGrupales />}
