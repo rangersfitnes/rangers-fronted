@@ -314,8 +314,8 @@ export async function obtenerDatosUsuario({ signal, token: tokenOverride } = {})
   return data.usuario || null
 }
 
-export async function completarPerfilUsuario({ fechaNacimiento }, { signal } = {}) {
-  return actualizarMiPerfil({ fechaNacimiento }, { signal })
+export async function completarPerfilUsuario(datos, { signal } = {}) {
+  return actualizarMiPerfil(datos, { signal })
 }
 
 export async function actualizarMiPerfil(datos, { signal } = {}) {

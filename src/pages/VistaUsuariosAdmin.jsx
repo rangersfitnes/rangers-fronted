@@ -264,15 +264,19 @@ function VistaUsuariosAdmin() {
     try {
       const reporte = await obtenerReporteCompletoUsuarios()
       if (formato === 'xlsx') {
-        exportarReporteUsuariosExcel(reporte)
+        await exportarReporteUsuariosExcel(reporte)
       } else {
         exportarReporteUsuariosPdf(reporte)
       }
       const etiquetaFormato = formato === 'xlsx' ? 'Excel' : 'PDF'
       toast.success(
-        `${etiquetaFormato} exportado con ${reporte.usuarios.length} usuario${
-          reporte.usuarios.length === 1 ? '' : 's'
-        }`,
+        formato === 'xlsx'
+          ? `Plantilla de clientes exportada con ${reporte.usuarios.length} usuario${
+              reporte.usuarios.length === 1 ? '' : 's'
+            }`
+          : `${etiquetaFormato} exportado con ${reporte.usuarios.length} usuario${
+              reporte.usuarios.length === 1 ? '' : 's'
+            }`,
       )
     } catch (err) {
       const etiquetaFormato = formato === 'xlsx' ? 'Excel' : 'PDF'
@@ -437,7 +441,7 @@ function VistaUsuariosAdmin() {
             onClick={() => handleExportarReporte('xlsx')}
             disabled={loading || exportandoReporte}
           >
-            {exportandoReporte ? 'Generando reporte…' : 'Exportar Excel'}
+            {exportandoReporte ? 'Generando reporte…' : 'Exportar Excel clientes'}
           </button>
           <button
             type="button"

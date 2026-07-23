@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
 import CampoFechaCalendario from './CampoFechaCalendario.jsx'
+import {
+  esCorreoValido,
+  normalizarCorreo,
+  normalizarDireccion,
+} from '../utils/validacionUsuario.js'
 import './CrearUsuarioModal.css'
 
 const tiposDocumento = [
@@ -16,6 +21,8 @@ const estadoInicial = {
   tipoDocumento: 'CC',
   documento: '',
   fechaNacimiento: '',
+  correo: '',
+  direccion: '',
   password: '',
 }
 
@@ -58,12 +65,26 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
       return
     }
 
+    const correo = normalizarCorreo(form.correo)
+    if (!esCorreoValido(correo)) {
+      setLocalError('Ingresa un correo electrónico válido')
+      return
+    }
+
+    const direccion = normalizarDireccion(form.direccion)
+    if (direccion.length < 5) {
+      setLocalError('La dirección es obligatoria')
+      return
+    }
+
     onSubmit?.({
       nombre: form.nombre.trim(),
       tipoDocumento: form.tipoDocumento,
       documento: form.documento.trim(),
       celular: `+57${form.celular}`,
       fechaNacimiento: form.fechaNacimiento,
+      correo,
+      direccion,
       password: form.password,
     })
   }
@@ -184,6 +205,34 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
           }}
           disabled={submitting}
         />
+
+        <label className="crear-usuario__field">
+          <span className="crear-usuario__label">Correo electrónico</span>
+          <input
+            type="email"
+            className="crear-usuario__input"
+            placeholder="Ej. usuario@correo.com"
+            value={form.correo}
+            onChange={handleChange('correo')}
+            autoComplete="email"
+            disabled={submitting}
+            required
+          />
+        </label>
+
+        <label className="crear-usuario__field">
+          <span className="crear-usuario__label">Dirección</span>
+          <input
+            type="text"
+            className="crear-usuario__input"
+            placeholder="Ej. Calle 10 # 5-20, Manizales"
+            value={form.direccion}
+            onChange={handleChange('direccion')}
+            autoComplete="street-address"
+            disabled={submitting}
+            required
+          />
+        </label>
 
         <label className="crear-usuario__field">
           <span className="crear-usuario__label">Contraseña</span>

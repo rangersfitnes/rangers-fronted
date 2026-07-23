@@ -130,7 +130,7 @@ function App() {
       </Routes>
       <CompletarPerfilModal
         open={mostrarCompletarPerfil}
-        nombre={usuario?.nombre}
+        usuario={usuario}
         onCompletado={(datos) => actualizarUsuario(datos)}
       />
     </div>

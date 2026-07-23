@@ -43,6 +43,7 @@ import VistaGestionHumana from './AdministracionGeneralGestionHumana.jsx'
 import VistaAsistencias from './AdministracionGeneralAsistencias.jsx'
 import VistaContenidoWeb from './AdministracionGeneralContenidoWeb.jsx'
 import VistaUsuariosAdmin from './VistaUsuariosAdmin.jsx'
+import { exportarPlanesExcel } from '../utils/exportPlanesExcel.js'
 import './AdministracionGeneral.css'
 
 const tabs = [
@@ -266,6 +267,25 @@ function VistaPlanes() {
           </p>
         </div>
         <div className="ag-page__view-actions">
+          <button
+            type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => {
+              try {
+                exportarPlanesExcel(planes)
+                toast.success(
+                  `Excel generado con ${planes.length} plan${
+                    planes.length === 1 ? '' : 'es'
+                  }`,
+                )
+              } catch (err) {
+                toast.error(err.message || 'No se pudo generar el Excel')
+              }
+            }}
+            disabled={loading || planes.length === 0}
+          >
+            Exportar Excel
+          </button>
           <button
             type="button"
             className="ag-action-btn ag-action-btn--ghost"

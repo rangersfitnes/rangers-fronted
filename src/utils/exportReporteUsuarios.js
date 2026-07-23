@@ -331,30 +331,206 @@ export function exportarReporteUsuariosPdf(reporte) {
   doc.save(`reporte-usuarios-${fechaArchivoReporte(generadoEn)}.pdf`)
 }
 
-export function exportarReporteUsuariosExcel(reporte) {
+const CLASE_ID_POR_TIPO = {
+  CC: 'Cédula de ciudadanía',
+  TI: 'Tarjeta de identidad',
+  CE: 'Cédula de extranjería',
+  PA: 'Pasaporte',
+}
+
+const ENCABEZADOS_TERCEROS = [
+  'NIT/Cedula',
+  'ID padre',
+  'Elija la clase del ID',
+  'Inactivo',
+  'Digito de Verif.',
+  'PerJuridic',
+  'Nombre comercial',
+  'Nombre',
+  'Nombre2',
+  'Apellido1',
+  'Apellido2',
+  'Direccion',
+  'BarrioID',
+  'CiudadID',
+  'Telefono',
+  'Tel. movil',
+  'Email',
+  'Codigo',
+  'EsCliente',
+  'Elija el estado',
+  'EsCobrador',
+  'Es salud',
+  'EsPension',
+  'Es Caja',
+  'EsCesantia',
+  'EsTranspor',
+  'ReteTodo',
+  'Regimen',
+  'GranContr',
+  'No genera IVA',
+  'Tarifa de ICA',
+  'ActiEconID',
+  'Opcional',
+  'EsRepVend',
+  'Geo coordenadas',
+  'Banco ID',
+  'TipoCtaBanco',
+  'Cta bancaria',
+  'Observacion',
+  'Fecha de creacion',
+  'Fecha de creacion en sistema',
+]
+
+function partirNombreCompleto(nombreCompleto) {
+  const partes = String(nombreCompleto || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (partes.length === 0) {
+    return { nombre: '', nombre2: '', apellido1: '', apellido2: '' }
+  }
+  if (partes.length === 1) {
+    return { nombre: partes[0], nombre2: '', apellido1: '', apellido2: '' }
+  }
+  if (partes.length === 2) {
+    return {
+      nombre: partes[0],
+      nombre2: '',
+      apellido1: partes[1],
+      apellido2: '',
+    }
+  }
+  if (partes.length === 3) {
+    return {
+      nombre: partes[0],
+      nombre2: '',
+      apellido1: partes[1],
+      apellido2: partes[2],
+    }
+  }
+
+  return {
+    nombre: partes[0],
+    nombre2: partes[1],
+    apellido1: partes[2],
+    apellido2: partes.slice(3).join(' '),
+  }
+}
+
+function etiquetaClaseId(tipoDocumento) {
+  const tipo = String(tipoDocumento || '')
+    .trim()
+    .toUpperCase()
+  return CLASE_ID_POR_TIPO[tipo] || ''
+}
+
+/** Serial de Excel (días desde 1899-12-30) a partir de millis. */
+function excelSerialDesdeMs(ms) {
+  if (!ms || !Number.isFinite(Number(ms))) return ''
+  return Number(ms) / 86_400_000 + 25569
+}
+
+function tieneVigenciaActiva(usuario) {
+  return (usuario?.planEstado ?? 'sin_plan') === 'activo'
+}
+
+function filaTerceroPlantilla(usuario) {
+  const { nombre, nombre2, apellido1, apellido2 } = partirNombreCompleto(
+    usuario.nombre,
+  )
+  const fechaCreacion = excelSerialDesdeMs(usuario.fechaCreacion)
+  const vigenciaActiva = tieneVigenciaActiva(usuario)
+
+  // Solo se rellenan campos que existen en Rangers Box; el resto queda vacío.
+  return [
+    usuario.documento || '', // NIT/Cedula
+    '', // ID padre
+    etiquetaClaseId(usuario.tipoDocumento), // Elija la clase del ID
+    vigenciaActiva ? 'NO' : 'SI', // Inactivo
+    '', // Digito de Verif.
+    '', // PerJuridic
+    '', // Nombre comercial
+    nombre,
+    nombre2,
+    apellido1,
+    apellido2,
+    usuario.direccion || '', // Direccion
+    '', // BarrioID
+    '', // CiudadID
+    '', // Telefono
+    usuario.celular || '', // Tel. movil
+    usuario.correo || '', // Email
+    '', // Codigo
+    '', // EsCliente
+    vigenciaActiva ? 'SI' : 'NO', // Elija el estado (activo)
+    '', // EsCobrador
+    '', // Es salud
+    '', // EsPension
+    '', // Es Caja
+    '', // EsCesantia
+    '', // EsTranspor
+    '', // ReteTodo
+    '', // Regimen
+    '', // GranContr
+    '', // No genera IVA
+    '', // Tarifa de ICA
+    '', // ActiEconID
+    '', // Opcional
+    '', // EsRepVend
+    '', // Geo coordenadas
+    '', // Banco ID
+    '', // TipoCtaBanco
+    '', // Cta bancaria
+    '', // Observacion
+    fechaCreacion, // Fecha de creacion
+    fechaCreacion, // Fecha de creacion en sistema
+  ]
+}
+
+/**
+ * Exporta usuarios usando la plantilla de clientes (hojas tablas + Terceros).
+ * Solo rellena datos disponibles; el resto queda vacío.
+ */
+export async function exportarReporteUsuariosExcel(reporte) {
   const generadoEn = reporte?.generadoEn ?? Date.now()
   const usuarios = reporte?.usuarios ?? []
-  const estadisticas = reporte?.estadisticas ?? {}
 
-  const resumenSheet = XLSX.utils.aoa_to_sheet([
-    ['Rangers Box — Reporte de usuarios'],
-    ['Generado', formatearFechaHoraCuenta(generadoEn)],
-    ['Total en reporte', usuarios.length],
-    [],
-    ['Concepto', 'Cantidad'],
-    ...filasResumen(estadisticas),
-    [],
-    ['Resumen financiero', 'Valor'],
-    ...filasResumenFinanciero(usuarios),
+  const base = String(import.meta.env.BASE_URL || '/').replace(/\/?$/, '/')
+  const plantillaUrl = `${base}plantillas/plantilla-clientes.xlsx`
+
+  let libro
+  try {
+    const response = await fetch(plantillaUrl)
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar la plantilla (${response.status})`)
+    }
+    const buffer = await response.arrayBuffer()
+    libro = XLSX.read(buffer, { type: 'array' })
+  } catch (err) {
+    throw new Error(
+      err.message || 'No se pudo cargar la plantilla de clientes',
+    )
+  }
+
+  const hojaTerceros = XLSX.utils.aoa_to_sheet([
+    ENCABEZADOS_TERCEROS,
+    ...usuarios.map(filaTerceroPlantilla),
   ])
 
-  const detalleSheet = XLSX.utils.aoa_to_sheet([
-    ENCABEZADOS_DETALLE,
-    ...usuarios.map(filaUsuarioDetallada),
-  ])
+  hojaTerceros['!cols'] = ENCABEZADOS_TERCEROS.map((titulo) => ({
+    wch: Math.min(28, Math.max(12, String(titulo).length + 2)),
+  }))
 
-  const libro = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(libro, resumenSheet, 'Resumen')
-  XLSX.utils.book_append_sheet(libro, detalleSheet, 'Usuarios')
-  XLSX.writeFile(libro, `reporte-usuarios-${fechaArchivoReporte(generadoEn)}.xlsx`)
+  libro.Sheets.Terceros = hojaTerceros
+  if (!libro.SheetNames.includes('Terceros')) {
+    libro.SheetNames.push('Terceros')
+  }
+
+  // Conserva la hoja "tablas" de la plantilla (catálogos de referencia).
+  XLSX.writeFile(
+    libro,
+    `clientes-rangers-box-${fechaArchivoReporte(generadoEn)}.xlsx`,
+  )
 }

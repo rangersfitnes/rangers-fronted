@@ -6,6 +6,11 @@ import {
   AUTORIZACION_DATOS_CASILLA_ENLACE,
   AUTORIZACION_DATOS_CASILLA_PREFIJO,
 } from '../content/autorizacionDatosPersonales.js'
+import {
+  esCorreoValido,
+  normalizarCorreo,
+  normalizarDireccion,
+} from '../utils/validacionUsuario.js'
 import './CrearUsuarioModal.css'
 
 const tiposDocumento = [
@@ -21,6 +26,8 @@ const estadoInicial = {
   documento: '',
   celular: '',
   fechaNacimiento: '',
+  correo: '',
+  direccion: '',
   password: '',
   confirmar: '',
 }
@@ -80,12 +87,26 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
       return
     }
 
+    const correo = normalizarCorreo(form.correo)
+    if (!esCorreoValido(correo)) {
+      setLocalError('Ingresa un correo electrónico válido')
+      return
+    }
+
+    const direccion = normalizarDireccion(form.direccion)
+    if (direccion.length < 5) {
+      setLocalError('La dirección es obligatoria')
+      return
+    }
+
     onSubmit?.({
       nombre: form.nombre.trim(),
       tipoDocumento: form.tipoDocumento,
       documento: form.documento.trim(),
       celular: `+57${form.celular}`,
       fechaNacimiento: form.fechaNacimiento,
+      correo,
+      direccion,
       password: form.password,
       autorizacionDatos: true,
     })
@@ -98,6 +119,8 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
     form.documento.trim().length > 0 &&
     form.celular.length === 10 &&
     form.fechaNacimiento &&
+    esCorreoValido(form.correo) &&
+    normalizarDireccion(form.direccion).length >= 5 &&
     form.password.length >= 6 &&
     form.confirmar.length >= 6 &&
     form.password === form.confirmar &&
@@ -213,6 +236,34 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
             }}
             disabled={submitting}
           />
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">Correo electrónico</span>
+            <input
+              type="email"
+              className="crear-usuario__input"
+              placeholder="Ej. usuario@correo.com"
+              value={form.correo}
+              onChange={handleChange('correo')}
+              autoComplete="email"
+              disabled={submitting}
+              required
+            />
+          </label>
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">Dirección</span>
+            <input
+              type="text"
+              className="crear-usuario__input"
+              placeholder="Ej. Calle 10 # 5-20, Manizales"
+              value={form.direccion}
+              onChange={handleChange('direccion')}
+              autoComplete="street-address"
+              disabled={submitting}
+              required
+            />
+          </label>
 
           <label className="crear-usuario__field">
             <span className="crear-usuario__label">Contraseña</span>
