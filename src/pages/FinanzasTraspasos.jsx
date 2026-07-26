@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import AjusteCuentaModal from '../components/AjusteCuentaModal.jsx'
 import CampoFechaCalendario from '../components/CampoFechaCalendario.jsx'
 import FinanzasSubvistaHeader from '../components/FinanzasSubvistaHeader.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
@@ -99,6 +100,12 @@ function agruparTraspasos(movimientos = []) {
   )
 }
 
+function filtrarAjustes(movimientos = []) {
+  return movimientos
+    .filter((mov) => mov.categoria === 'ajuste' || mov.tipo === 'ajuste')
+    .sort((a, b) => (b.creadoEn ?? 0) - (a.creadoEn ?? 0))
+}
+
 function FinanzasTraspasos({ onVolver }) {
   const toast = useToast()
   const [fecha, setFecha] = useState(fechaHoyColombiaInput)
@@ -109,6 +116,8 @@ function FinanzasTraspasos({ onVolver }) {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [traspasos, setTraspasos] = useState([])
+  const [ajustes, setAjustes] = useState([])
+  const [modalAjusteAbierto, setModalAjusteAbierto] = useState(false)
   const [cargandoLista, setCargandoLista] = useState(true)
   const [filtroDesde, setFiltroDesde] = useState(inicioMesColombiaInput)
   const [filtroHasta, setFiltroHasta] = useState(fechaHoyColombiaInput)
@@ -121,9 +130,11 @@ function FinanzasTraspasos({ onVolver }) {
         hasta: filtroHasta,
       })
       setTraspasos(agruparTraspasos(registro?.movimientos ?? []))
+      setAjustes(filtrarAjustes(registro?.movimientos ?? []))
     } catch (err) {
       toast.error(err.message || 'No se pudieron cargar los traspasos')
       setTraspasos([])
+      setAjustes([])
     } finally {
       setCargandoLista(false)
     }
@@ -207,6 +218,17 @@ function FinanzasTraspasos({ onVolver }) {
         subtitulo="Mueve dinero entre efectivo, transferencia y Wompi. Actualiza el disponible de cada almacenamiento."
         onVolver={onVolver}
       />
+
+      <div className="ag-finanzas__form-actions" style={{ justifyContent: 'flex-start' }}>
+        <button
+          type="button"
+          className="ag-action-btn"
+          onClick={() => setModalAjusteAbierto(true)}
+          disabled={loadingVisible}
+        >
+          Registrar ajuste de cuenta
+        </button>
+      </div>
 
       <form
         className="ag-panel ag-finanzas__form"
@@ -430,6 +452,84 @@ function FinanzasTraspasos({ onVolver }) {
           </div>
         ) : null}
       </section>
+
+      <section className="ag-finanzas__salidas-lista" aria-label="Ajustes de cuenta registrados">
+        <header className="ag-finanzas__salidas-header">
+          <div>
+            <h2 className="ag-finanzas__salidas-title">Historial de ajustes de cuenta</h2>
+            <p className="ag-finanzas__salidas-meta">
+              {ajustes.length} ajuste(s) en el periodo seleccionado
+            </p>
+          </div>
+        </header>
+
+        {!cargandoLista && ajustes.length === 0 ? (
+          <div className="ag-panel">
+            <p className="ag-panel__empty">
+              No hay ajustes de cuenta registrados en el intervalo seleccionado.
+            </p>
+          </div>
+        ) : null}
+
+        {ajustes.length > 0 ? (
+          <div className="ag-finanzas__tabla-wrap">
+            <table className="ag-finanzas__tabla">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Registro</th>
+                  <th>Cuenta</th>
+                  <th>Tipo</th>
+                  <th>Motivo</th>
+                  <th>Valor</th>
+                  <th aria-label="Acciones" />
+                </tr>
+              </thead>
+              <tbody>
+                {ajustes.map((item) => {
+                  const disminuye = item.naturaleza === 'egreso'
+                  return (
+                    <tr key={item.id || item.documentoFirestoreId}>
+                      <td>
+                        {item.fecha
+                          ? formatearFechaCuenta(
+                              new Date(`${item.fecha}T12:00:00-05:00`).getTime(),
+                            )
+                          : '—'}
+                      </td>
+                      <td>{formatearFechaHoraCuenta(item.creadoEn)}</td>
+                      <td>
+                        {ALMACENAMIENTO_LABEL[item.metodoPago] ||
+                          item.metodoPago ||
+                          '—'}
+                      </td>
+                      <td>{disminuye ? 'Disminución (−)' : 'Aumento (+)'}</td>
+                      <td>{item.concepto || '—'}</td>
+                      <td className="ag-finanzas__tabla-monto">
+                        {disminuye ? '−' : '+'}
+                        {formatearPrecioCuenta(item.monto)}
+                      </td>
+                      <td className="ag-finanzas__tabla-acciones">
+                        <BotonEliminarMovimiento
+                          mov={item}
+                          onEliminar={solicitarEliminar}
+                          disabled={loadingVisible}
+                        />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
+
+      <AjusteCuentaModal
+        open={modalAjusteAbierto}
+        onClose={() => setModalAjusteAbierto(false)}
+        onGuardado={cargarTraspasos}
+      />
 
       {modalEliminar}
       <LoadingOverlay
