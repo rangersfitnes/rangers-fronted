@@ -34,6 +34,7 @@ import {
 } from '../services/eventosService.js'
 import {
   enviarMensajeWhatsApp,
+  iniciarBarridoInvitacionGrupoWhatsApp,
   obtenerEstadoWhatsApp,
   WHATSAPP_SESSION_CLOSED_CODE,
 } from '../services/whatsappService.js'
@@ -484,6 +485,8 @@ function VistaEventos() {
   const [guardandoPlantilla, setGuardandoPlantilla] = useState(false)
   const [plantillaError, setPlantillaError] = useState('')
   const [envioMasivoOpen, setEnvioMasivoOpen] = useState(false)
+  const [confirmarBarridoGrupoOpen, setConfirmarBarridoGrupoOpen] = useState(false)
+  const [iniciandoBarridoGrupo, setIniciandoBarridoGrupo] = useState(false)
 
   const cargarEventos = useCallback(
     async ({ signal } = {}) => {
@@ -637,6 +640,28 @@ function VistaEventos() {
     }
   }
 
+  const handleIniciarBarridoGrupo = async () => {
+    setIniciandoBarridoGrupo(true)
+
+    try {
+      const resultado = await iniciarBarridoInvitacionGrupoWhatsApp()
+      setConfirmarBarridoGrupoOpen(false)
+      toast.success(
+        `Barrido iniciado: se enviará el link del grupo a ${resultado.total} usuario(s)`,
+      )
+    } catch (err) {
+      if (err.code === WHATSAPP_SESSION_CLOSED_CODE) {
+        setConfirmarBarridoGrupoOpen(false)
+        setWhatsappConexionOpen(true)
+        return
+      }
+
+      toast.error(err.message || 'No se pudo iniciar el barrido de invitaciones')
+    } finally {
+      setIniciandoBarridoGrupo(false)
+    }
+  }
+
   return (
     <section className="ag-page__view">
       <header className="ag-page__view-header ag-page__view-header--with-action">
@@ -682,6 +707,19 @@ function VistaEventos() {
             }}
           >
             Envío masivo
+          </button>
+          <button
+            type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => {
+              if (!whatsappConectado) {
+                setWhatsappConexionOpen(true)
+                return
+              }
+              setConfirmarBarridoGrupoOpen(true)
+            }}
+          >
+            Enviar link del grupo a todos
           </button>
           <button
             type="button"
@@ -759,6 +797,21 @@ function VistaEventos() {
         loading={actionLoading}
       />
 
+      <ConfirmModal
+        open={confirmarBarridoGrupoOpen}
+        onClose={() => {
+          if (iniciandoBarridoGrupo) return
+          setConfirmarBarridoGrupoOpen(false)
+        }}
+        onConfirm={handleIniciarBarridoGrupo}
+        title="Enviar link del grupo"
+        message={
+          'Se enviará por WhatsApp el enlace del grupo Rangers box 🔥🔥 a todos los usuarios existentes que tengan celular registrado. El proceso se ejecutará en segundo plano con pausas entre envíos.'
+        }
+        confirmLabel="Iniciar barrido"
+        loading={iniciandoBarridoGrupo}
+      />
+
       <EnviarMensajeWhatsAppModal
         open={mensajeWhatsAppOpen}
         onClose={() => {
@@ -805,10 +858,13 @@ function VistaEventos() {
           submitting ||
           actionLoading ||
           enviandoWhatsApp ||
-          guardandoPlantilla
+          guardandoPlantilla ||
+          iniciandoBarridoGrupo
         }
         label={
-          guardandoPlantilla
+          iniciandoBarridoGrupo
+            ? 'Iniciando barrido'
+            : guardandoPlantilla
             ? 'Guardando plantilla'
             : enviandoWhatsApp
             ? 'Enviando mensaje'

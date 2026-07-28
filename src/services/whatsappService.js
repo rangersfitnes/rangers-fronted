@@ -159,6 +159,19 @@ export async function iniciarEnvioMasivoWhatsApp({ plantillaId, filtros } = {}) 
   }
 }
 
+export async function iniciarBarridoInvitacionGrupoWhatsApp() {
+  const data = await whatsappFetch('/api/whatsapp/invitar-grupo-existentes', {
+    method: 'POST',
+  })
+
+  return {
+    jobId: data.jobId,
+    total: data.total ?? 0,
+    grupo: data.grupo ?? null,
+    intervaloSegundos: data.intervaloSegundos ?? 3,
+  }
+}
+
 export async function obtenerEstadoEnvioMasivoWhatsApp(jobId, { signal } = {}) {
   const data = await whatsappFetch(
     `/api/whatsapp/envio-masivo/${encodeURIComponent(jobId)}`,
