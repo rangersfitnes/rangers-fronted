@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import ConfirmModal from './ConfirmModal.jsx'
 import Modal from './Modal.jsx'
 import { etiquetaMetodoPagoColaborador } from '../constants/metodosPagoColaborador.js'
@@ -16,6 +16,15 @@ function formatearHoras(valor) {
   return `${n.toFixed(2)} h`
 }
 
+function parseMontoCargo(valor) {
+  const limpio = String(valor || '')
+    .trim()
+    .replace(/\./g, '')
+    .replace(/,/g, '.')
+  const numero = Number(limpio)
+  return Number.isFinite(numero) ? numero : NaN
+}
+
 function LiquidarColaboradorModal({
   open,
   onClose,
@@ -30,6 +39,13 @@ function LiquidarColaboradorModal({
   const [turnoEliminar, setTurnoEliminar] = useState(null)
   const [eliminando, setEliminando] = useState(false)
   const [presupuestoExterno, setPresupuestoExterno] = useState(false)
+  const [cargoValorInput, setCargoValorInput] = useState('')
+  const [cargoConceptoInput, setCargoConceptoInput] = useState('')
+  const [cargoAdicional, setCargoAdicional] = useState(0)
+  const [cargoAdicionalConcepto, setCargoAdicionalConcepto] = useState(
+    'Cargo adicional',
+  )
+  const [cargoError, setCargoError] = useState('')
 
   const cargarPreview = useCallback(async () => {
     if (!colaborador?.uid) return
@@ -55,12 +71,22 @@ function LiquidarColaboradorModal({
       setError('')
       setTurnoEliminar(null)
       setPresupuestoExterno(false)
+      setCargoValorInput('')
+      setCargoConceptoInput('')
+      setCargoAdicional(0)
+      setCargoAdicionalConcepto('Cargo adicional')
+      setCargoError('')
       return
     }
 
     let cancelado = false
     setLoading(true)
     setError('')
+    setCargoValorInput('')
+    setCargoConceptoInput('')
+    setCargoAdicional(0)
+    setCargoAdicionalConcepto('Cargo adicional')
+    setCargoError('')
 
     obtenerPreviewColaborador({ colaboradorUid: colaborador.uid })
       .then((data) => {
@@ -80,6 +106,30 @@ function LiquidarColaboradorModal({
       cancelado = true
     }
   }, [open, colaborador?.uid])
+
+  const handleAgregarCargo = () => {
+    const monto = Math.round(parseMontoCargo(cargoValorInput))
+    if (!Number.isFinite(monto) || monto <= 0) {
+      setCargoError('Ingresa un valor mayor a cero')
+      return
+    }
+
+    const concepto =
+      String(cargoConceptoInput || '').trim() || 'Cargo adicional'
+    setCargoAdicional((prev) => prev + monto)
+    setCargoAdicionalConcepto(concepto)
+    setCargoValorInput('')
+    setCargoConceptoInput('')
+    setCargoError('')
+  }
+
+  const handleQuitarCargo = () => {
+    setCargoAdicional(0)
+    setCargoAdicionalConcepto('Cargo adicional')
+    setCargoValorInput('')
+    setCargoConceptoInput('')
+    setCargoError('')
+  }
 
   const handleConfirmarEliminar = async () => {
     if (!turnoEliminar?.turnoId || !turnoEliminar?.sede) return
@@ -103,6 +153,10 @@ function LiquidarColaboradorModal({
 
   const resumen = preview?.resumen ?? {}
   const turnos = preview?.turnos ?? []
+  const totalAPagar = useMemo(() => {
+    const base = Math.round(Number(resumen.pagoTotal) || 0)
+    return base + Math.round(Number(cargoAdicional) || 0)
+  }, [resumen.pagoTotal, cargoAdicional])
   const ocupado = loading || liquidando || eliminando
   const puedeLiquidar =
     turnos.length > 0 &&
@@ -122,7 +176,13 @@ function LiquidarColaboradorModal({
       <button
         type="button"
         className="modal__btn modal__btn--primary"
-        onClick={() => onLiquidar?.(colaborador, { presupuestoExterno })}
+        onClick={() =>
+          onLiquidar?.(colaborador, {
+            presupuestoExterno,
+            cargoAdicional,
+            cargoAdicionalConcepto,
+          })
+        }
         disabled={!puedeLiquidar}
       >
         {liquidando ? 'Liquidando…' : 'Liquidar'}
@@ -245,7 +305,77 @@ function LiquidarColaboradorModal({
                       </strong>
                     </li>
                   ) : null}
+                  {cargoAdicional > 0 ? (
+                    <li className="liquidar-colaborador__concepto--cargo">
+                      <span>
+                        {cargoAdicionalConcepto || 'Cargo adicional'}
+                      </span>
+                      <strong>
+                        {formatearPrecioCuenta(cargoAdicional)}
+                        <button
+                          type="button"
+                          className="liquidar-colaborador__btn-quitar-cargo"
+                          onClick={handleQuitarCargo}
+                          disabled={ocupado}
+                        >
+                          Quitar
+                        </button>
+                      </strong>
+                    </li>
+                  ) : null}
                 </ul>
+
+                <div className="liquidar-colaborador__cargo">
+                  <h4>Cargo adicional</h4>
+                  <p>
+                    Suma un monto extra al total a liquidar (bono, ajuste u otro
+                    concepto). Quedará en el desprendible del colaborador.
+                  </p>
+                  <div className="liquidar-colaborador__cargo-campos">
+                    <label className="liquidar-colaborador__cargo-field">
+                      <span>Concepto</span>
+                      <input
+                        type="text"
+                        value={cargoConceptoInput}
+                        onChange={(e) => {
+                          setCargoConceptoInput(e.target.value)
+                          setCargoError('')
+                        }}
+                        placeholder="Ej. Bono / ajuste"
+                        disabled={ocupado}
+                      />
+                    </label>
+                    <label className="liquidar-colaborador__cargo-field">
+                      <span>Valor</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={cargoValorInput}
+                        onChange={(e) => {
+                          setCargoValorInput(
+                            e.target.value.replace(/[^\d.,]/g, ''),
+                          )
+                          setCargoError('')
+                        }}
+                        placeholder="Ej. 50000"
+                        disabled={ocupado}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="liquidar-colaborador__btn-cargo"
+                      onClick={handleAgregarCargo}
+                      disabled={ocupado || !cargoValorInput.trim()}
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                  {cargoError ? (
+                    <p className="liquidar-colaborador__error" role="alert">
+                      {cargoError}
+                    </p>
+                  ) : null}
+                </div>
               </section>
 
               {turnos.length > 0 ? (
@@ -260,7 +390,7 @@ function LiquidarColaboradorModal({
                           <th>Fecha</th>
                           <th>Horario</th>
                           <th>Horas</th>
-                          <th>Dominicales</th>
+                          <th>Dom. / festivo</th>
                           <th>Extra</th>
                           <th>Pago</th>
                           <th aria-label="Acciones" />
@@ -269,16 +399,42 @@ function LiquidarColaboradorModal({
                       <tbody>
                         {turnos.map((turno) => (
                           <tr key={turno.turnoId}>
-                            <td>{formatearFechaTabla(turno.inicioEn)}</td>
+                            <td>
+                              <span className="liquidar-colaborador__fecha-celda">
+                                {formatearFechaTabla(turno.inicioEn)}
+                                {turno.esFestivo && !turno.esDiaDominical ? (
+                                  <small className="liquidar-colaborador__dia-tag">
+                                    Festivo
+                                  </small>
+                                ) : null}
+                                {turno.esDiaDominical ? (
+                                  <small className="liquidar-colaborador__dia-tag">
+                                    Domingo
+                                  </small>
+                                ) : null}
+                              </span>
+                            </td>
                             <td>
                               {formatearHoraCuenta(turno.inicioEn)} –{' '}
                               {formatearHoraCuenta(turno.finEn)}
                             </td>
                             <td>{formatearHoras(turno.horasTrabajadas)}</td>
                             <td>
-                              {turno.horasDominicales > 0
-                                ? formatearHoras(turno.horasDominicales)
-                                : '—'}
+                              {turno.horasDominicales > 0 ? (
+                                <span className="liquidar-colaborador__fecha-celda">
+                                  {formatearHoras(turno.horasDominicales)}
+                                  {turno.pagoRecargoDominical > 0 ? (
+                                    <small>
+                                      +
+                                      {formatearPrecioCuenta(
+                                        turno.pagoRecargoDominical,
+                                      )}
+                                    </small>
+                                  ) : null}
+                                </span>
+                              ) : (
+                                '—'
+                              )}
                             </td>
                             <td>
                               {turno.horasExtra > 0
@@ -310,7 +466,7 @@ function LiquidarColaboradorModal({
 
               <div className="liquidar-colaborador__total">
                 <span>Total a pagar</span>
-                <strong>{formatearPrecioCuenta(resumen.pagoTotal)}</strong>
+                <strong>{formatearPrecioCuenta(totalAPagar)}</strong>
               </div>
             </>
           ) : null}

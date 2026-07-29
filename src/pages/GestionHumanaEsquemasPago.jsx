@@ -10,6 +10,10 @@ import {
   obtenerEsquemasPago,
 } from '../services/esquemasPagoService.js'
 import { formatearPrecioCuenta } from './cuenta/cuentaUtils.js'
+import {
+  DIAS_SEMANA_ESQUEMA,
+  etiquetaDiaEsquema,
+} from '../utils/esquemaPagoUtils.js'
 import './AdministracionGeneral.css'
 
 function validarDatosEsquema(datos) {
@@ -46,7 +50,46 @@ function validarDatosEsquema(datos) {
     }
   }
 
+  const horaInicio = Number(datos.horaInicioNocturna)
+  const horaFin = Number(datos.horaFinNocturna)
+  if (
+    !Number.isInteger(horaInicio) ||
+    horaInicio < 0 ||
+    horaInicio > 23 ||
+    !Number.isInteger(horaFin) ||
+    horaFin < 0 ||
+    horaFin > 23
+  ) {
+    return 'Define una franja nocturna válida (0 a 23)'
+  }
+  if (horaInicio === horaFin) {
+    return 'La hora de inicio y fin del recargo nocturno deben ser diferentes'
+  }
+
+  const jornadas = datos.jornadasPorDia || {}
+  for (const dia of DIAS_SEMANA_ESQUEMA) {
+    const config = jornadas[dia.id]
+    if (!config) continue
+    if (!Number.isFinite(config.horasTurno) || config.horasTurno <= 0) {
+      return `Ingresa horas válidas para ${dia.label}`
+    }
+    if (!Number.isFinite(config.valorTurno) || config.valorTurno < 0) {
+      return `Ingresa un valor de turno válido para ${dia.label}`
+    }
+  }
+
   return ''
+}
+
+function textoJornadasEspeciales(esquema) {
+  const jornadas = esquema?.jornadasPorDia || {}
+  const partes = DIAS_SEMANA_ESQUEMA.filter((dia) => jornadas[dia.id]).map(
+    (dia) => {
+      const config = jornadas[dia.id]
+      return `${etiquetaDiaEsquema(dia.id)} ${config.horasTurno} h · ${formatearPrecioCuenta(config.valorTurno)}`
+    },
+  )
+  return partes.length ? partes.join(' · ') : null
 }
 
 function GestionHumanaEsquemasPago({ onVolver }) {
@@ -209,7 +252,12 @@ function GestionHumanaEsquemasPago({ onVolver }) {
                   <td>{esquema.nombre}</td>
                   <td>{formatearPrecioCuenta(esquema.valorPorHora)}</td>
                   <td>
-                    {esquema.horasTurno} h · {formatearPrecioCuenta(esquema.valorTurno)}
+                    <div>{esquema.horasTurno} h · {formatearPrecioCuenta(esquema.valorTurno)}</div>
+                    {textoJornadasEspeciales(esquema) ? (
+                      <small className="ag-esquema-pago__jornadas-meta">
+                        {textoJornadasEspeciales(esquema)}
+                      </small>
+                    ) : null}
                   </td>
                   <td>
                     {esquema.porcentajeHoraExtra}% ·{' '}
@@ -222,6 +270,11 @@ function GestionHumanaEsquemasPago({ onVolver }) {
                   <td>
                     {esquema.porcentajeRecargoNocturno}% · +
                     {formatearPrecioCuenta(esquema.incrementoRecargoNocturno)}
+                    <small className="ag-esquema-pago__jornadas-meta">
+                      {String(esquema.horaInicioNocturna ?? 19).padStart(2, '0')}:00
+                      {' → '}
+                      {String(esquema.horaFinNocturna ?? 6).padStart(2, '0')}:00
+                    </small>
                   </td>
                   <td className="ag-finanzas__tabla-acciones">
                     <div className="ag-esquema-pago__acciones">

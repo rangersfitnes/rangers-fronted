@@ -7,6 +7,10 @@ import { SEDES } from '../services/horariosService.js'
 import { obtenerMiPerfilLaboral } from '../services/miPerfilService.js'
 import { MINUTOS_MINIMOS_HORA_EXTRA } from '../utils/calculoPagoTurnoUtils.js'
 import {
+  DIAS_SEMANA_ESQUEMA,
+  etiquetaDiaEsquema,
+} from '../utils/esquemaPagoUtils.js'
+import {
   formatearDuracionMs,
   formatearFechaTabla,
   formatearHoraCuenta,
@@ -96,6 +100,17 @@ function etiquetaEstadoExtra(estado) {
   return null
 }
 
+function textoJornadasEspeciales(esquema) {
+  const jornadas = esquema?.jornadasPorDia || {}
+  const partes = DIAS_SEMANA_ESQUEMA.filter((dia) => jornadas[dia.id]).map(
+    (dia) => {
+      const config = jornadas[dia.id]
+      return `${etiquetaDiaEsquema(dia.id)}: ${formatearHorasDecimal(config.horasTurno)} · ${formatearPrecioCuenta(config.valorTurno)}`
+    },
+  )
+  return partes.length ? partes.join(' · ') : null
+}
+
 function CampoPerfil({ etiqueta, valor }) {
   return (
     <div className="pf-mi-perfil__campo">
@@ -105,7 +120,7 @@ function CampoPerfil({ etiqueta, valor }) {
   )
 }
 
-function ResumenCard({ etiqueta, valor, destacado = false }) {
+function ResumenCard({ etiqueta, valor, destacado = false, detalle = '' }) {
   return (
     <article
       className={`pf-mi-perfil__resumen-card${
@@ -114,6 +129,9 @@ function ResumenCard({ etiqueta, valor, destacado = false }) {
     >
       <span className="pf-mi-perfil__resumen-label">{etiqueta}</span>
       <strong className="pf-mi-perfil__resumen-valor">{valor}</strong>
+      {detalle ? (
+        <span className="pf-mi-perfil__resumen-detalle">{detalle}</span>
+      ) : null}
     </article>
   )
 }
@@ -123,7 +141,7 @@ function FilasTurnosTabla({ turnos }) {
   const tienePendientes = turnos.some((turno) => !turno.liquidacionId)
   const mostrarSeparador = tieneLiquidados && tienePendientes
   let separadorInsertado = false
-  const columnas = 11
+  const columnas = 13
 
   return turnos.flatMap((turno, index) => {
     const esLiquidado = Boolean(turno.liquidacionId)
@@ -144,12 +162,15 @@ function FilasTurnosTabla({ turnos }) {
       separadorInsertado = true
       filas.push(
         <tr key="turnos-separador-liquidados" className="pf-mi-perfil__turnos-separador">
-          <td colSpan={columnas}>
-            Turnos ya liquidados en nómina
-          </td>
+          <td colSpan={columnas}>Turnos ya liquidados en nómina</td>
         </tr>,
       )
     }
+
+    const horasNocturnas = Number(turno.horasNocturnas) || 0
+    const horasDominicales = Number(turno.horasDominicales) || 0
+    const pagoNocturno = Number(turno.pagoRecargoNocturno) || 0
+    const pagoDominical = Number(turno.pagoRecargoDominical) || 0
 
     filas.push(
       <tr
@@ -172,6 +193,39 @@ function FilasTurnosTabla({ turnos }) {
         <td>{formatearHoraCuenta(turno.finEn)}</td>
         <td>{formatearDuracionMs(turno.duracionMs)}</td>
         <td>{formatearHorasDecimal(turno.horasOrdinarias)}</td>
+        <td>
+          {horasNocturnas > 0 ? (
+            <span className="pf-mi-perfil__extra-celda">
+              {formatearHorasDecimal(horasNocturnas)}
+              {pagoNocturno > 0 ? (
+                <small className="pf-mi-perfil__extra-estado">
+                  +{formatearPrecioCuenta(pagoNocturno)}
+                </small>
+              ) : null}
+            </span>
+          ) : (
+            '—'
+          )}
+        </td>
+        <td>
+          {horasDominicales > 0 ? (
+            <span className="pf-mi-perfil__extra-celda">
+              {formatearHorasDecimal(horasDominicales)}
+              {turno.esFestivo && !turno.esDiaDominical
+                ? ' festivo'
+                : turno.esFestivo
+                  ? ' dom./fest.'
+                  : ''}
+              {pagoDominical > 0 ? (
+                <small className="pf-mi-perfil__extra-estado">
+                  +{formatearPrecioCuenta(pagoDominical)}
+                </small>
+              ) : null}
+            </span>
+          ) : (
+            '—'
+          )}
+        </td>
         <td>{formatearTiempoExtraTrabajado(turno)}</td>
         <td>
           {Number(turno.horasExtra) > 0 ? (
@@ -256,6 +310,7 @@ function PuntoFisicoMiPerfil() {
   const turnos = datos?.turnos ?? []
   const resumen = datos?.resumen
   const desprendibles = datos?.desprendibles ?? []
+  const jornadasEspeciales = textoJornadasEspeciales(esquema)
 
   return (
     <section className="pf-page__view pf-mi-perfil">
@@ -319,7 +374,10 @@ function PuntoFisicoMiPerfil() {
               <h2 className="pf-mi-perfil__panel-title">Esquema laboral</h2>
               {esquema ? (
                 <div className="pf-mi-perfil__campos">
-                  <CampoPerfil etiqueta="Esquema asignado" valor={esquemaClave || esquema.nombre} />
+                  <CampoPerfil
+                    etiqueta="Esquema asignado"
+                    valor={esquemaClave || esquema.nombre}
+                  />
                   <CampoPerfil etiqueta="Esquema" valor={esquema.nombre} />
                   <CampoPerfil
                     etiqueta="Valor hora ordinaria"
@@ -333,9 +391,23 @@ function PuntoFisicoMiPerfil() {
                     etiqueta="Valor por turno"
                     valor={formatearPrecioCuenta(esquema.valorTurno)}
                   />
+                  {jornadasEspeciales ? (
+                    <CampoPerfil
+                      etiqueta="Jornadas especiales"
+                      valor={jornadasEspeciales}
+                    />
+                  ) : null}
                   <CampoPerfil
                     etiqueta="Hora extra"
                     valor={`${esquema.porcentajeHoraExtra}% · ${formatearPrecioCuenta(esquema.valorHoraExtra)}`}
+                  />
+                  <CampoPerfil
+                    etiqueta="Recargo dominical / festivo"
+                    valor={`${esquema.porcentajeRecargoDominical}% · +${formatearPrecioCuenta(esquema.incrementoRecargoDominical)}`}
+                  />
+                  <CampoPerfil
+                    etiqueta="Recargo nocturno"
+                    valor={`${esquema.porcentajeRecargoNocturno}% · +${formatearPrecioCuenta(esquema.incrementoRecargoNocturno)} · ${String(esquema.horaInicioNocturna ?? 19).padStart(2, '0')}:00 → ${String(esquema.horaFinNocturna ?? 6).padStart(2, '0')}:00`}
                   />
                 </div>
               ) : (
@@ -357,8 +429,31 @@ function PuntoFisicoMiPerfil() {
                 valor={formatearDuracionMs(resumen.totalDuracionMs)}
               />
               <ResumenCard
-                etiqueta="Horas extra acumuladas"
+                etiqueta="Horas extra"
                 valor={formatearHorasDecimal(resumen.totalHorasExtra)}
+                detalle={
+                  resumen.totalPagoExtra > 0
+                    ? formatearPrecioCuenta(resumen.totalPagoExtra)
+                    : ''
+                }
+              />
+              <ResumenCard
+                etiqueta="Horas nocturnas"
+                valor={formatearHorasDecimal(resumen.totalHorasNocturnas)}
+                detalle={
+                  resumen.totalPagoRecargoNocturno > 0
+                    ? `+${formatearPrecioCuenta(resumen.totalPagoRecargoNocturno)}`
+                    : ''
+                }
+              />
+              <ResumenCard
+                etiqueta="Horas dominicales / festivo"
+                valor={formatearHorasDecimal(resumen.totalHorasDominicales)}
+                detalle={
+                  resumen.totalPagoRecargoDominical > 0
+                    ? `+${formatearPrecioCuenta(resumen.totalPagoRecargoDominical)}`
+                    : ''
+                }
               />
               <ResumenCard
                 etiqueta="Total devengado"
@@ -418,6 +513,8 @@ function PuntoFisicoMiPerfil() {
                       <th>Fin</th>
                       <th>Tiempo laborado</th>
                       <th>H. ordinarias</th>
+                      <th>H. nocturnas</th>
+                      <th>H. dominicales</th>
                       <th>Tiempo extra</th>
                       <th>H. extra liquidadas</th>
                       <th>Pago ordinario</th>
@@ -436,14 +533,23 @@ function PuntoFisicoMiPerfil() {
               <p className="pf-mi-perfil__nota">
                 El pago se calcula con tu esquema actual: hasta{' '}
                 {formatearHorasDecimal(esquema.horasTurno)} se paga el valor del
-                turno ({formatearPrecioCuenta(esquema.valorTurno)}). El tiempo
-                adicional solo liquida horas extra a partir de{' '}
-                {MINUTOS_MINIMOS_HORA_EXTRA} minutos continuos (por ejemplo,{' '}
-                {MINUTOS_MINIMOS_HORA_EXTRA - 1} min extra no generan pago;{' '}
-                {MINUTOS_MINIMOS_HORA_EXTRA} min o más cuentan como 1 hora extra). Cada hora extra se paga a{' '}
-                {formatearPrecioCuenta(esquema.valorHoraExtra)}. El tiempo extra
-                se muestra siempre en la tabla; la aprobación en Gestión humana
-                solo es necesaria para incluirlo en la liquidación de nómina.
+                turno ({formatearPrecioCuenta(esquema.valorTurno)}
+                {jornadasEspeciales
+                  ? '; algunos días usan jornada y valor especiales'
+                  : ''}
+                ). Las horas nocturnas (
+                {String(esquema.horaInicioNocturna ?? 19).padStart(2, '0')}:00–
+                {String(esquema.horaFinNocturna ?? 6).padStart(2, '0')}:00) suman
+                recargo de {esquema.porcentajeRecargoNocturno}% (+
+                {formatearPrecioCuenta(esquema.incrementoRecargoNocturno)}/h).
+                Las horas dominicales o de festivo oficial suman recargo de{' '}
+                {esquema.porcentajeRecargoDominical}% (+
+                {formatearPrecioCuenta(esquema.incrementoRecargoDominical)}/h).
+                El tiempo adicional solo liquida horas extra a partir de{' '}
+                {MINUTOS_MINIMOS_HORA_EXTRA} minutos continuos, a{' '}
+                {formatearPrecioCuenta(esquema.valorHoraExtra)}. La aprobación en
+                Gestión humana solo es necesaria para incluir las horas extra en
+                la liquidación de nómina.
               </p>
             ) : null}
           </section>

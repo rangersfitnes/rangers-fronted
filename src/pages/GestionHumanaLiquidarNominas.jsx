@@ -108,6 +108,8 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
       await ejecutarLiquidacionColaborador({
         colaboradorUid: colaborador.uid,
         presupuestoExterno: Boolean(opciones.presupuestoExterno),
+        cargoAdicional: Number(opciones.cargoAdicional) || 0,
+        cargoAdicionalConcepto: opciones.cargoAdicionalConcepto,
       })
       toast.success(
         opciones.presupuestoExterno

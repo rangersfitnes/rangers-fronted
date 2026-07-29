@@ -150,6 +150,14 @@ export function exportarDesprendibleNominaPdf(desprendible) {
       formatearPrecioCuenta(resumen.pagoRecargoDominical),
     ],
     ['Recargo nocturno', formatearPrecioCuenta(resumen.pagoRecargoNocturno)],
+    ...(Number(resumen.cargoAdicional) > 0
+      ? [
+          [
+            resumen.cargoAdicionalConcepto || 'Cargo adicional',
+            formatearPrecioCuenta(resumen.cargoAdicional),
+          ],
+        ]
+      : []),
     ['TOTAL A PAGAR', formatearPrecioCuenta(resumen.pagoTotal)],
   ]
 

@@ -67,7 +67,7 @@
 
 .pf-mi-perfil__resumen {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1.75rem;
 }
@@ -99,6 +99,12 @@
   font-size: 1.15rem;
   font-weight: 700;
   color: #ffffff;
+}
+
+.pf-mi-perfil__resumen-detalle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #86efac;
 }
 
 .pf-mi-perfil__resumen-card--destacado .pf-mi-perfil__resumen-valor {
@@ -221,14 +227,23 @@
   border-bottom-color: rgba(251, 191, 36, 0.2);
 }
 
-@media (max-width: 960px) {
-  .pf-mi-perfil__grid,
+@media (max-width: 1100px) {
   .pf-mi-perfil__resumen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .pf-mi-perfil__grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
+  .pf-mi-perfil__resumen {
+    grid-template-columns: 1fr;
+  }
+
   .pf-mi-perfil__tabla th,
   .pf-mi-perfil__tabla td {
     white-space: normal;

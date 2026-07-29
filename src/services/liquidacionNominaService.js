@@ -60,6 +60,8 @@ export async function obtenerPreviewColaborador({ colaboradorUid }) {
 export async function ejecutarLiquidacionColaborador({
   colaboradorUid,
   presupuestoExterno = false,
+  cargoAdicional = 0,
+  cargoAdicionalConcepto = 'Cargo adicional',
 }) {
   let response
   try {
@@ -74,6 +76,8 @@ export async function ejecutarLiquidacionColaborador({
         body: JSON.stringify({
           colaboradorUid,
           presupuestoExterno: Boolean(presupuestoExterno),
+          cargoAdicional,
+          cargoAdicionalConcepto,
         }),
       },
     )

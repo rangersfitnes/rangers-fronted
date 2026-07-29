@@ -72,25 +72,49 @@ function renderEstadoDominical(estadoRecargoDominical) {
   )
 }
 
+function renderEstadoNocturno(estadoRecargoNocturno) {
+  if (!estadoRecargoNocturno?.etiqueta) return null
+
+  const horas = Number(estadoRecargoNocturno.horasNocturnas) || 0
+  const detalleHoras =
+    horas > 0 ? ` · ${horas.toFixed(2)} h nocturnas` : ''
+
+  return (
+    <span
+      className={
+        estadoRecargoNocturno.activoAhora
+          ? 'cronometro-turno__nocturno cronometro-turno__nocturno--activo'
+          : 'cronometro-turno__nocturno'
+      }
+    >
+      {estadoRecargoNocturno.etiqueta}
+      {detalleHoras}
+    </span>
+  )
+}
+
 function CronometroTurnoWidget({
   tiempoMs,
   horasTurno = 0,
   estadoHorasExtra,
   estadoRecargoDominical,
+  estadoRecargoNocturno,
   onFinalizar,
   finalizando,
 }) {
   const enDominical = Boolean(estadoRecargoDominical?.activoAhora)
+  const enNocturno = Boolean(estadoRecargoNocturno?.activoAhora)
+
+  const claseAside = [
+    'cronometro-turno',
+    enDominical ? 'cronometro-turno--dominical' : '',
+    enNocturno ? 'cronometro-turno--nocturno' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <aside
-      className={
-        enDominical
-          ? 'cronometro-turno cronometro-turno--dominical'
-          : 'cronometro-turno'
-      }
-      aria-live="polite"
-    >
+    <aside className={claseAside} aria-live="polite">
       <div className="cronometro-turno__info">
         <span className="cronometro-turno__estado">En turno</span>
         <span className="cronometro-turno__tiempo">
@@ -98,6 +122,7 @@ function CronometroTurnoWidget({
         </span>
         {renderEstadoExtra({ horasTurno, estadoHorasExtra })}
         {renderEstadoDominical(estadoRecargoDominical)}
+        {renderEstadoNocturno(estadoRecargoNocturno)}
       </div>
       <button
         type="button"

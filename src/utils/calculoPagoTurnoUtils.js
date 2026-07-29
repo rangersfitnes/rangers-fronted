@@ -116,3 +116,110 @@ export function obtenerEstadoRecargoDominical(inicioEnMs, duracionMs, horasTurno
     etiqueta,
   }
 }
+
+export const HORA_INICIO_NOCTURNA_DEFAULT = 19
+export const HORA_FIN_NOCTURNA_DEFAULT = 6
+
+export function normalizarFranjaNocturna(esquema = {}) {
+  const inicioRaw = Number(esquema?.horaInicioNocturna)
+  const finRaw = Number(esquema?.horaFinNocturna)
+  const horaInicio =
+    Number.isInteger(inicioRaw) && inicioRaw >= 0 && inicioRaw <= 23
+      ? inicioRaw
+      : HORA_INICIO_NOCTURNA_DEFAULT
+  const horaFin =
+    Number.isInteger(finRaw) && finRaw >= 0 && finRaw <= 23
+      ? finRaw
+      : HORA_FIN_NOCTURNA_DEFAULT
+
+  return { horaInicio, horaFin }
+}
+
+function esHoraNocturna(
+  hora24,
+  { horaInicio = HORA_INICIO_NOCTURNA_DEFAULT, horaFin = HORA_FIN_NOCTURNA_DEFAULT } = {},
+) {
+  const h = Number(hora24)
+  const inicio = Number(horaInicio)
+  const fin = Number(horaFin)
+  if (!Number.isFinite(h) || !Number.isFinite(inicio) || !Number.isFinite(fin)) {
+    return false
+  }
+  if (inicio === fin) return false
+  if (inicio < fin) return h >= inicio && h < fin
+  return h >= inicio || h < fin
+}
+
+function horaColombia(ms) {
+  const hora = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'America/Bogota',
+    hour: '2-digit',
+    hour12: false,
+  }).format(new Date(ms))
+  return Number(hora)
+}
+
+function formatearHoraFranja(hora) {
+  return `${String(Number(hora) || 0).padStart(2, '0')}:00`
+}
+
+/**
+ * Estado en vivo del recargo nocturno según la franja del esquema.
+ */
+export function obtenerEstadoRecargoNocturno(
+  inicioEnMs,
+  duracionMs,
+  esquema = {},
+) {
+  const inicio = Number(inicioEnMs) || 0
+  const duracion = Math.max(0, Number(duracionMs) || 0)
+  const franja = normalizarFranjaNocturna(esquema)
+  const pct = Number(esquema?.porcentajeRecargoNocturno) || 0
+
+  if (!inicio) {
+    return {
+      activoAhora: false,
+      horasNocturnas: 0,
+      porcentaje: pct,
+      horaInicio: franja.horaInicio,
+      horaFin: franja.horaFin,
+      etiqueta: '',
+    }
+  }
+
+  const ahora = duracion > 0 ? inicio + duracion : Date.now()
+  const activoAhora = esHoraNocturna(horaColombia(ahora), franja)
+
+  const fin = inicio + (duracion > 0 ? duracion : Math.max(0, ahora - inicio))
+  const paso = 15 * MS_POR_MINUTO
+  let msNocturnos = 0
+
+  for (let cursor = inicio; cursor < fin; cursor += paso) {
+    if (esHoraNocturna(horaColombia(cursor), franja)) {
+      msNocturnos += Math.min(paso, fin - cursor)
+    }
+  }
+
+  const horasNocturnas = Math.round((msNocturnos / MS_POR_HORA) * 100) / 100
+
+  let etiqueta = ''
+  if (activoAhora && pct > 0) {
+    etiqueta = `Nocturno · recargo ${pct}%`
+  } else if (activoAhora) {
+    etiqueta = 'Franja nocturna activa'
+  } else if (horasNocturnas > 0 && pct > 0) {
+    etiqueta = `Incluye horas nocturnas · ${pct}%`
+  } else if (horasNocturnas > 0) {
+    etiqueta = 'Incluye horas nocturnas'
+  }
+
+  return {
+    activoAhora,
+    horasNocturnas,
+    porcentaje: pct,
+    horaInicio: franja.horaInicio,
+    horaFin: franja.horaFin,
+    etiqueta,
+    franjaLabel: `${formatearHoraFranja(franja.horaInicio)}–${formatearHoraFranja(franja.horaFin)}`,
+  }
+}

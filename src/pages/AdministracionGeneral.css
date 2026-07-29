@@ -1148,6 +1148,76 @@
   color: #a3a3a3;
 }
 
+.ag-esquema-pago__jornadas {
+  margin: 0.25rem 0 0.35rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.ag-esquema-pago__jornadas-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #cbd5e1;
+}
+
+.ag-esquema-pago__jornadas-lista {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.ag-esquema-pago__jornada-dia {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.ag-esquema-pago__jornada-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.ag-esquema-pago__jornada-check input {
+  accent-color: #f97316;
+}
+
+.ag-esquema-pago__jornada-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+@media (max-width: 640px) {
+  .ag-esquema-pago__jornada-campos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ag-esquema-pago__jornadas-meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: #a3a3a3;
+  line-height: 1.35;
+}
+
+.esquema-pago-form-modal .modal__dialog {
+  max-width: 40rem;
+}
+
 .ag-esquema-pago__pct-row {
   align-items: stretch;
 }

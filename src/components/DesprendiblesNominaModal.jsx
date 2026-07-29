@@ -77,6 +77,9 @@ function DesprendiblesNominaModal({ open, onClose, desprendibles = [] }) {
                       {resumen.pagoRecargoNocturno > 0
                         ? ` · Noct. ${formatearPrecioCuenta(resumen.pagoRecargoNocturno)}`
                         : ''}
+                      {resumen.cargoAdicional > 0
+                        ? ` · ${resumen.cargoAdicionalConcepto || 'Cargo adicional'} ${formatearPrecioCuenta(resumen.cargoAdicional)}`
+                        : ''}
                     </span>
                     {item.liquidadoEn ? (
                       <span className="desprendibles-nomina__item-detalle">

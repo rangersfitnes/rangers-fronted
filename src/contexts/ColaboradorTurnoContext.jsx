@@ -20,7 +20,9 @@ import {
 import {
   obtenerEstadoHorasExtra,
   obtenerEstadoRecargoDominical,
+  obtenerEstadoRecargoNocturno,
 } from '../utils/calculoPagoTurnoUtils.js'
+import { resolverJornadaEsquema } from '../utils/esquemaPagoUtils.js'
 import { normalizarTimestampMs } from '../pages/cuenta/cuentaUtils.js'
 
 const ColaboradorTurnoContext = createContext(null)
@@ -105,10 +107,14 @@ export function ColaboradorTurnoProvider({ children }) {
   }, [inicioTurnoMs, ahora])
 
   const horasTurnoJornada = useMemo(() => {
-    const desdeEsquema = Number(esquemaLaboral?.horasTurno) || 0
+    const jornada = resolverJornadaEsquema(
+      esquemaLaboral,
+      inicioTurnoMs || Date.now(),
+    )
+    const desdeEsquema = Number(jornada.horasTurno) || 0
     const desdeTurno = Number(turnoActivo?.horasTurno) || 0
     return desdeEsquema || desdeTurno
-  }, [esquemaLaboral?.horasTurno, turnoActivo?.horasTurno])
+  }, [esquemaLaboral, inicioTurnoMs, turnoActivo?.horasTurno])
 
   const estadoHorasExtra = useMemo(() => {
     if (!horasTurnoJornada) {
@@ -141,6 +147,24 @@ export function ColaboradorTurnoProvider({ children }) {
       horasTurnoJornada,
     )
   }, [inicioTurnoMs, tiempoTranscurridoMs, horasTurnoJornada])
+
+  const estadoRecargoNocturno = useMemo(() => {
+    if (!inicioTurnoMs) {
+      return {
+        activoAhora: false,
+        horasNocturnas: 0,
+        porcentaje: 0,
+        horaInicio: 19,
+        horaFin: 6,
+        etiqueta: '',
+      }
+    }
+    return obtenerEstadoRecargoNocturno(
+      inicioTurnoMs,
+      tiempoTranscurridoMs,
+      esquemaLaboral || {},
+    )
+  }, [inicioTurnoMs, tiempoTranscurridoMs, esquemaLaboral])
 
   const jornadaCompleta =
     horasTurnoJornada > 0 && !estadoHorasExtra.enJornada
@@ -241,6 +265,7 @@ export function ColaboradorTurnoProvider({ children }) {
                 horasTurno={horasTurnoJornada}
                 estadoHorasExtra={estadoHorasExtra}
                 estadoRecargoDominical={estadoRecargoDominical}
+                estadoRecargoNocturno={estadoRecargoNocturno}
                 onFinalizar={handleFinalizarTurno}
                 finalizando={finalizando}
               />
