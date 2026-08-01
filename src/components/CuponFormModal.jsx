@@ -3,6 +3,15 @@ import Modal from './Modal.jsx'
 import './CrearPlanModal.css'
 import './CuponesModals.css'
 
+function hoyColombia() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+}
+
 function CuponFormModal({
   open,
   onClose,
@@ -15,6 +24,9 @@ function CuponFormModal({
     nombre: '',
     codigo: '',
     porcentajeDescuento: '',
+    fechaExpiracion: '',
+    maxUsos: '',
+    maxUsosPorUsuario: '',
     planIds: [],
   })
 
@@ -24,6 +36,9 @@ function CuponFormModal({
       nombre: '',
       codigo: '',
       porcentajeDescuento: '',
+      fechaExpiracion: '',
+      maxUsos: '',
+      maxUsosPorUsuario: '',
       planIds: [],
     })
   }, [open])
@@ -62,6 +77,10 @@ function CuponFormModal({
       nombre: form.nombre.trim(),
       codigo: form.codigo.trim(),
       porcentajeDescuento: Number(form.porcentajeDescuento),
+      fechaExpiracion: form.fechaExpiracion || null,
+      maxUsos: form.maxUsos === '' ? null : Number(form.maxUsos),
+      maxUsosPorUsuario:
+        form.maxUsosPorUsuario === '' ? null : Number(form.maxUsosPorUsuario),
       planIds: form.planIds,
     })
   }
@@ -152,6 +171,58 @@ function CuponFormModal({
               />
               <span>%</span>
             </div>
+          </label>
+        </div>
+
+        <label className="crear-plan__field">
+          <span className="crear-plan__label">Vence el (opcional)</span>
+          <input
+            type="date"
+            className="crear-plan__input"
+            min={hoyColombia()}
+            value={form.fechaExpiracion}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, fechaExpiracion: e.target.value }))
+            }
+            disabled={submitting}
+          />
+          <small className="cupones-modal__hint">
+            Déjalo vacío para que el cupón no venza.
+          </small>
+        </label>
+
+        <div className="crear-plan__row">
+          <label className="crear-plan__field">
+            <span className="crear-plan__label">Límite total de usos</span>
+            <input
+              type="number"
+              min={1}
+              className="crear-plan__input"
+              placeholder="Sin límite"
+              value={form.maxUsos}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, maxUsos: e.target.value }))
+              }
+              disabled={submitting}
+            />
+          </label>
+
+          <label className="crear-plan__field">
+            <span className="crear-plan__label">Usos por usuario</span>
+            <input
+              type="number"
+              min={1}
+              className="crear-plan__input"
+              placeholder="Sin límite"
+              value={form.maxUsosPorUsuario}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  maxUsosPorUsuario: e.target.value,
+                }))
+              }
+              disabled={submitting}
+            />
           </label>
         </div>
 

@@ -50,6 +50,49 @@ export async function crearCupon(cupon) {
   return data.cupon
 }
 
+export async function actualizarCupon(cuponId, cambios) {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/planes/cupones/${encodeURIComponent(cuponId)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cambios),
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await parseJsonResponse(response, 'No se pudo actualizar el cupón')
+  return data.cupon
+}
+
+export async function eliminarCupon(cuponId) {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/planes/cupones/${encodeURIComponent(cuponId)}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  return parseJsonResponse(response, 'No se pudo eliminar el cupón')
+}
+
 export async function validarCuponParaPlan({
   codigo,
   planId,

@@ -25,7 +25,12 @@ import {
   eliminarPlan,
   obtenerPlanes,
 } from '../services/planesService.js'
-import { crearCupon, obtenerCupones } from '../services/cuponesService.js'
+import {
+  actualizarCupon,
+  crearCupon,
+  eliminarCupon,
+  obtenerCupones,
+} from '../services/cuponesService.js'
 import {
   actualizarEvento,
   crearEvento,
@@ -73,6 +78,8 @@ function VistaPlanes() {
   const [cupones, setCupones] = useState([])
   const [cuponError, setCuponError] = useState('')
   const [guardandoCupon, setGuardandoCupon] = useState(false)
+  const [cuponProcesandoId, setCuponProcesandoId] = useState('')
+  const [cuponEliminar, setCuponEliminar] = useState(null)
   const [editarPlan, setEditarPlan] = useState(null)
   const [eliminarTarget, setEliminarTarget] = useState(null)
   const [menuPlan, setMenuPlan] = useState(null)
@@ -135,6 +142,42 @@ function VistaPlanes() {
       setCuponError(err.message || 'No se pudo crear el cupón')
     } finally {
       setGuardandoCupon(false)
+    }
+  }
+
+  const handleToggleCuponActivo = async (cupon) => {
+    setCuponProcesandoId(cupon.id)
+    try {
+      const actualizado = await actualizarCupon(cupon.id, {
+        activo: !cupon.activo,
+      })
+      setCupones((prev) =>
+        prev.map((item) => (item.id === actualizado.id ? actualizado : item)),
+      )
+      toast.success(
+        actualizado.activo
+          ? `Cupón "${actualizado.nombre}" activado`
+          : `Cupón "${actualizado.nombre}" desactivado`,
+      )
+    } catch (err) {
+      toast.error(err.message || 'No se pudo actualizar el cupón')
+    } finally {
+      setCuponProcesandoId('')
+    }
+  }
+
+  const handleConfirmEliminarCupon = async () => {
+    if (!cuponEliminar) return
+    setCuponProcesandoId(cuponEliminar.id)
+    try {
+      await eliminarCupon(cuponEliminar.id)
+      setCupones((prev) => prev.filter((item) => item.id !== cuponEliminar.id))
+      toast.success(`Cupón "${cuponEliminar.nombre}" eliminado`)
+      setCuponEliminar(null)
+    } catch (err) {
+      toast.error(err.message || 'No se pudo eliminar el cupón')
+    } finally {
+      setCuponProcesandoId('')
     }
   }
 
@@ -412,6 +455,27 @@ function VistaPlanes() {
         onClose={() => setCuponesListOpen(false)}
         cupones={cupones}
         planes={planes}
+        onToggleActivo={handleToggleCuponActivo}
+        onEliminar={setCuponEliminar}
+        procesandoId={cuponProcesandoId}
+      />
+
+      <ConfirmModal
+        open={Boolean(cuponEliminar)}
+        onClose={() => {
+          if (cuponProcesandoId) return
+          setCuponEliminar(null)
+        }}
+        onConfirm={handleConfirmEliminarCupon}
+        title="Eliminar cupón"
+        message={
+          cuponEliminar
+            ? `¿Seguro que quieres eliminar el cupón "${cuponEliminar.nombre}" (${cuponEliminar.codigo})? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmLabel="Eliminar"
+        variant="danger"
+        loading={Boolean(cuponProcesandoId)}
       />
 
       <ModificarVigenciaModal

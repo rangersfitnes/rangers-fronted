@@ -45,6 +45,15 @@
   cursor: not-allowed;
 }
 
+.cupones-modal__link-btn--danger {
+  color: #f87171;
+}
+
+.cupones-modal__hint {
+  color: #a3a3a3;
+  font-size: 0.75rem;
+}
+
 .cupones-modal__planes-list {
   list-style: none;
   margin: 0;
@@ -122,6 +131,44 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+}
+
+.cupones-list-modal__estado {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cupones-list-modal__estado--activo {
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.cupones-list-modal__estado--inactivo {
+  background: rgba(163, 163, 163, 0.16);
+  color: #d4d4d4;
+}
+
+.cupones-list-modal__estado--vencido {
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+}
+
+.cupones-list-modal__nota {
+  display: block;
+  color: #a3a3a3;
+  font-size: 0.72rem;
+}
+
+.cupones-list-modal__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
 }
 
 .cupones-list-modal__table code {

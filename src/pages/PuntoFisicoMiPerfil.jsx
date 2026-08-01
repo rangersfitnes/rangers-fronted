@@ -100,6 +100,22 @@ function etiquetaEstadoExtra(estado) {
   return null
 }
 
+function detallePendienteLiquidar(resumen) {
+  const turnos = Number(resumen?.totalTurnosPendientes) || 0
+  if (turnos === 0) return 'Todo liquidado'
+
+  const partes = [`${turnos} turno${turnos === 1 ? '' : 's'}`]
+
+  const sinAprobar = Number(resumen?.turnosConExtraSinAprobar) || 0
+  if (sinAprobar > 0) {
+    partes.push(
+      `${sinAprobar} con horas extra por aprobar`,
+    )
+  }
+
+  return partes.join(' · ')
+}
+
 function textoJornadasEspeciales(esquema) {
   const jornadas = esquema?.jornadasPorDia || {}
   const partes = DIAS_SEMANA_ESQUEMA.filter((dia) => jornadas[dia.id]).map(
@@ -120,11 +136,11 @@ function CampoPerfil({ etiqueta, valor }) {
   )
 }
 
-function ResumenCard({ etiqueta, valor, destacado = false, detalle = '' }) {
+function ResumenCard({ etiqueta, valor, variante = '', detalle = '' }) {
   return (
     <article
       className={`pf-mi-perfil__resumen-card${
-        destacado ? ' pf-mi-perfil__resumen-card--destacado' : ''
+        variante ? ` pf-mi-perfil__resumen-card--${variante}` : ''
       }`}
     >
       <span className="pf-mi-perfil__resumen-label">{etiqueta}</span>
@@ -458,7 +474,13 @@ function PuntoFisicoMiPerfil() {
               <ResumenCard
                 etiqueta="Total devengado"
                 valor={formatearPrecioCuenta(resumen.totalPago)}
-                destacado
+                variante="destacado"
+              />
+              <ResumenCard
+                etiqueta="Pendiente por liquidar"
+                valor={formatearPrecioCuenta(resumen.totalPagoPendiente)}
+                variante="pendiente"
+                detalle={detallePendienteLiquidar(resumen)}
               />
             </div>
           ) : null}
