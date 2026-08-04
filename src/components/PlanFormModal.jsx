@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
 import './CrearPlanModal.css'
 
-const duraciones = ['2 semanas', '1 mes', '6 meses', '1 año']
+const duraciones = ['2 semanas', '1 mes', 'trimestre', '6 meses', '1 año']
 const CANTIDAD_PERSONAS_MIN = 1
 const CANTIDAD_PERSONAS_MAX = 5
 
