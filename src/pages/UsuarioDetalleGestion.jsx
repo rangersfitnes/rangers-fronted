@@ -7,17 +7,31 @@ import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import UserIcon from '../components/icons/UserIcon.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { DIAS_SEMANA } from '../constants/diasSemana.js'
-import { formatearFechaCuenta } from './cuenta/cuentaUtils.js'
+import {
+  etiquetaMetodoPago,
+  etiquetaOrigenPago,
+  formatearFechaCuenta,
+  formatearFechaHoraCuenta,
+  formatearPrecioCuenta,
+} from './cuenta/cuentaUtils.js'
 import {
   eliminarEntrenamientoUsuarioAdmin,
   guardarEntrenamientoUsuarioAdmin,
   obtenerEntrenamientosUsuario,
 } from '../services/entrenamientosAdminService.js'
+import { obtenerAsistenciasUsuarioAdmin } from '../services/asistenciasService.js'
 import {
   activarPlanUsuario,
   eliminarPlanUsuario,
+  obtenerHistorialMembresiasUsuario,
   obtenerUsuarios,
 } from '../services/usuariosService.js'
+import {
+  claseFilaAsistencia,
+  deduplicarRegistrosAsistencia,
+  etiquetaTipoAcceso,
+  keyRegistroAsistencia,
+} from '../utils/asistenciasUtils.js'
 import trashIcon from '../assets/images/icons/trash.svg'
 
 const tienePlanActivo = (u) =>
@@ -53,6 +67,11 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
   const [planSubmitting, setPlanSubmitting] = useState(false)
   const [planActionLoading, setPlanActionLoading] = useState(false)
   const [errorPlan, setErrorPlan] = useState('')
+  const [membresias, setMembresias] = useState([])
+  const [asistencias, setAsistencias] = useState([])
+  const [cargandoHistorial, setCargandoHistorial] = useState(false)
+  const [errorHistorial, setErrorHistorial] = useState('')
+  const [activacionesCount, setActivacionesCount] = useState(null)
 
   useEffect(() => {
     setUsuario(usuarioProp)
@@ -76,13 +95,43 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
     }
   }, [])
 
+  const cargarHistoriales = useCallback(async (uid, signal) => {
+    setCargandoHistorial(true)
+    setErrorHistorial('')
+    try {
+      const [historial, listaAsistencias] = await Promise.all([
+        obtenerHistorialMembresiasUsuario(uid, { signal }),
+        obtenerAsistenciasUsuarioAdmin(uid, { signal }),
+      ])
+      if (signal?.aborted) return
+      setMembresias(historial.membresias ?? [])
+      setActivacionesCount(
+        historial.activacionesPlanCount != null
+          ? Number(historial.activacionesPlanCount)
+          : (historial.membresias ?? []).length,
+      )
+      setAsistencias(deduplicarRegistrosAsistencia(listaAsistencias))
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      setMembresias([])
+      setAsistencias([])
+      setActivacionesCount(null)
+      setErrorHistorial(
+        err.message || 'No se pudo cargar el historial del usuario',
+      )
+    } finally {
+      if (!signal?.aborted) setCargandoHistorial(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (!usuario?.uid) return
     const controller = new AbortController()
     setError('')
     cargarEntrenamientos(usuario.uid, controller.signal)
+    cargarHistoriales(usuario.uid, controller.signal)
     return () => controller.abort()
-  }, [usuario?.uid, cargarEntrenamientos])
+  }, [usuario?.uid, cargarEntrenamientos, cargarHistoriales])
 
   const recargarUsuario = useCallback(async () => {
     if (!usuario?.documento) return
@@ -124,6 +173,7 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
       )
       setActivarPlanOpen(false)
       await recargarUsuario()
+      if (usuario.uid) await cargarHistoriales(usuario.uid)
     } catch (err) {
       setErrorPlan(err.message || 'No se pudo activar el plan')
     } finally {
@@ -233,6 +283,7 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
       : null
   const loadingVisible =
     cargandoEntrenamientos ||
+    cargandoHistorial ||
     guardando ||
     eliminando ||
     planSubmitting ||
@@ -254,7 +305,7 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
         <div>
           <h1 className="pf-page__title">{usuario.nombre || 'Usuario'}</h1>
           <p className="pf-page__subtitle">
-            Plan, datos del miembro y cronograma de entrenamiento
+            Plan, historial de membresías, asistencias y cronograma
           </p>
         </div>
       </header>
@@ -467,6 +518,167 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
         )}
       </section>
 
+      <section
+        className="pf-entrenamientos__planes pf-usuario-historial"
+        aria-label="Historial de membresías"
+      >
+        <header className="pf-entrenamientos__planes-header">
+          <div>
+            <h2 className="pf-entrenamientos__planes-title">
+              Historial de membresías
+            </h2>
+            <p className="pf-entrenamientos__planes-meta">
+              {activacionesCount != null
+                ? `${activacionesCount} activación${activacionesCount === 1 ? '' : 'es'} registrada${activacionesCount === 1 ? '' : 's'}`
+                : 'Pagos y activaciones de plan'}
+            </p>
+          </div>
+        </header>
+
+        {errorHistorial && (
+          <p className="pf-entrenamientos__error" role="alert">
+            {errorHistorial}
+          </p>
+        )}
+
+        {!cargandoHistorial && !errorHistorial && membresias.length === 0 && (
+          <p className="pf-panel__empty">
+            Este usuario aún no tiene activaciones de membresía registradas.
+          </p>
+        )}
+
+        {!cargandoHistorial && membresias.length > 0 && (
+          <div className="pf-usuario-historial__wrap">
+            <table className="pf-usuario-historial__table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Plan</th>
+                  <th>Monto</th>
+                  <th>Método</th>
+                  <th>Origen</th>
+                  <th>Vigencia</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {membresias.map((pago) => (
+                  <tr key={pago.id}>
+                    <td data-label="Fecha">
+                      {formatearFechaHoraCuenta(pago.creadoEn)}
+                    </td>
+                    <td data-label="Plan">
+                      <span className="pf-usuario-historial__plan-nombre">
+                        {pago.plan?.nombre || '—'}
+                      </span>
+                      {pago.plan?.duracion ? (
+                        <span className="pf-usuario-historial__plan-meta">
+                          {pago.plan.duracion}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td data-label="Monto">
+                      {formatearPrecioCuenta(
+                        pago.montoPagado ?? pago.montoEsperado,
+                      )}
+                    </td>
+                    <td data-label="Método">
+                      {etiquetaMetodoPago(pago.metodoPago)}
+                    </td>
+                    <td data-label="Origen">
+                      {etiquetaOrigenPago(pago.origen)}
+                    </td>
+                    <td data-label="Vigencia">
+                      {formatearFechaCuenta(pago.plan?.fechaInicio)}
+                      {' — '}
+                      {formatearFechaCuenta(pago.plan?.vigencia)}
+                    </td>
+                    <td data-label="Estado">
+                      <span
+                        className={`pf-usuario-historial__estado pf-usuario-historial__estado--${
+                          pago.estado || 'desconocido'
+                        }`}
+                      >
+                        {pago.estado || '—'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section
+        className="pf-entrenamientos__planes pf-usuario-historial"
+        aria-label="Historial de asistencias"
+      >
+        <header className="pf-entrenamientos__planes-header">
+          <div>
+            <h2 className="pf-entrenamientos__planes-title">
+              Historial de asistencias
+            </h2>
+            <p className="pf-entrenamientos__planes-meta">
+              {asistencias.length} registro
+              {asistencias.length === 1 ? '' : 's'}
+            </p>
+          </div>
+        </header>
+
+        {!cargandoHistorial && !errorHistorial && asistencias.length === 0 && (
+          <p className="pf-panel__empty">
+            Este usuario aún no tiene asistencias ni clases del día registradas.
+          </p>
+        )}
+
+        {!cargandoHistorial && asistencias.length > 0 && (
+          <div className="pf-usuario-historial__wrap">
+            <table className="pf-usuario-historial__table">
+              <thead>
+                <tr>
+                  <th>Fecha ingreso</th>
+                  <th>Hora registro</th>
+                  <th>Sede</th>
+                  <th>Plan</th>
+                  <th>Tipo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {asistencias.map((item) => (
+                  <tr
+                    key={keyRegistroAsistencia(item)}
+                    className={claseFilaAsistencia(item)}
+                  >
+                    <td data-label="Fecha ingreso">
+                      {formatearFechaCuenta(
+                        item.fecha
+                          ? new Date(`${item.fecha}T12:00:00`).getTime()
+                          : null,
+                      )}
+                    </td>
+                    <td data-label="Hora registro">
+                      {formatearFechaHoraCuenta(item.creadoEn)}
+                    </td>
+                    <td data-label="Sede">{item.sedeNombre || '—'}</td>
+                    <td data-label="Plan">{item.planNombre || '—'}</td>
+                    <td data-label="Tipo">
+                      <span
+                        className={`pf-usuario-historial__tipo pf-usuario-historial__tipo--${
+                          item.tipoAcceso || 'membresia'
+                        }`}
+                      >
+                        {etiquetaTipoAcceso(item.tipoAcceso)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <AnadirCronogramaModal
         open={modalAbierto}
         onClose={cerrarModal}
@@ -527,7 +739,9 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
                 ? 'Guardando entrenamiento'
                 : eliminando
                   ? 'Eliminando'
-                  : 'Cargando entrenamientos'
+                  : cargandoHistorial
+                    ? 'Cargando historial'
+                    : 'Cargando entrenamientos'
         }
       />
     </section>

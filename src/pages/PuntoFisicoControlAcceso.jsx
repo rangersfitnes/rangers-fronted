@@ -461,7 +461,11 @@ function BotonFullscreen({ fullscreen, onToggle, modoKiosco = false }) {
       className={`pf-control-acceso__fullscreen-btn${
         modoKiosco ? ' pf-control-acceso__fullscreen-btn--kiosco' : ''
       }`}
-      onClick={onToggle}
+      onClick={(event) => {
+        // Quita el foco del botón para que pase al input de cédula.
+        event.currentTarget.blur()
+        onToggle?.()
+      }}
       aria-label={
         modoKiosco
           ? 'Salir de pantalla completa (staff)'
@@ -522,7 +526,24 @@ function VistaControlAcceso({
   const [pagoPendiente, setPagoPendiente] = useState(null)
 
   const enfocarInput = useCallback(() => {
-    requestAnimationFrame(() => inputRef.current?.focus())
+    const aplicar = () => {
+      const el = inputRef.current
+      if (!el || el.disabled) return
+      try {
+        el.focus({ preventScroll: true })
+      } catch {
+        el.focus()
+      }
+    }
+
+    // Tras requestFullscreen el navegador suele dejar el foco en el botón;
+    // reintentamos en varios ticks para asegurar el cursor en la cédula.
+    requestAnimationFrame(() => {
+      aplicar()
+      window.setTimeout(aplicar, 40)
+      window.setTimeout(aplicar, 160)
+      window.setTimeout(aplicar, 320)
+    })
   }, [])
 
   const reiniciar = useCallback(() => {
@@ -539,6 +560,20 @@ function VistaControlAcceso({
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [enfocarInput])
+
+  // Al activar pantalla completa / kiosco, el cursor queda en la barra sin clic.
+  useEffect(() => {
+    if (!fullscreen && !modoKiosco) return
+    if (resultado || pagoPendiente || validando) return
+    enfocarInput()
+  }, [
+    fullscreen,
+    modoKiosco,
+    resultado,
+    pagoPendiente,
+    validando,
+    enfocarInput,
+  ])
 
   const mostrarResultadoTemporal = useCallback(
     (datos) => {
@@ -742,6 +777,7 @@ function VistaControlAcceso({
                 placeholder="Digita tu cédula y presiona Enter"
                 inputMode="numeric"
                 autoComplete="off"
+                autoFocus
                 disabled={validando}
               />
             </label>

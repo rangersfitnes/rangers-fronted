@@ -42,6 +42,10 @@ export async function obtenerUsuarios({
   nombre,
   celular,
   estadoPlan,
+  planId,
+  categoria,
+  ventanaNuevosDias,
+  orden,
   signal,
 } = {}) {
   const token = await requerirAdminToken()
@@ -65,6 +69,23 @@ export async function obtenerUsuarios({
     const estadoLimpio = String(estadoPlan || '').trim().toLowerCase()
     if (['activo', 'vencido', 'sin_plan'].includes(estadoLimpio)) {
       params.set('estadoPlan', estadoLimpio)
+    }
+    const planLimpio = String(planId || '').trim()
+    if (planLimpio) params.set('planId', planLimpio)
+
+    const categoriaLimpia = String(categoria || '').trim().toLowerCase()
+    if (['nuevo', 'renovado'].includes(categoriaLimpia)) {
+      params.set('categoria', categoriaLimpia)
+    }
+
+    const ventana = Math.trunc(Number(ventanaNuevosDias))
+    if ([7, 15, 30, 60, 90].includes(ventana)) {
+      params.set('ventanaNuevosDias', String(ventana))
+    }
+
+    const ordenLimpio = String(orden || '').trim().toLowerCase()
+    if (['recientes', 'antiguedad_asc', 'antiguedad_desc'].includes(ordenLimpio)) {
+      params.set('orden', ordenLimpio)
     }
   }
 
@@ -100,6 +121,10 @@ export async function obtenerUsuarios({
     tipoBusqueda: data.tipoBusqueda || null,
     total: data.total ?? (data.usuarios || []).length,
     estadoPlan: data.estadoPlan ?? null,
+    planId: data.planId ?? null,
+    categoria: data.categoria ?? null,
+    ventanaNuevosDias: data.ventanaNuevosDias ?? null,
+    orden: data.orden ?? 'recientes',
   }
 }
 
@@ -265,6 +290,38 @@ export async function activarPlanUsuario(
 
   if (!response.ok) {
     throw new Error(data.error || 'No se pudo activar el plan')
+  }
+
+  return data
+}
+
+export async function obtenerHistorialMembresiasUsuario(uid, { signal } = {}) {
+  const token = await requerirAdminToken()
+  const id = String(uid || '').trim()
+  if (!id) throw new Error('El usuario es obligatorio')
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/usuarios/${encodeURIComponent(id)}/historial-membresias`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error(
+      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+    )
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(
+      data.error || 'No se pudo cargar el historial de membresías',
+    )
   }
 
   return data

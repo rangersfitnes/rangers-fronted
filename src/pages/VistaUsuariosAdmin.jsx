@@ -15,6 +15,7 @@ import {
   obtenerUsuarios,
   registrarUsuario,
 } from '../services/usuariosService.js'
+import { obtenerPlanes } from '../services/planesService.js'
 import {
   exportarReporteUsuariosExcel,
   exportarReporteUsuariosPdf,
@@ -51,6 +52,26 @@ const ETIQUETA_FILTRO_USUARIO = {
   vencido: 'usuarios vencidos',
   sin_plan: 'usuarios sin plan',
 }
+
+const OPCIONES_CATEGORIA = [
+  { id: '', label: 'Todos (sin categoría)' },
+  { id: 'nuevo', label: 'Usuarios nuevos' },
+  { id: 'renovado', label: 'Renovaron membresía' },
+]
+
+const OPCIONES_VENTANA_NUEVOS = [
+  { id: 7, label: 'Últimos 7 días' },
+  { id: 15, label: 'Últimos 15 días' },
+  { id: 30, label: 'Últimos 30 días' },
+  { id: 60, label: 'Últimos 60 días' },
+  { id: 90, label: 'Últimos 90 días' },
+]
+
+const OPCIONES_ORDEN = [
+  { id: 'recientes', label: 'Más recientes (por registro)' },
+  { id: 'antiguedad_desc', label: 'Más nuevos primero (antigüedad)' },
+  { id: 'antiguedad_asc', label: 'Más antiguos primero' },
+]
 
 const TIPOS_BUSQUEDA_USUARIO = [
   {
@@ -104,12 +125,35 @@ function VistaUsuariosAdmin() {
   const [busquedaTexto, setBusquedaTexto] = useState('')
   const [busquedaActiva, setBusquedaActiva] = useState(null)
   const [filtroEstadoPlan, setFiltroEstadoPlan] = useState(null)
+  const [filtroPlanId, setFiltroPlanId] = useState('')
+  const [filtroCategoria, setFiltroCategoria] = useState('')
+  const [ventanaNuevosDias, setVentanaNuevosDias] = useState(30)
+  const [ordenListado, setOrdenListado] = useState('recientes')
+  const [planes, setPlanes] = useState([])
+  const [totalFiltrado, setTotalFiltrado] = useState(null)
   const [estadisticas, setEstadisticas] = useState({
     total: 0,
     activos: 0,
     vencidos: 0,
     sinPlan: 0,
   })
+
+  const filtrosListado = useCallback(
+    () => ({
+      estadoPlan: filtroEstadoPlan,
+      planId: filtroPlanId || null,
+      categoria: filtroCategoria || null,
+      ventanaNuevosDias,
+      orden: ordenListado,
+    }),
+    [
+      filtroCategoria,
+      filtroEstadoPlan,
+      filtroPlanId,
+      ordenListado,
+      ventanaNuevosDias,
+    ],
+  )
 
   const cargarEstadisticas = useCallback(
     async ({ signal } = {}) => {
@@ -124,20 +168,49 @@ function VistaUsuariosAdmin() {
     [toast],
   )
 
+  const cargarPlanesFiltro = useCallback(
+    async ({ signal } = {}) => {
+      try {
+        const data = await obtenerPlanes({ signal })
+        setPlanes(Array.isArray(data) ? data : [])
+      } catch (err) {
+        if (err?.name === 'AbortError') return
+        // Silencioso: el filtro de plan queda vacío si falla
+      }
+    },
+    [],
+  )
+
   const cargarUsuarios = useCallback(
-    async (pagina, { signal, busqueda, estadoPlan = null } = {}) => {
+    async (pagina, { signal, busqueda, filtros } = {}) => {
       setLoading(true)
       try {
+        const filtrosActivos = filtros || {}
         const res = await obtenerUsuarios({
           page: pagina,
           limit: PAGE_SIZE,
           ...parametrosBusquedaUsuarios(busqueda),
-          estadoPlan: busqueda ? undefined : estadoPlan,
+          estadoPlan: busqueda ? undefined : filtrosActivos.estadoPlan,
+          planId: busqueda ? undefined : filtrosActivos.planId,
+          categoria: busqueda ? undefined : filtrosActivos.categoria,
+          ventanaNuevosDias: busqueda
+            ? undefined
+            : filtrosActivos.ventanaNuevosDias,
+          orden: busqueda ? undefined : filtrosActivos.orden,
           signal,
         })
         setUsuarios(res.usuarios)
         setHasMore(res.hasMore)
         setPage(res.page)
+        setTotalFiltrado(
+          busqueda ||
+            filtrosActivos.estadoPlan ||
+            filtrosActivos.planId ||
+            filtrosActivos.categoria ||
+            (filtrosActivos.orden && filtrosActivos.orden !== 'recientes')
+            ? res.total
+            : null,
+        )
         if (res.busqueda && res.tipoBusqueda) {
           setBusquedaActiva({
             tipo: res.tipoBusqueda,
@@ -145,9 +218,6 @@ function VistaUsuariosAdmin() {
           })
         } else {
           setBusquedaActiva(null)
-        }
-        if (!res.busqueda) {
-          setFiltroEstadoPlan(res.estadoPlan || null)
         }
       } catch (err) {
         if (err?.name === 'AbortError') return
@@ -163,7 +233,7 @@ function VistaUsuariosAdmin() {
     (pagina = page) => {
       cargarUsuarios(pagina, {
         busqueda: busquedaActiva,
-        estadoPlan: busquedaActiva ? null : filtroEstadoPlan,
+        filtros: busquedaActiva ? {} : filtrosListado(),
       })
       cargarEstadisticas()
     },
@@ -171,17 +241,23 @@ function VistaUsuariosAdmin() {
       busquedaActiva,
       cargarEstadisticas,
       cargarUsuarios,
-      filtroEstadoPlan,
+      filtrosListado,
       page,
     ],
   )
 
   useEffect(() => {
     const controller = new AbortController()
-    cargarUsuarios(1, { signal: controller.signal })
+    cargarUsuarios(1, {
+      signal: controller.signal,
+      filtros: filtrosListado(),
+    })
     cargarEstadisticas({ signal: controller.signal })
+    cargarPlanesFiltro({ signal: controller.signal })
     return () => controller.abort()
-  }, [cargarEstadisticas, cargarUsuarios])
+    // Solo carga inicial
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const diaColombia = useDiaColombia()
   const diaListadoRef = useRef(diaColombia)
@@ -216,7 +292,7 @@ function VistaUsuariosAdmin() {
     const termino = busquedaTexto.trim()
     if (!termino) {
       setBusquedaActiva(null)
-      cargarUsuarios(1, { estadoPlan: filtroEstadoPlan })
+      cargarUsuarios(1, { filtros: filtrosListado() })
       return
     }
 
@@ -234,14 +310,38 @@ function VistaUsuariosAdmin() {
     }
 
     const busqueda = { tipo: tipoBusqueda, termino }
-    setFiltroEstadoPlan(null)
     cargarUsuarios(1, { busqueda })
   }
 
   const limpiarBusqueda = () => {
     setBusquedaTexto('')
     setBusquedaActiva(null)
-    cargarUsuarios(1, { estadoPlan: filtroEstadoPlan })
+    cargarUsuarios(1, { filtros: filtrosListado() })
+  }
+
+  const aplicarFiltrosDetalle = () => {
+    setBusquedaTexto('')
+    setBusquedaActiva(null)
+    cargarUsuarios(1, { filtros: filtrosListado() })
+  }
+
+  const limpiarFiltrosDetalle = () => {
+    setFiltroEstadoPlan(null)
+    setFiltroPlanId('')
+    setFiltroCategoria('')
+    setVentanaNuevosDias(30)
+    setOrdenListado('recientes')
+    setBusquedaTexto('')
+    setBusquedaActiva(null)
+    cargarUsuarios(1, {
+      filtros: {
+        estadoPlan: null,
+        planId: null,
+        categoria: null,
+        ventanaNuevosDias: 30,
+        orden: 'recientes',
+      },
+    })
   }
 
   const seleccionarFiltro = (estadoPlan) => {
@@ -249,7 +349,12 @@ function VistaUsuariosAdmin() {
     setBusquedaTexto('')
     setBusquedaActiva(null)
     setFiltroEstadoPlan(siguiente)
-    cargarUsuarios(1, { estadoPlan: siguiente })
+    cargarUsuarios(1, {
+      filtros: {
+        ...filtrosListado(),
+        estadoPlan: siguiente,
+      },
+    })
   }
 
   const handleBusquedaKeyDown = (event) => {
@@ -361,15 +466,45 @@ function VistaUsuariosAdmin() {
 
   const irAnterior = () => {
     if (page <= 1 || loading || busquedaActiva) return
-    cargarUsuarios(page - 1, { estadoPlan: filtroEstadoPlan })
+    cargarUsuarios(page - 1, { filtros: filtrosListado() })
   }
 
   const irSiguiente = () => {
     if (!hasMore || loading || busquedaActiva) return
-    cargarUsuarios(page + 1, { estadoPlan: filtroEstadoPlan })
+    cargarUsuarios(page + 1, { filtros: filtrosListado() })
   }
 
   const enModoBusqueda = Boolean(busquedaActiva)
+  const hayFiltrosDetalle = Boolean(
+    filtroEstadoPlan ||
+      filtroPlanId ||
+      filtroCategoria ||
+      ordenListado !== 'recientes',
+  )
+
+  const textoResumenFiltros = () => {
+    const partes = []
+    if (filtroEstadoPlan) {
+      partes.push(ETIQUETA_FILTRO_USUARIO[filtroEstadoPlan])
+    }
+    if (filtroPlanId) {
+      const plan = planes.find((p) => p.id === filtroPlanId)
+      partes.push(`plan «${plan?.nombre || filtroPlanId}»`)
+    }
+    if (filtroCategoria === 'nuevo') {
+      partes.push(`nuevos (últimos ${ventanaNuevosDias} días)`)
+    }
+    if (filtroCategoria === 'renovado') {
+      partes.push('que renovaron membresía')
+    }
+    if (ordenListado === 'antiguedad_asc') {
+      partes.push('ordenados del más antiguo al más nuevo')
+    }
+    if (ordenListado === 'antiguedad_desc') {
+      partes.push('ordenados del más nuevo al más antiguo')
+    }
+    return partes.join(' · ')
+  }
 
   if (usuarioGestion) {
     return (
@@ -539,6 +674,107 @@ function VistaUsuariosAdmin() {
         </div>
       </div>
 
+      <div className="pf-usuarios-filtros" aria-label="Filtros detallados">
+        <div className="pf-usuarios-filtros__grid">
+          <label className="pf-usuarios-busqueda__field">
+            <span className="pf-usuarios-busqueda__label">Plan</span>
+            <select
+              className="pf-usuarios-busqueda__select"
+              value={filtroPlanId}
+              onChange={(e) => setFiltroPlanId(e.target.value)}
+              disabled={loading || enModoBusqueda}
+            >
+              <option value="">Todos los planes</option>
+              {planes.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.nombre || plan.id}
+                  {plan.estado && plan.estado !== 'activo'
+                    ? ` (${plan.estado})`
+                    : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="pf-usuarios-busqueda__field">
+            <span className="pf-usuarios-busqueda__label">Categoría</span>
+            <select
+              className="pf-usuarios-busqueda__select"
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value)}
+              disabled={loading || enModoBusqueda}
+            >
+              {OPCIONES_CATEGORIA.map((opcion) => (
+                <option key={opcion.id || 'todas'} value={opcion.id}>
+                  {opcion.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="pf-usuarios-busqueda__field">
+            <span className="pf-usuarios-busqueda__label">
+              Ventana de nuevos
+            </span>
+            <select
+              className="pf-usuarios-busqueda__select"
+              value={ventanaNuevosDias}
+              onChange={(e) => setVentanaNuevosDias(Number(e.target.value))}
+              disabled={
+                loading || enModoBusqueda || filtroCategoria !== 'nuevo'
+              }
+            >
+              {OPCIONES_VENTANA_NUEVOS.map((opcion) => (
+                <option key={opcion.id} value={opcion.id}>
+                  {opcion.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="pf-usuarios-busqueda__field">
+            <span className="pf-usuarios-busqueda__label">Ordenar por</span>
+            <select
+              className="pf-usuarios-busqueda__select"
+              value={ordenListado}
+              onChange={(e) => setOrdenListado(e.target.value)}
+              disabled={loading || enModoBusqueda}
+            >
+              {OPCIONES_ORDEN.map((opcion) => (
+                <option key={opcion.id} value={opcion.id}>
+                  {opcion.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="pf-usuarios-filtros__actions">
+          <button
+            type="button"
+            className="pf-action-btn"
+            onClick={aplicarFiltrosDetalle}
+            disabled={loading || enModoBusqueda}
+          >
+            Aplicar filtros
+          </button>
+          <button
+            type="button"
+            className="pf-action-btn pf-action-btn--ghost"
+            onClick={limpiarFiltrosDetalle}
+            disabled={loading || (!hayFiltrosDetalle && !enModoBusqueda)}
+          >
+            Limpiar filtros
+          </button>
+        </div>
+
+        <p className="pf-usuarios-filtros__ayuda">
+          «Usuarios nuevos» = registrados en la ventana elegida. «Renovaron
+          membresía» = 2 o más activaciones de plan confirmadas. Puedes
+          combinarlo con el estado (Activos / Vencidos / Sin plan).
+        </p>
+      </div>
+
       {enModoBusqueda && !loading ? (
         <p className="pf-usuarios-busqueda__hint">
           Resultados para el {ETIQUETA_TIPO_BUSQUEDA[busquedaActiva.tipo]} «
@@ -547,9 +783,10 @@ function VistaUsuariosAdmin() {
         </p>
       ) : null}
 
-      {!enModoBusqueda && filtroEstadoPlan && !loading ? (
+      {!enModoBusqueda && hayFiltrosDetalle && !loading ? (
         <p className="pf-usuarios-busqueda__hint">
-          Mostrando {ETIQUETA_FILTRO_USUARIO[filtroEstadoPlan]}
+          Mostrando {textoResumenFiltros()}
+          {totalFiltrado != null ? ` · ${totalFiltrado} resultado${totalFiltrado === 1 ? '' : 's'}` : ''}
           {usuarios.length === 0 ? ' — sin coincidencias' : ''}
         </p>
       ) : null}
@@ -559,8 +796,8 @@ function VistaUsuariosAdmin() {
           <p className="pf-panel__empty">
             {enModoBusqueda
               ? `No se encontró ningún usuario con ese ${ETIQUETA_TIPO_BUSQUEDA[busquedaActiva?.tipo] || 'criterio'}.`
-              : filtroEstadoPlan
-                ? `No hay ${ETIQUETA_FILTRO_USUARIO[filtroEstadoPlan]}.`
+              : hayFiltrosDetalle
+                ? 'No hay usuarios con esos filtros.'
                 : 'Aún no hay usuarios registrados. Crea el primero con el botón «+ Crear usuario».'}
           </p>
         </div>

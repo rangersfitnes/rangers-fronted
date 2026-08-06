@@ -54,6 +54,34 @@ export async function registrarAsistencia({ cedula, sede = SEDE_HORARIOS }) {
   return data
 }
 
+export async function obtenerAsistenciasUsuarioAdmin(uid, { signal } = {}) {
+  const token = await requerirAdminToken()
+  const id = String(uid || '').trim()
+  if (!id) throw new Error('El usuario es obligatorio')
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/asistencias/usuario/${encodeURIComponent(id)}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudieron cargar las asistencias')
+  }
+
+  return data.asistencias ?? []
+}
+
 export async function obtenerAsistenciasAdmin({
   sede,
   fechaDesde,

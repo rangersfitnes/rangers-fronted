@@ -111,6 +111,164 @@
   padding-right: 0.85rem;
 }
 
+.pf-usuario-historial {
+  margin-top: 1.25rem;
+}
+
+.pf-usuario-historial__wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.pf-usuario-historial__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.pf-usuario-historial__table thead th {
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.pf-usuario-historial__table tbody td {
+  padding: 0.75rem 0.9rem;
+  color: #e5e5e5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.pf-usuario-historial__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pf-usuario-historial__table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pf-usuario-historial__plan-nombre {
+  display: block;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.pf-usuario-historial__plan-meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  color: #a3a3a3;
+  text-transform: capitalize;
+}
+
+.pf-usuario-historial__estado {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: rgba(163, 163, 163, 0.15);
+  color: #d4d4d4;
+}
+
+.pf-usuario-historial__estado--aprobado,
+.pf-usuario-historial__estado--completado,
+.pf-usuario-historial__estado--activo {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.pf-usuario-historial__estado--pendiente {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fdba74;
+}
+
+.pf-usuario-historial__estado--rechazado,
+.pf-usuario-historial__estado--anulado {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.pf-usuario-historial__tipo {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.pf-usuario-historial__tipo--membresia {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.pf-usuario-historial__tipo--clase-dia {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fdba74;
+}
+
+.pf-usuario-historial__tipo--clase-cortesia {
+  background: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+}
+
+@media (max-width: 720px) {
+  .pf-usuario-historial__wrap {
+    border: none;
+    overflow: visible;
+  }
+
+  .pf-usuario-historial__table,
+  .pf-usuario-historial__table thead,
+  .pf-usuario-historial__table tbody,
+  .pf-usuario-historial__table tr,
+  .pf-usuario-historial__table th,
+  .pf-usuario-historial__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .pf-usuario-historial__table thead {
+    display: none;
+  }
+
+  .pf-usuario-historial__table tbody tr {
+    margin-bottom: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .pf-usuario-historial__table tbody td {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    border: none;
+  }
+
+  .pf-usuario-historial__table tbody td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #a3a3a3;
+  }
+}
+
 .pf-page__view-actions {
   display: flex;
   gap: 0.5rem;
@@ -313,6 +471,48 @@
   margin: -0.5rem 0 1rem;
   font-size: 0.82rem;
   color: #a3a3a3;
+}
+
+.pf-usuarios-filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pf-usuarios-filtros__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.pf-usuarios-filtros__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.pf-usuarios-filtros__ayuda {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #737373;
+}
+
+@media (max-width: 1100px) {
+  .pf-usuarios-filtros__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .pf-usuarios-filtros__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .pf-pagination {
@@ -580,6 +780,7 @@
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
+  margin-bottom: 1.25rem;
 }
 
 .pf-entrenamientos__planes-header {
