@@ -338,6 +338,13 @@ const CLASE_ID_POR_TIPO = {
   PA: 'Pasaporte',
 }
 
+const EMAIL_TEMPORAL_PLANTILLA = 'prueva@temporal.com'
+const DIRECCION_PLANTILLA = 'clientes rangers box'
+const CIUDAD_PLANTILLA = 'MANIZALES-CALDAS'
+const REGIMEN_PLANTILLA = 'No responsable de IVA'
+const TIPO_CTA_BANCO_PLANTILLA = 'Ahorros'
+
+/** Encabezados exactos de la hoja Terceros en plantilla-clientes.xlsx */
 const ENCABEZADOS_TERCEROS = [
   'NIT/Cedula',
   'ID padre',
@@ -359,12 +366,18 @@ const ENCABEZADOS_TERCEROS = [
   'Codigo',
   'EsCliente',
   'Elija el estado',
+  'Elija el estado',
+  'Elija el estado',
+  'Elija el estado',
+  'Elija el estado',
   'EsCobrador',
   'Es salud',
   'EsPension',
+  'Elija el estado',
   'Es Caja',
   'EsCesantia',
   'EsTranspor',
+  'Elija el estado',
   'ReteTodo',
   'Regimen',
   'GranContr',
@@ -378,6 +391,7 @@ const ENCABEZADOS_TERCEROS = [
   'TipoCtaBanco',
   'Cta bancaria',
   'Observacion',
+  'Elija el estado',
   'Fecha de creacion',
   'Fecha de creacion en sistema',
 ]
@@ -423,7 +437,7 @@ function etiquetaClaseId(tipoDocumento) {
   const tipo = String(tipoDocumento || '')
     .trim()
     .toUpperCase()
-  return CLASE_ID_POR_TIPO[tipo] || ''
+  return CLASE_ID_POR_TIPO[tipo] || CLASE_ID_POR_TIPO.CC
 }
 
 /** Serial de Excel (días desde 1899-12-30) a partir de millis. */
@@ -436,54 +450,66 @@ function tieneVigenciaActiva(usuario) {
   return (usuario?.planEstado ?? 'sin_plan') === 'activo'
 }
 
+function emailParaPlantilla(usuario) {
+  const correo = String(usuario?.correo || '').trim()
+  return correo || EMAIL_TEMPORAL_PLANTILLA
+}
+
 function filaTerceroPlantilla(usuario) {
-  const { nombre, nombre2, apellido1, apellido2 } = partirNombreCompleto(
-    usuario.nombre,
-  )
+  const nombreCompleto = String(usuario.nombre || '').trim()
+  const { nombre, nombre2, apellido1, apellido2 } =
+    partirNombreCompleto(nombreCompleto)
   const fechaCreacion = excelSerialDesdeMs(usuario.fechaCreacion)
   const vigenciaActiva = tieneVigenciaActiva(usuario)
+  const no = 'NO'
 
-  // Solo se rellenan campos que existen en Rangers Box; el resto queda vacío.
   return [
     usuario.documento || '', // NIT/Cedula
     '', // ID padre
     etiquetaClaseId(usuario.tipoDocumento), // Elija la clase del ID
     vigenciaActiva ? 'NO' : 'SI', // Inactivo
     '', // Digito de Verif.
-    '', // PerJuridic
-    '', // Nombre comercial
+    no, // PerJuridic
+    nombreCompleto, // Nombre comercial
     nombre,
     nombre2,
     apellido1,
     apellido2,
-    usuario.direccion || '', // Direccion
+    DIRECCION_PLANTILLA, // Direccion
     '', // BarrioID
-    '', // CiudadID
+    CIUDAD_PLANTILLA, // CiudadID
     '', // Telefono
     usuario.celular || '', // Tel. movil
-    usuario.correo || '', // Email
+    emailParaPlantilla(usuario), // Email
     '', // Codigo
-    '', // EsCliente
-    vigenciaActiva ? 'SI' : 'NO', // Elija el estado (activo)
-    '', // EsCobrador
-    '', // Es salud
-    '', // EsPension
-    '', // Es Caja
-    '', // EsCesantia
-    '', // EsTranspor
-    '', // ReteTodo
-    '', // Regimen
-    '', // GranContr
-    '', // No genera IVA
+    'SI', // EsCliente
+    no, // Elija el estado
+    no,
+    no,
+    no,
+    no,
+    no, // EsCobrador
+    no, // Es salud
+    no, // EsPension
+    no, // Elija el estado
+    no, // Es Caja
+    no, // EsCesantia
+    no, // EsTranspor
+    no, // Elija el estado
+    no, // ReteTodo
+    REGIMEN_PLANTILLA, // Regimen
+    no, // GranContr
+    no, // No genera IVA
     '', // Tarifa de ICA
     '', // ActiEconID
     '', // Opcional
-    '', // EsRepVend
+    no, // EsRepVend
     '', // Geo coordenadas
     '', // Banco ID
-    '', // TipoCtaBanco
+    TIPO_CTA_BANCO_PLANTILLA, // TipoCtaBanco
     '', // Cta bancaria
     '', // Observacion
+    no, // Elija el estado
     fechaCreacion, // Fecha de creacion
     fechaCreacion, // Fecha de creacion en sistema
   ]
@@ -491,7 +517,7 @@ function filaTerceroPlantilla(usuario) {
 
 /**
  * Exporta usuarios usando la plantilla de clientes (hojas tablas + Terceros).
- * Solo rellena datos disponibles; el resto queda vacío.
+ * Sin correo usa prueva@temporal.com.
  */
 export async function exportarReporteUsuariosExcel(reporte) {
   const generadoEn = reporte?.generadoEn ?? Date.now()

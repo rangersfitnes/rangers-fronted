@@ -200,12 +200,6 @@ function CuentaPerfil() {
             </span>
           </div>
           <div className="cuenta-page__row">
-            <span className="cuenta-page__row-label">Dirección</span>
-            <span className="cuenta-page__row-value">
-              {usuario?.direccion || '—'}
-            </span>
-          </div>
-          <div className="cuenta-page__row">
             <span className="cuenta-page__row-label">Fecha de nacimiento</span>
             <span className="cuenta-page__row-value">
               {formatearFechaNacimiento(usuario?.fechaNacimiento)}

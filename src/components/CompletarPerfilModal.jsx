@@ -2,12 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import CampoFechaCalendario from './CampoFechaCalendario.jsx'
 import { useToast } from './Toast.jsx'
 import { completarPerfilUsuario } from '../services/userService.js'
-import {
-  camposFacturacionFaltantes,
-  esCorreoValido,
-  normalizarCorreo,
-  normalizarDireccion,
-} from '../utils/validacionUsuario.js'
+import { camposFacturacionFaltantes } from '../utils/validacionUsuario.js'
 import './CompletarPerfilModal.css'
 
 function CompletarPerfilModal({ open, usuario, onCompletado }) {
@@ -18,24 +13,18 @@ function CompletarPerfilModal({ open, usuario, onCompletado }) {
   )
 
   const [fechaNacimiento, setFechaNacimiento] = useState('')
-  const [correo, setCorreo] = useState('')
-  const [direccion, setDireccion] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!open) {
       setFechaNacimiento('')
-      setCorreo('')
-      setDireccion('')
       setError('')
       setGuardando(false)
       return
     }
 
     setFechaNacimiento(usuario?.fechaNacimiento || '')
-    setCorreo(usuario?.correo || '')
-    setDireccion(usuario?.direccion || '')
   }, [open, usuario])
 
   useEffect(() => {
@@ -60,24 +49,6 @@ function CompletarPerfilModal({ open, usuario, onCompletado }) {
       payload.fechaNacimiento = fechaNacimiento
     }
 
-    if (faltantes.correo) {
-      const correoLimpio = normalizarCorreo(correo)
-      if (!esCorreoValido(correoLimpio)) {
-        setError('Ingresa un correo electrónico válido')
-        return
-      }
-      payload.correo = correoLimpio
-    }
-
-    if (faltantes.direccion) {
-      const direccionLimpia = normalizarDireccion(direccion)
-      if (direccionLimpia.length < 5) {
-        setError('Ingresa tu dirección completa')
-        return
-      }
-      payload.direccion = direccionLimpia
-    }
-
     if (Object.keys(payload).length === 0) {
       onCompletado?.(usuario)
       return
@@ -95,10 +66,7 @@ function CompletarPerfilModal({ open, usuario, onCompletado }) {
     }
   }
 
-  const puedeGuardar =
-    (!faltantes.fechaNacimiento || Boolean(fechaNacimiento)) &&
-    (!faltantes.correo || esCorreoValido(correo)) &&
-    (!faltantes.direccion || normalizarDireccion(direccion).length >= 5)
+  const puedeGuardar = !faltantes.fechaNacimiento || Boolean(fechaNacimiento)
 
   if (!open) return null
 
@@ -128,40 +96,6 @@ function CompletarPerfilModal({ open, usuario, onCompletado }) {
               onChange={setFechaNacimiento}
               disabled={guardando}
             />
-          ) : null}
-
-          {faltantes.correo ? (
-            <label className="completar-perfil-card__field">
-              <span className="completar-perfil-card__label">
-                Correo electrónico
-              </span>
-              <input
-                type="email"
-                className="completar-perfil-card__input"
-                placeholder="Ej. usuario@correo.com"
-                value={correo}
-                onChange={(event) => setCorreo(event.target.value)}
-                autoComplete="email"
-                disabled={guardando}
-                required
-              />
-            </label>
-          ) : null}
-
-          {faltantes.direccion ? (
-            <label className="completar-perfil-card__field">
-              <span className="completar-perfil-card__label">Dirección</span>
-              <input
-                type="text"
-                className="completar-perfil-card__input"
-                placeholder="Ej. Calle 10 # 5-20, Manizales"
-                value={direccion}
-                onChange={(event) => setDireccion(event.target.value)}
-                autoComplete="street-address"
-                disabled={guardando}
-                required
-              />
-            </label>
           ) : null}
 
           {error ? (

@@ -517,48 +517,71 @@ export function exportarReporteExcel(reporte) {
 }
 
 export function exportarReporteIngresosEgresosExcel(reporte) {
-  const desdeLabel = formatearFechaCuenta(
-    new Date(`${reporte.desde}T12:00:00-05:00`).getTime(),
-  )
-  const hastaLabel = formatearFechaCuenta(
-    new Date(`${reporte.hasta}T12:00:00-05:00`).getTime(),
-  )
+  if (!reporte) {
+    throw new Error('No hay datos para exportar')
+  }
 
-  const resumenSheet = XLSX.utils.aoa_to_sheet([
+  const periodo = etiquetaPeriodoReporte(reporte)
+  const movimientos = [...combinarMovimientosReporte(reporte)].sort((a, b) => {
+    const fechaA = String(a.fecha || '')
+    const fechaB = String(b.fecha || '')
+    if (fechaA !== fechaB) return fechaA.localeCompare(fechaB)
+    return (a.creadoEn ?? 0) - (b.creadoEn ?? 0)
+  })
+
+  let totalIngresos = 0
+  let totalEgresos = 0
+
+  const filas = movimientos.map((mov) => {
+    const esEgreso = mov.naturalezaMov === 'egreso'
+    const monto = Number(mov.monto) || 0
+    if (esEgreso) totalEgresos += monto
+    else totalIngresos += monto
+
+    const fecha =
+      mov.fecha ||
+      (mov.creadoEn
+        ? new Date(mov.creadoEn).toLocaleDateString('en-CA', {
+            timeZone: 'America/Bogota',
+          })
+        : '')
+
+    const concepto = String(mov.descripcion || mov.concepto || '—').trim() || '—'
+
+    return [
+      fecha,
+      concepto,
+      esEgreso ? monto : '',
+      esEgreso ? '' : monto,
+    ]
+  })
+
+  const hoja = XLSX.utils.aoa_to_sheet([
     ['Rangers Box — Ingresos y egresos'],
-    ['Periodo', `${desdeLabel} – ${hastaLabel}`],
-    ['Sede', reporte.sedeId],
+    ['Periodo', periodo],
     ['Generado', new Date().toLocaleString('es-CO')],
     [],
-    ['Concepto', 'Valor'],
-    ...filasResumenIngresosEgresos(reporte),
+    ['Fecha', 'Concepto', 'Egreso', 'Ingreso'],
+    ...filas,
+    [],
+    ['', 'TOTALES', totalEgresos, totalIngresos],
+    ['', 'Balance neto (ingresos − egresos)', '', totalIngresos - totalEgresos],
   ])
 
-  const detalleSheet = XLSX.utils.aoa_to_sheet([
-    [
-      'Tipo',
-      'Fecha registro',
-      'Día',
-      'Descripción',
-      'Categoría',
-      'Canal / método',
-      'Cédula',
-      'Nombre',
-      'Monto',
-    ],
-    ...filasDetalleCompleto(reporte),
-  ])
+  hoja['!cols'] = [{ wch: 14 }, { wch: 48 }, { wch: 14 }, { wch: 14 }]
 
   const libro = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(libro, resumenSheet, 'Resumen')
-  XLSX.utils.book_append_sheet(libro, detalleSheet, 'Detalle')
+  XLSX.utils.book_append_sheet(libro, hoja, 'Movimientos')
+
+  const desdeArchivo = reporte.historialCompleto
+    ? 'historial-completo'
+    : reporte.desde || 'desde'
+  const hastaArchivo = reporte.historialCompleto
+    ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
+    : reporte.hasta || 'hasta'
+
   XLSX.writeFile(
     libro,
-    nombreArchivoReporte(
-      reporte.desde,
-      reporte.hasta,
-      'xlsx',
-      'ingresos-egresos',
-    ),
+    nombreArchivoReporte(desdeArchivo, hastaArchivo, 'xlsx', 'ingresos-egresos'),
   )
 }

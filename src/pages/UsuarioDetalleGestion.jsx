@@ -390,10 +390,6 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
             <dd>{usuario.correo || '—'}</dd>
           </div>
           <div>
-            <dt>Dirección</dt>
-            <dd>{usuario.direccion || '—'}</dd>
-          </div>
-          <div>
             <dt>Plan activo</dt>
             <dd>{planActivo || 'Sin plan'}</dd>
           </div>

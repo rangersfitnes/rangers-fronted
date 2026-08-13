@@ -179,7 +179,7 @@ function FinanzasResumenIngresosEgresos({ onVolver }) {
               type="button"
               className="ag-action-btn"
               onClick={handleExportarExcel}
-              disabled={loading}
+              disabled={loading || movimientos.length === 0}
             >
               Exportar Excel
             </button>

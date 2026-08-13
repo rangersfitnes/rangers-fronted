@@ -1,4 +1,4 @@
-/** Validación de correo electrónico para facturación / perfil de usuario. */
+/** Validación de correo electrónico (opcional; p. ej. reportes / legado). */
 export const CORREO_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function esCorreoValido(correo) {
@@ -9,19 +9,13 @@ export function normalizarCorreo(correo) {
   return String(correo || '').trim().toLowerCase()
 }
 
-export function normalizarDireccion(direccion) {
-  return String(direccion || '').trim()
-}
-
 export function camposFacturacionFaltantes(usuario = {}) {
   return {
     fechaNacimiento: !String(usuario.fechaNacimiento ?? '').trim(),
-    correo: !esCorreoValido(usuario.correo),
-    direccion: !normalizarDireccion(usuario.direccion),
   }
 }
 
 export function requiereCompletarDatosFacturacion(usuario = {}) {
   const faltantes = camposFacturacionFaltantes(usuario)
-  return faltantes.fechaNacimiento || faltantes.correo || faltantes.direccion
+  return faltantes.fechaNacimiento
 }
