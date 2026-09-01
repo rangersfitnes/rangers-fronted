@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../variables/api.jsx'
 import { requerirAdminToken } from './authService.js'
+import { SEDE_HORARIOS } from './horariosService.js'
 
 export async function obtenerEstadisticasUsuarios({ signal } = {}) {
   const token = await requerirAdminToken()
@@ -84,7 +85,11 @@ export async function obtenerUsuarios({
     }
 
     const ordenLimpio = String(orden || '').trim().toLowerCase()
-    if (['recientes', 'antiguedad_asc', 'antiguedad_desc'].includes(ordenLimpio)) {
+    if (
+      ['recientes', 'pago_reciente', 'antiguedad_asc', 'antiguedad_desc'].includes(
+        ordenLimpio,
+      )
+    ) {
       params.set('orden', ordenLimpio)
     }
   }
@@ -124,7 +129,7 @@ export async function obtenerUsuarios({
     planId: data.planId ?? null,
     categoria: data.categoria ?? null,
     ventanaNuevosDias: data.ventanaNuevosDias ?? null,
-    orden: data.orden ?? 'recientes',
+    orden: data.orden ?? 'pago_reciente',
   }
 }
 
@@ -263,6 +268,7 @@ export async function activarPlanUsuario(
   planId,
   acompanantes = [],
   metodoPago,
+  sede = SEDE_HORARIOS,
 ) {
   const token = await requerirAdminToken()
 
@@ -277,7 +283,7 @@ export async function activarPlanUsuario(
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ planId, acompanantes, metodoPago }),
+        body: JSON.stringify({ planId, acompanantes, metodoPago, sede }),
       },
     )
   } catch {

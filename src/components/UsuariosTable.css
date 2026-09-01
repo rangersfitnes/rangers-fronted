@@ -142,6 +142,11 @@
   color: #86efac;
 }
 
+.usuarios-table__fecha-cell {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .usuarios-table__badge {
   display: inline-flex;
   align-items: center;

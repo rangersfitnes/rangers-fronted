@@ -24,6 +24,18 @@ function formatearFecha(ms) {
   })
 }
 
+function formatearFechaHora(ms) {
+  if (!ms) return ''
+  return new Date(ms).toLocaleString('es-CO', {
+    timeZone: 'America/Bogota',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 function formatearPagoUsuario(usuario) {
   const monto = usuario.valorPagadoActivacion
   if (monto == null || !Number.isFinite(Number(monto))) return '—'
@@ -195,6 +207,7 @@ function UsuariosTable({ usuarios, onRowClick }) {
             <th>Tiquetera</th>
             <th>Método pago</th>
             <th>Valor pagado</th>
+            <th>Fecha pago</th>
             <th>Grupo del plan</th>
             <th>Inicio</th>
             <th>Vigencia</th>
@@ -260,6 +273,22 @@ function UsuariosTable({ usuarios, onRowClick }) {
                 </td>
                 <td className="usuarios-table__pago-monto" title={tituloPagoUsuario(u)}>
                   {formatearPagoUsuario(u)}
+                </td>
+                <td>
+                  <span
+                    className="usuarios-table__fecha-cell"
+                    title={
+                      u.fechaPagoActivacion
+                        ? formatearFechaHora(u.fechaPagoActivacion)
+                        : u.ultimaActivacionEn
+                          ? formatearFechaHora(u.ultimaActivacionEn)
+                          : undefined
+                    }
+                  >
+                    {formatearFecha(
+                      u.fechaPagoActivacion || u.ultimaActivacionEn,
+                    )}
+                  </span>
                 </td>
                 <td className="usuarios-table__grupo-cell">
                   <PlanGrupoCelda

@@ -68,6 +68,7 @@ const OPCIONES_VENTANA_NUEVOS = [
 ]
 
 const OPCIONES_ORDEN = [
+  { id: 'pago_reciente', label: 'Más recientes (por pago)' },
   { id: 'recientes', label: 'Más recientes (por registro)' },
   { id: 'antiguedad_desc', label: 'Más nuevos primero (antigüedad)' },
   { id: 'antiguedad_asc', label: 'Más antiguos primero' },
@@ -128,7 +129,7 @@ function VistaUsuariosAdmin() {
   const [filtroPlanId, setFiltroPlanId] = useState('')
   const [filtroCategoria, setFiltroCategoria] = useState('')
   const [ventanaNuevosDias, setVentanaNuevosDias] = useState(30)
-  const [ordenListado, setOrdenListado] = useState('recientes')
+  const [ordenListado, setOrdenListado] = useState('pago_reciente')
   const [planes, setPlanes] = useState([])
   const [totalFiltrado, setTotalFiltrado] = useState(null)
   const [estadisticas, setEstadisticas] = useState({
@@ -207,7 +208,7 @@ function VistaUsuariosAdmin() {
             filtrosActivos.estadoPlan ||
             filtrosActivos.planId ||
             filtrosActivos.categoria ||
-            (filtrosActivos.orden && filtrosActivos.orden !== 'recientes')
+            (filtrosActivos.orden && filtrosActivos.orden !== 'pago_reciente')
             ? res.total
             : null,
         )
@@ -330,7 +331,7 @@ function VistaUsuariosAdmin() {
     setFiltroPlanId('')
     setFiltroCategoria('')
     setVentanaNuevosDias(30)
-    setOrdenListado('recientes')
+    setOrdenListado('pago_reciente')
     setBusquedaTexto('')
     setBusquedaActiva(null)
     cargarUsuarios(1, {
@@ -339,7 +340,7 @@ function VistaUsuariosAdmin() {
         planId: null,
         categoria: null,
         ventanaNuevosDias: 30,
-        orden: 'recientes',
+        orden: 'pago_reciente',
       },
     })
   }
@@ -479,7 +480,7 @@ function VistaUsuariosAdmin() {
     filtroEstadoPlan ||
       filtroPlanId ||
       filtroCategoria ||
-      ordenListado !== 'recientes',
+      ordenListado !== 'pago_reciente',
   )
 
   const textoResumenFiltros = () => {
@@ -496,6 +497,9 @@ function VistaUsuariosAdmin() {
     }
     if (filtroCategoria === 'renovado') {
       partes.push('que renovaron membresía')
+    }
+    if (ordenListado === 'pago_reciente') {
+      partes.push('ordenados por último pago')
     }
     if (ordenListado === 'antiguedad_asc') {
       partes.push('ordenados del más antiguo al más nuevo')
@@ -770,8 +774,10 @@ function VistaUsuariosAdmin() {
 
         <p className="pf-usuarios-filtros__ayuda">
           «Usuarios nuevos» = registrados en la ventana elegida. «Renovaron
-          membresía» = 2 o más activaciones de plan confirmadas. Puedes
-          combinarlo con el estado (Activos / Vencidos / Sin plan).
+          membresía» = 2 o más activaciones de plan confirmadas. «Más recientes
+          (por pago)» muestra primero a quienes pagaron o activaron un plan más
+          recientemente. Puedes combinarlo con el estado (Activos / Vencidos /
+          Sin plan).
         </p>
       </div>
 
