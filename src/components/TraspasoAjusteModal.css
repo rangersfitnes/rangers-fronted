@@ -1,0 +1,113 @@
+.traspaso-ajuste-modal .modal__dialog {
+  max-width: 34rem;
+}
+
+.traspaso-ajuste__cuentas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.traspaso-ajuste__cuenta {
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.traspaso-ajuste__cuenta-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.traspaso-ajuste__cuenta-head strong {
+  font-size: 0.95rem;
+  color: #f5f5f5;
+}
+
+.traspaso-ajuste__sistema {
+  font-size: 0.8rem;
+  color: #a3a3a3;
+}
+
+.traspaso-ajuste__delta {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  color: #a3a3a3;
+}
+
+.traspaso-ajuste__delta--positivo {
+  color: #86efac;
+}
+
+.traspaso-ajuste__delta--negativo {
+  color: #fca5a5;
+}
+
+.traspaso-ajuste__resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.traspaso-ajuste__resumen-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+  color: #d4d4d4;
+}
+
+.traspaso-ajuste__desfase strong {
+  font-weight: 700;
+}
+
+.traspaso-ajuste__desfase--positivo strong {
+  color: #86efac;
+}
+
+.traspaso-ajuste__desfase--negativo strong {
+  color: #fca5a5;
+}
+
+.traspaso-ajuste__plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.traspaso-ajuste__plan-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.traspaso-ajuste__plan-lista {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #e5e5e5;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.traspaso-ajuste__alarma {
+  margin: 0.25rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}

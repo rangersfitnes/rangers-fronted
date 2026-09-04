@@ -7,6 +7,7 @@ import {
   BotonEliminarMovimiento,
   useEliminarMovimiento,
 } from '../components/MovimientoEliminar.jsx'
+import TraspasoAjusteModal from '../components/TraspasoAjusteModal.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { obtenerMovimientosRango } from '../services/cierreDiarioService.js'
 import { registrarTraspaso } from '../services/finanzasService.js'
@@ -118,6 +119,8 @@ function FinanzasTraspasos({ onVolver }) {
   const [traspasos, setTraspasos] = useState([])
   const [ajustes, setAjustes] = useState([])
   const [modalAjusteAbierto, setModalAjusteAbierto] = useState(false)
+  const [modalTraspasoAjusteAbierto, setModalTraspasoAjusteAbierto] =
+    useState(false)
   const [cargandoLista, setCargandoLista] = useState(true)
   const [filtroDesde, setFiltroDesde] = useState(inicioMesColombiaInput)
   const [filtroHasta, setFiltroHasta] = useState(fechaHoyColombiaInput)
@@ -223,6 +226,14 @@ function FinanzasTraspasos({ onVolver }) {
         <button
           type="button"
           className="ag-action-btn"
+          onClick={() => setModalTraspasoAjusteAbierto(true)}
+          disabled={loadingVisible}
+        >
+          Traspaso y ajuste
+        </button>
+        <button
+          type="button"
+          className="ag-action-btn ag-action-btn--ghost"
           onClick={() => setModalAjusteAbierto(true)}
           disabled={loadingVisible}
         >
@@ -528,6 +539,12 @@ function FinanzasTraspasos({ onVolver }) {
       <AjusteCuentaModal
         open={modalAjusteAbierto}
         onClose={() => setModalAjusteAbierto(false)}
+        onGuardado={cargarTraspasos}
+      />
+
+      <TraspasoAjusteModal
+        open={modalTraspasoAjusteAbierto}
+        onClose={() => setModalTraspasoAjusteAbierto(false)}
         onGuardado={cargarTraspasos}
       />
 

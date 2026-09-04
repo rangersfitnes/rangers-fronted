@@ -14,6 +14,7 @@ import {
 import { obtenerEsquemasPago } from '../services/esquemasPagoService.js'
 import { etiquetaMetodoPagoColaborador, requiereNumeroCuenta } from '../constants/metodosPagoColaborador.js'
 import { verificarColaboradorPagoGuardado } from '../utils/verificarColaboradorPago.js'
+import ColaboradorDetalleGestion from './ColaboradorDetalleGestion.jsx'
 import './AdministracionGeneral.css'
 
 function formatearFechaNacimiento(valor) {
@@ -67,6 +68,7 @@ function GestionHumanaColaboradores({ onVolver }) {
   const [eliminando, setEliminando] = useState(false)
   const [reestableciendo, setReestableciendo] = useState(false)
   const [error, setError] = useState('')
+  const [colaboradorDetalle, setColaboradorDetalle] = useState(null)
 
   const cargarDatos = useCallback(async () => {
     setLoading(true)
@@ -199,6 +201,15 @@ function GestionHumanaColaboradores({ onVolver }) {
   const accionesDeshabilitadas =
     loading || submitting || eliminando || reestableciendo
 
+  if (colaboradorDetalle) {
+    return (
+      <ColaboradorDetalleGestion
+        colaborador={colaboradorDetalle}
+        onVolver={() => setColaboradorDetalle(null)}
+      />
+    )
+  }
+
   return (
     <section className="ag-page__view">
       <header className="ag-page__view-header ag-page__view-header--with-action ag-finanzas__sub-header">
@@ -265,7 +276,20 @@ function GestionHumanaColaboradores({ onVolver }) {
             </thead>
             <tbody>
               {colaboradores.map((colaborador) => (
-                <tr key={colaborador.uid}>
+                <tr
+                  key={colaborador.uid}
+                  className="ag-finanzas__tabla-fila--clickable"
+                  onClick={() => setColaboradorDetalle(colaborador)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setColaboradorDetalle(colaborador)
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Ver detalle de ${colaborador.nombre}`}
+                >
                   <td>{colaborador.nombre}</td>
                   <td>{colaborador.documento}</td>
                   <td>{colaborador.correo}</td>
@@ -278,7 +302,11 @@ function GestionHumanaColaboradores({ onVolver }) {
                       : '—'}
                   </td>
                   <td>{colaborador.numeroCuenta || '—'}</td>
-                  <td className="ag-finanzas__tabla-acciones">
+                  <td
+                    className="ag-finanzas__tabla-acciones"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
                     <div className="ag-esquema-pago__acciones">
                       <button
                         type="button"
