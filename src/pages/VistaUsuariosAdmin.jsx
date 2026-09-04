@@ -132,6 +132,7 @@ function VistaUsuariosAdmin() {
   const [ordenListado, setOrdenListado] = useState('pago_reciente')
   const [planes, setPlanes] = useState([])
   const [totalFiltrado, setTotalFiltrado] = useState(null)
+  const [contadoresAbiertos, setContadoresAbiertos] = useState(false)
   const [estadisticas, setEstadisticas] = useState({
     total: 0,
     activos: 0,
@@ -600,29 +601,59 @@ function VistaUsuariosAdmin() {
         </div>
       </header>
 
-      <div className="pf-usuarios-resumen" aria-label="Resumen de usuarios">
-        {CONTADORES_USUARIOS.map((contador) => {
-          const seleccionado = filtroEstadoPlan === contador.id
-          return (
-            <button
-              key={contador.etiqueta}
-              type="button"
-              className={`pf-usuarios-resumen__card pf-usuarios-resumen__card--${contador.tono}${
-                seleccionado ? ' pf-usuarios-resumen__card--seleccionado' : ''
-              }`}
-              onClick={() => seleccionarFiltro(contador.id)}
-              disabled={loading}
-              aria-pressed={seleccionado}
-            >
-              <span className="pf-usuarios-resumen__valor">
-                {estadisticas[contador.clave] ?? 0}
-              </span>
-              <span className="pf-usuarios-resumen__etiqueta">
-                {contador.etiqueta}
-              </span>
-            </button>
-          )
-        })}
+      <div className="pf-usuarios-contadores">
+        <button
+          type="button"
+          className={`pf-usuarios-contadores__toggle${
+            contadoresAbiertos ? ' pf-usuarios-contadores__toggle--abierto' : ''
+          }${filtroEstadoPlan ? ' pf-usuarios-contadores__toggle--filtro' : ''}`}
+          onClick={() => setContadoresAbiertos((prev) => !prev)}
+          aria-expanded={contadoresAbiertos}
+          aria-controls="pf-usuarios-contadores-panel"
+        >
+          <span className="pf-usuarios-contadores__toggle-label">
+            {contadoresAbiertos ? 'Ocultar contadores' : 'Ver contadores'}
+          </span>
+          {filtroEstadoPlan && !contadoresAbiertos ? (
+            <span className="pf-usuarios-contadores__toggle-hint">
+              Filtro: {ETIQUETA_FILTRO_USUARIO[filtroEstadoPlan]}
+            </span>
+          ) : null}
+          <span className="pf-usuarios-contadores__toggle-chevron" aria-hidden="true">
+            {contadoresAbiertos ? '▴' : '▾'}
+          </span>
+        </button>
+
+        {contadoresAbiertos ? (
+          <div
+            id="pf-usuarios-contadores-panel"
+            className="pf-usuarios-resumen"
+            aria-label="Resumen de usuarios"
+          >
+            {CONTADORES_USUARIOS.map((contador) => {
+              const seleccionado = filtroEstadoPlan === contador.id
+              return (
+                <button
+                  key={contador.etiqueta}
+                  type="button"
+                  className={`pf-usuarios-resumen__card pf-usuarios-resumen__card--${contador.tono}${
+                    seleccionado ? ' pf-usuarios-resumen__card--seleccionado' : ''
+                  }`}
+                  onClick={() => seleccionarFiltro(contador.id)}
+                  disabled={loading}
+                  aria-pressed={seleccionado}
+                >
+                  <span className="pf-usuarios-resumen__valor">
+                    {estadisticas[contador.clave] ?? 0}
+                  </span>
+                  <span className="pf-usuarios-resumen__etiqueta">
+                    {contador.etiqueta}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
       </div>
 
       <div className="pf-usuarios-busqueda">

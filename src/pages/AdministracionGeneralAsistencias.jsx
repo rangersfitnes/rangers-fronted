@@ -3,6 +3,7 @@ import CampoFechaCalendario from '../components/CampoFechaCalendario.jsx'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { useToast } from '../components/Toast.jsx'
+import { getAdminRole } from '../services/authService.js'
 import {
   eliminarAsistenciaAdmin,
   obtenerAsistenciasAdmin,
@@ -38,8 +39,9 @@ function inicioMesColombiaInput() {
   return `${hoy.slice(0, 8)}01`
 }
 
-function AdministracionGeneralAsistencias() {
+function AdministracionGeneralAsistencias({ puedeEliminar = true } = {}) {
   const toast = useToast()
+  const permitirEliminar = puedeEliminar && getAdminRole() === 'creador'
   const [asistencias, setAsistencias] = useState([])
   const [loading, setLoading] = useState(true)
   const [eliminando, setEliminando] = useState(false)
@@ -80,7 +82,7 @@ function AdministracionGeneralAsistencias() {
   }, [cargarAsistencias])
 
   const handleConfirmEliminar = async () => {
-    if (!eliminarTarget) return
+    if (!permitirEliminar || !eliminarTarget) return
     setEliminando(true)
     try {
       await eliminarAsistenciaAdmin({
@@ -107,6 +109,9 @@ function AdministracionGeneralAsistencias() {
           <h1 className="ag-page__title">Asistencias</h1>
           <p className="ag-page__subtitle">
             Ingresos por membresía y clases del día registrados en el box
+            {permitirEliminar
+              ? ''
+              : '. Consulta el registro; no puedes eliminar asistencias.'}
           </p>
         </div>
         <button
@@ -218,7 +223,7 @@ function AdministracionGeneralAsistencias() {
                   <th>Usuario</th>
                   <th>Plan</th>
                   <th>Tipo</th>
-                  <th aria-label="Acciones" />
+                  {permitirEliminar ? <th aria-label="Acciones" /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -246,18 +251,20 @@ function AdministracionGeneralAsistencias() {
                         {etiquetaTipoAcceso(item.tipoAcceso)}
                       </span>
                     </td>
-                    <td className="ag-finanzas__tabla-acciones">
-                      <button
-                        type="button"
-                        className="pf-movimiento__eliminar"
-                        onClick={() => setEliminarTarget(item)}
-                        disabled={loadingVisible}
-                        aria-label={`Eliminar ${etiquetaTipoAcceso(item.tipoAcceso).toLowerCase()}`}
-                        title={`Eliminar ${etiquetaTipoAcceso(item.tipoAcceso).toLowerCase()}`}
-                      >
-                        Eliminar
-                      </button>
-                    </td>
+                    {permitirEliminar ? (
+                      <td className="ag-finanzas__tabla-acciones">
+                        <button
+                          type="button"
+                          className="pf-movimiento__eliminar"
+                          onClick={() => setEliminarTarget(item)}
+                          disabled={loadingVisible}
+                          aria-label={`Eliminar ${etiquetaTipoAcceso(item.tipoAcceso).toLowerCase()}`}
+                          title={`Eliminar ${etiquetaTipoAcceso(item.tipoAcceso).toLowerCase()}`}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
@@ -266,21 +273,23 @@ function AdministracionGeneralAsistencias() {
         )}
       </section>
 
-      <ConfirmModal
-        open={Boolean(eliminarTarget)}
-        onClose={() => {
-          if (eliminando) return
-          setEliminarTarget(null)
-        }}
-        onConfirm={handleConfirmEliminar}
-        title={eliminarTarget ? tituloEliminarRegistro(eliminarTarget) : 'Eliminar registro'}
-        message={
-          eliminarTarget ? mensajeEliminarRegistro(eliminarTarget) : ''
-        }
-        confirmLabel="Eliminar"
-        variant="danger"
-        loading={eliminando}
-      />
+      {permitirEliminar ? (
+        <ConfirmModal
+          open={Boolean(eliminarTarget)}
+          onClose={() => {
+            if (eliminando) return
+            setEliminarTarget(null)
+          }}
+          onConfirm={handleConfirmEliminar}
+          title={eliminarTarget ? tituloEliminarRegistro(eliminarTarget) : 'Eliminar registro'}
+          message={
+            eliminarTarget ? mensajeEliminarRegistro(eliminarTarget) : ''
+          }
+          confirmLabel="Eliminar"
+          variant="danger"
+          loading={eliminando}
+        />
+      ) : null}
 
       <LoadingOverlay
         visible={loadingVisible}

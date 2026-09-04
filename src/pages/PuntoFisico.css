@@ -275,11 +275,75 @@
   flex-wrap: wrap;
 }
 
+.pf-usuarios-contadores {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.pf-usuarios-contadores__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  align-self: flex-start;
+  padding: 0.65rem 0.95rem;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e5e5e5;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid #333;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.pf-usuarios-contadores__toggle:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: #525252;
+}
+
+.pf-usuarios-contadores__toggle--abierto {
+  border-color: rgba(249, 115, 22, 0.45);
+  background-color: rgba(249, 115, 22, 0.08);
+  color: #fdba74;
+}
+
+.pf-usuarios-contadores__toggle--filtro:not(.pf-usuarios-contadores__toggle--abierto) {
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.pf-usuarios-contadores__toggle-label {
+  line-height: 1;
+}
+
+.pf-usuarios-contadores__toggle-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #a3a3a3;
+}
+
+.pf-usuarios-contadores__toggle-chevron {
+  margin-left: 0.15rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.85;
+}
+
 .pf-usuarios-resumen {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
 }
 
 .pf-usuarios-resumen__card {

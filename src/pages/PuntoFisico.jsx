@@ -8,11 +8,13 @@ import VistaCierreDiario from './PuntoFisicoCierreDiario.jsx'
 import VistaControlAcceso from './PuntoFisicoControlAcceso.jsx'
 import VistaMiPerfil from './PuntoFisicoMiPerfil.jsx'
 import VistaUsuariosAdmin from './VistaUsuariosAdmin.jsx'
+import VistaAsistencias from './AdministracionGeneralAsistencias.jsx'
 import './PuntoFisico.css'
 
 const tabs = [
   { id: 'control-acceso', label: 'Control de acceso' },
   { id: 'pago-clases', label: 'Pago del día' },
+  { id: 'asistencias', label: 'Asistencias' },
   { id: 'cierre-diario', label: 'Cierre diario' },
   { id: 'mi-perfil', label: 'Mi perfil' },
   { id: 'usuarios', label: 'Usuarios' },
@@ -140,6 +142,7 @@ function PuntoFisico() {
           </>
         ) : null}
         {activeTab === 'pago-clases' && <VistaPagoClases />}
+        {activeTab === 'asistencias' && <VistaAsistencias puedeEliminar={false} />}
         {activeTab === 'cierre-diario' && <VistaCierreDiario />}
         {activeTab === 'mi-perfil' && <VistaMiPerfil />}
         {activeTab === 'usuarios' && <VistaUsuariosAdmin />}
