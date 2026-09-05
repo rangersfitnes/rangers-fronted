@@ -65,6 +65,45 @@ HECHOS PARA RESISTIR. ENTRENADOS PARA VENCER. 🧡🖤.`,
       },
     ],
   },
+  {
+    id: 'vencimiento',
+    nombre: 'Vencimiento',
+    descripcion:
+      'Se envía automáticamente a las 9:00 a. m. (Colombia) cuando el plan de un usuario vence.',
+    contenidoPorDefecto: `⚔️ MISIÓN FINALIZADA
+
+Hola, {nombre}.
+
+Tu plan {plan} ha llegado a su fecha de vencimiento ({fecha_fin}).
+
+Gracias por entrenar con nosotros. Renueva tu plan para seguir construyendo fuerza, resistencia y disciplina en Rangers Box.
+
+Te esperamos de vuelta en el box.
+
+HECHOS PARA RESISTIR. ENTRENADOS PARA VENCER. 🧡🖤`,
+    variables: [
+      {
+        clave: 'nombre',
+        etiqueta: 'Nombre',
+        descripcion: 'Nombre del titular o beneficiario',
+      },
+      {
+        clave: 'plan',
+        etiqueta: 'Plan',
+        descripcion: 'Nombre del plan vencido',
+      },
+      {
+        clave: 'fecha_inicio',
+        etiqueta: 'Inicio del plan',
+        descripcion: 'Fecha de inicio del plan vencido',
+      },
+      {
+        clave: 'fecha_fin',
+        etiqueta: 'Vencimiento',
+        descripcion: 'Fecha de vencimiento del plan',
+      },
+    ],
+  },
 ]
 
 export function obtenerPlantillaAutomaticaMeta(id) {
