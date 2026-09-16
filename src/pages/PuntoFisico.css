@@ -1646,6 +1646,14 @@
   text-wrap: balance;
 }
 
+.pf-control-acceso__banner-sub {
+  margin: 0.15rem 0 0;
+  font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .pf-control-acceso__shell--fullscreen .pf-control-acceso__banner {
   max-width: none;
   padding: clamp(1rem, 2.5vh, 2rem) clamp(2rem, 5vw, 4rem);
@@ -1684,7 +1692,11 @@
 }
 
 .pf-control-acceso__shell--fullscreen .pf-control-acceso__logo {
-  width: min(240px, 28vw);
+  width: min(220px, 32vw);
+}
+
+.pf-control-acceso__shell--fullscreen .pf-control-acceso__field {
+  max-width: min(36rem, 100%);
 }
 
 .pf-control-acceso__shell--fullscreen .pf-control-acceso__input {
@@ -1765,7 +1777,7 @@
 .pf-control-acceso__contenido {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   gap: 1.25rem;
   width: 100%;
   max-width: min(720px, 94vw);
@@ -1774,26 +1786,27 @@
 
 .pf-control-acceso__entrada {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(1.25rem, 3vw, 2.5rem);
+  gap: clamp(1.5rem, 3.5vh, 2.5rem);
   width: 100%;
 }
 
 .pf-control-acceso__logo {
   flex-shrink: 0;
-  width: min(180px, 26vw);
+  width: min(180px, 42vw);
   height: auto;
   object-fit: contain;
 }
 
 .pf-control-acceso__field {
   display: flex;
-  flex: 1;
   flex-direction: column;
+  align-items: center;
   gap: 0.65rem;
-  min-width: 0;
-  text-align: left;
+  width: 100%;
+  max-width: min(28rem, 100%);
+  text-align: center;
 }
 
 .pf-control-acceso__label {
@@ -1810,7 +1823,7 @@
   font-size: 1.35rem;
   font-family: inherit;
   font-weight: 600;
-  text-align: left;
+  text-align: center;
   letter-spacing: 0.04em;
   color: #ffffff;
   background-color: #1a1a1a;
@@ -2202,6 +2215,13 @@
 
 .pf-control-acceso__field--pago {
   margin-top: 0.5rem;
+  align-items: stretch;
+  max-width: none;
+  text-align: left;
+}
+
+.pf-control-acceso__field--pago .pf-control-acceso__input {
+  text-align: left;
 }
 
 .pf-control-acceso__pago-acciones {
@@ -2433,6 +2453,291 @@
   }
   100% {
     background-position: 220% center;
+  }
+}
+
+/* —— Mes del Amor y la Amistad (septiembre) —— */
+.pf-control-acceso__shell--amor {
+  position: relative;
+  isolation: isolate;
+}
+
+.pf-control-acceso__shell--amor.pf-control-acceso__shell--fullscreen
+  .pf-control-acceso__banner {
+  background: linear-gradient(
+    180deg,
+    rgba(251, 113, 133, 0.18) 0%,
+    rgba(249, 115, 22, 0.14) 45%,
+    transparent 100%
+  );
+  border-bottom-color: rgba(251, 113, 133, 0.28);
+}
+
+.pf-control-acceso__banner-eyebrow--amor {
+  color: #fb7185;
+  letter-spacing: 0.18em;
+}
+
+.pf-control-acceso__shell--amor .pf-control-acceso__banner-titulo {
+  background: linear-gradient(90deg, #ffffff 0%, #fdba74 45%, #fb7185 100%);
+  background-size: 180% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: pf-control-acceso-amor-titulo 6s ease-in-out infinite;
+}
+
+.pf-control-acceso__amor-ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pf-control-acceso__shell--amor > .pf-control-acceso__banner,
+.pf-control-acceso__shell--amor > .pf-control-acceso,
+.pf-control-acceso__shell--amor > .pf-loading-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+.pf-control-acceso__shell--amor > .pf-control-acceso__fullscreen-btn {
+  position: absolute;
+  z-index: 5;
+}
+
+.pf-control-acceso__amor-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.45;
+  animation: pf-control-acceso-amor-glow 8s ease-in-out infinite;
+}
+
+.pf-control-acceso__amor-glow--a {
+  width: min(42vw, 380px);
+  height: min(42vw, 380px);
+  top: -8%;
+  left: -6%;
+  background: radial-gradient(
+    circle,
+    rgba(249, 115, 22, 0.45) 0%,
+    transparent 70%
+  );
+}
+
+.pf-control-acceso__amor-glow--b {
+  width: min(38vw, 340px);
+  height: min(38vw, 340px);
+  right: -4%;
+  bottom: 8%;
+  background: radial-gradient(
+    circle,
+    rgba(251, 113, 133, 0.38) 0%,
+    transparent 70%
+  );
+  animation-delay: -3.5s;
+}
+
+.pf-control-acceso__amor-particula {
+  position: absolute;
+  opacity: 0;
+  animation-name: pf-control-acceso-amor-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.pf-control-acceso__amor-particula--dot {
+  border-radius: 50%;
+  background: rgba(253, 186, 116, 0.85);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.45);
+}
+
+.pf-control-acceso__amor-particula--spark {
+  border-radius: 2px;
+  background: linear-gradient(135deg, #fdba74, #fb7185);
+  transform: rotate(45deg);
+}
+
+.pf-control-acceso__amor-particula--heart {
+  background: #fb7185;
+  border-radius: 50% 50% 0 50%;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 12px rgba(251, 113, 133, 0.4);
+}
+
+.pf-control-acceso__amor-particula--heart::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  transform: translateX(45%);
+}
+
+.pf-control-acceso__logo--amor {
+  animation: pf-control-acceso-amor-logo 4.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(251, 113, 133, 0.28))
+    drop-shadow(0 0 28px rgba(249, 115, 22, 0.22));
+}
+
+.pf-control-acceso--amor-ingreso {
+  position: relative;
+  overflow: hidden;
+}
+
+.pf-control-acceso__amor-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pf-control-acceso__amor-confetti-item {
+  position: absolute;
+  top: -12px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: pf-control-acceso-amor-confetti;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.pf-control-acceso__bienvenida-icono--amor {
+  background: linear-gradient(135deg, #f97316, #fb7185);
+  box-shadow:
+    0 0 0 0 rgba(251, 113, 133, 0.45),
+    0 10px 36px rgba(249, 115, 22, 0.4);
+  animation:
+    pf-control-acceso-amor-check 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) both,
+    pf-control-acceso-amor-ring 1.4s ease-out 0.15s both;
+}
+
+.pf-control-acceso--amor-ingreso .pf-control-acceso__bienvenida-etiqueta {
+  color: #fb7185;
+}
+
+.pf-control-acceso__amor-copy {
+  margin: 0;
+  max-width: 28rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: #fdba74;
+  animation: pf-control-acceso-fade-in 0.5s ease 0.12s both;
+}
+
+@keyframes pf-control-acceso-amor-titulo {
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+}
+
+@keyframes pf-control-acceso-amor-glow {
+  0%,
+  100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.12) translate(2%, 3%);
+    opacity: 0.62;
+  }
+}
+
+@keyframes pf-control-acceso-amor-float {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.85);
+  }
+  15% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-18px) scale(1);
+  }
+  85% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes pf-control-acceso-amor-logo {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+
+@keyframes pf-control-acceso-amor-confetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(18px, 72vh, 0) rotate(420deg);
+  }
+}
+
+@keyframes pf-control-acceso-amor-check {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pf-control-acceso-amor-ring {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(251, 113, 133, 0.55),
+      0 10px 36px rgba(249, 115, 22, 0.4);
+  }
+  100% {
+    box-shadow:
+      0 0 0 28px rgba(251, 113, 133, 0),
+      0 10px 36px rgba(249, 115, 22, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-control-acceso__shell--amor .pf-control-acceso__banner-titulo,
+  .pf-control-acceso__amor-glow,
+  .pf-control-acceso__amor-particula,
+  .pf-control-acceso__logo--amor,
+  .pf-control-acceso__amor-confetti-item,
+  .pf-control-acceso__bienvenida-icono--amor,
+  .pf-control-acceso__amor-copy {
+    animation: none !important;
+  }
+
+  .pf-control-acceso__amor-particula,
+  .pf-control-acceso__amor-confetti {
+    display: none;
+  }
+
+  .pf-control-acceso__shell--amor .pf-control-acceso__banner-titulo {
+    color: #ffffff;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
   }
 }
 

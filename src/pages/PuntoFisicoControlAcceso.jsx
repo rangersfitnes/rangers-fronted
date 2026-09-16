@@ -21,6 +21,38 @@ const CONFETTI_PARTICULAS = Array.from({ length: 28 }, (_, indice) => ({
   ],
 }))
 
+/** Mes del Amor y la Amistad (septiembre, Colombia). */
+function esTemporadaAmorAmistad(ahora = Date.now()) {
+  const mes = Number(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Bogota',
+      month: 'numeric',
+    }).format(new Date(ahora)),
+  )
+  return mes === 9
+}
+
+const AMOR_PARTICULAS_IDLE = Array.from({ length: 18 }, (_, indice) => ({
+  id: `idle-${indice}`,
+  left: `${(indice * 17 + 5) % 100}%`,
+  top: `${(indice * 23 + 8) % 88}%`,
+  delay: `${(indice % 9) * 0.35}s`,
+  duration: `${7 + (indice % 5) * 1.1}s`,
+  size: `${8 + (indice % 4) * 3}px`,
+  tipo: indice % 3 === 0 ? 'spark' : indice % 3 === 1 ? 'heart' : 'dot',
+}))
+
+const AMOR_CONFETTI_INGRESO = Array.from({ length: 22 }, (_, indice) => ({
+  id: `admit-${indice}`,
+  left: `${(indice * 11 + 9) % 100}%`,
+  delay: `${(indice % 6) * 0.08}s`,
+  duration: `${1.4 + (indice % 5) * 0.22}s`,
+  size: `${7 + (indice % 4) * 2}px`,
+  color: ['#f97316', '#fb7185', '#fbbf24', '#fda4af', '#fdba74', '#ffffff'][
+    indice % 6
+  ],
+}))
+
 function obtenerPrimerNombre(nombre) {
   if (!nombre) return 'atleta'
   return nombre.trim().split(/\s+/)[0]
@@ -454,6 +486,50 @@ function PantallaCumpleanos({
   )
 }
 
+function DecoracionAmorIdle() {
+  return (
+    <div className="pf-control-acceso__amor-ambient" aria-hidden="true">
+      <div className="pf-control-acceso__amor-glow pf-control-acceso__amor-glow--a" />
+      <div className="pf-control-acceso__amor-glow pf-control-acceso__amor-glow--b" />
+      {AMOR_PARTICULAS_IDLE.map((particula) => (
+        <span
+          key={particula.id}
+          className={`pf-control-acceso__amor-particula pf-control-acceso__amor-particula--${particula.tipo}`}
+          style={{
+            left: particula.left,
+            top: particula.top,
+            animationDelay: particula.delay,
+            animationDuration: particula.duration,
+            width: particula.size,
+            height: particula.size,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function DecoracionAmorIngreso() {
+  return (
+    <div className="pf-control-acceso__amor-confetti" aria-hidden="true">
+      {AMOR_CONFETTI_INGRESO.map((particula) => (
+        <span
+          key={particula.id}
+          className="pf-control-acceso__amor-confetti-item"
+          style={{
+            left: particula.left,
+            animationDelay: particula.delay,
+            animationDuration: particula.duration,
+            width: particula.size,
+            height: particula.size,
+            backgroundColor: particula.color,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function BotonFullscreen({ fullscreen, onToggle, modoKiosco = false }) {
   return (
     <button
@@ -524,6 +600,11 @@ function VistaControlAcceso({
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState(null)
   const [pagoPendiente, setPagoPendiente] = useState(null)
+  const temporadaAmor = esTemporadaAmorAmistad()
+  const enReposo = !resultado && !pagoPendiente
+  const mostrarDecoracionAmor = temporadaAmor && enReposo
+  const celebrarIngresoAmor =
+    temporadaAmor && resultado?.tipo === 'admitido' && !resultado.esCumpleanos
 
   const enfocarInput = useCallback(() => {
     const aplicar = () => {
@@ -651,17 +732,36 @@ function VistaControlAcceso({
   } else if (resultado?.tipo === 'admitido') {
     contenido = (
       <section
-        className="pf-control-acceso pf-control-acceso--bienvenida"
+        className={`pf-control-acceso pf-control-acceso--bienvenida${
+          celebrarIngresoAmor ? ' pf-control-acceso--amor-ingreso' : ''
+        }`}
         aria-live="polite"
       >
+        {celebrarIngresoAmor ? <DecoracionAmorIngreso /> : null}
         <div className="pf-control-acceso__bienvenida">
-          <div className="pf-control-acceso__bienvenida-icono" aria-hidden="true">
+          <div
+            className={`pf-control-acceso__bienvenida-icono${
+              celebrarIngresoAmor
+                ? ' pf-control-acceso__bienvenida-icono--amor'
+                : ''
+            }`}
+            aria-hidden="true"
+          >
             ✓
           </div>
-          <p className="pf-control-acceso__bienvenida-etiqueta">Ingreso admitido</p>
+          <p className="pf-control-acceso__bienvenida-etiqueta">
+            {celebrarIngresoAmor
+              ? 'Ingreso admitido · Amor y amistad'
+              : 'Ingreso admitido'}
+          </p>
           <h1 className="pf-control-acceso__bienvenida-nombre">
             ¡Bienvenido/a, {resultado.nombre || 'atleta'}!
           </h1>
+          {celebrarIngresoAmor ? (
+            <p className="pf-control-acceso__amor-copy">
+              Entrena con tu gente. Buen entrenamiento.
+            </p>
+          ) : null}
           <p className="pf-control-acceso__bienvenida-plan">
             {resultado.tipoPlan === 'tiquetera'
               ? 'Tiquetera: '
@@ -753,13 +853,19 @@ function VistaControlAcceso({
     )
   } else {
     contenido = (
-      <section className="pf-control-acceso">
+      <section
+        className={`pf-control-acceso${
+          temporadaAmor ? ' pf-control-acceso--amor-idle' : ''
+        }`}
+      >
         <div className="pf-control-acceso__contenido">
           <div className="pf-control-acceso__entrada">
             <img
               src={logo}
               alt="Rangers Box"
-              className="pf-control-acceso__logo"
+              className={`pf-control-acceso__logo${
+                temporadaAmor ? ' pf-control-acceso__logo--amor' : ''
+              }`}
             />
 
             <label className="pf-control-acceso__field">
@@ -801,14 +907,34 @@ function VistaControlAcceso({
     <div
       className={`pf-control-acceso__shell${
         fullscreen || modoKiosco ? ' pf-control-acceso__shell--fullscreen' : ''
-      }${modoKiosco ? ' pf-control-acceso__shell--kiosco' : ''}`}
+      }${modoKiosco ? ' pf-control-acceso__shell--kiosco' : ''}${
+        temporadaAmor ? ' pf-control-acceso__shell--amor' : ''
+      }`}
     >
-      {!resultado && !pagoPendiente ? (
+      {mostrarDecoracionAmor ? <DecoracionAmorIdle /> : null}
+
+      {enReposo ? (
         <header className="pf-control-acceso__banner" aria-label="Bienvenida">
-          <p className="pf-control-acceso__banner-eyebrow">Bienvenido</p>
-          <h1 className="pf-control-acceso__banner-titulo">
-            Registra aquí tu asistencia
-          </h1>
+          {temporadaAmor ? (
+            <>
+              <p className="pf-control-acceso__banner-eyebrow pf-control-acceso__banner-eyebrow--amor">
+                Mes del amor y la amistad
+              </p>
+              <h1 className="pf-control-acceso__banner-titulo">
+                Entrena con tu gente
+              </h1>
+              <p className="pf-control-acceso__banner-sub">
+                Registra aquí tu asistencia
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="pf-control-acceso__banner-eyebrow">Bienvenido</p>
+              <h1 className="pf-control-acceso__banner-titulo">
+                Registra aquí tu asistencia
+              </h1>
+            </>
+          )}
         </header>
       ) : null}
 
