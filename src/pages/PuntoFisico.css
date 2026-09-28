@@ -2456,7 +2456,7 @@
   }
 }
 
-/* —— Mes del Amor y la Amistad (septiembre) —— */
+/* —— Mes del Amor y la Amistad (tema seleccionable) —— */
 .pf-control-acceso__shell--amor {
   position: relative;
   isolation: isolate;
@@ -2493,6 +2493,171 @@
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
+}
+
+.pf-control-acceso__tema-icono {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+.pf-control-acceso__tema-icono--amor,
+.pf-control-acceso__tema-icono--halloween {
+  animation-name: pf-control-acceso-tema-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.pf-control-acceso__tema-icono--caida {
+  top: -18px;
+  animation-name: pf-control-acceso-tema-caida;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.pf-control-acceso__celebracion {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pf-control-acceso__celebracion-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: pf-control-acceso-celeb-flash 0.85s ease-out both;
+}
+
+.pf-control-acceso__celebracion-flash--amor {
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(251, 113, 133, 0.38) 0%,
+    rgba(249, 115, 22, 0.12) 42%,
+    transparent 70%
+  );
+}
+
+.pf-control-acceso__celebracion-flash--halloween {
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(234, 88, 12, 0.4) 0%,
+    rgba(124, 58, 237, 0.18) 45%,
+    transparent 72%
+  );
+}
+
+.pf-control-acceso__celebracion-anillo {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: pf-control-acceso-celeb-anillo 1.35s ease-out 0.05s both;
+}
+
+.pf-control-acceso__celebracion-anillo--amor {
+  border: 2px solid rgba(251, 113, 133, 0.7);
+  box-shadow: 0 0 24px rgba(249, 115, 22, 0.35);
+}
+
+.pf-control-acceso__celebracion-anillo--halloween {
+  border: 2px solid rgba(168, 85, 247, 0.75);
+  box-shadow: 0 0 28px rgba(234, 88, 12, 0.4);
+}
+
+.pf-control-acceso__celebracion-hero {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: clamp(52px, 9vw, 84px);
+  height: auto;
+  transform: translateX(-50%);
+  opacity: 0;
+  filter: drop-shadow(0 8px 22px rgba(234, 88, 12, 0.45));
+  animation: pf-control-acceso-celeb-hero 1.1s cubic-bezier(0.34, 1.45, 0.64, 1)
+    0.08s both;
+}
+
+.pf-control-acceso__celebracion-hero--amor {
+  filter: drop-shadow(0 8px 22px rgba(251, 113, 133, 0.5));
+}
+
+.pf-control-acceso__tema-icono--burst {
+  top: 42%;
+  left: 50%;
+  margin-left: -16px;
+  margin-top: -16px;
+  opacity: 0;
+  animation-name: pf-control-acceso-tema-burst;
+  animation-duration: 1.35s;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.34, 1);
+  animation-fill-mode: both;
+}
+
+.pf-control-acceso__tema-icono--subida {
+  bottom: -24px;
+  top: auto;
+  opacity: 0;
+  animation-name: pf-control-acceso-tema-subida;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.pf-control-acceso__tema-icono--vuelo {
+  opacity: 0;
+  animation-fill-mode: both;
+  animation-timing-function: ease-in-out;
+}
+
+.pf-control-acceso__tema-icono--vuelo-left {
+  left: -10%;
+  animation-name: pf-control-acceso-tema-vuelo-left;
+}
+
+.pf-control-acceso__tema-icono--vuelo-right {
+  right: -10%;
+  left: auto;
+  animation-name: pf-control-acceso-tema-vuelo-right;
+}
+
+.pf-control-acceso--celebracion-activa .pf-control-acceso__bienvenida {
+  position: relative;
+  z-index: 3;
+}
+
+.pf-control-acceso__bienvenida-emoji {
+  width: 2.6rem;
+  height: 2.6rem;
+  object-fit: contain;
+}
+
+.pf-control-acceso__bienvenida-nombre--celebracion {
+  animation: pf-control-acceso-celeb-nombre 0.7s cubic-bezier(0.34, 1.4, 0.64, 1)
+    0.12s both;
+}
+
+.pf-control-acceso--celebracion-activa .pf-control-acceso__bienvenida-etiqueta {
+  animation: pf-control-acceso-fade-in 0.45s ease 0.05s both;
+}
+
+.pf-control-acceso--celebracion-activa .pf-control-acceso__bienvenida-plan {
+  animation: pf-control-acceso-fade-in 0.5s ease 0.22s both;
+}
+
+.pf-control-acceso__tema-icono--bat {
+  animation-name: pf-control-acceso-tema-bat;
+}
+
+.pf-control-acceso__tema-icono--ghost {
+  opacity: 0;
 }
 
 .pf-control-acceso__shell--amor > .pf-control-acceso__banner,
@@ -2639,6 +2804,170 @@
   }
 }
 
+@keyframes pf-control-acceso-tema-float {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(10px) scale(0.92);
+  }
+  20% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-16px) scale(1);
+  }
+  80% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes pf-control-acceso-tema-bat {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translate(0, 8px) rotate(-8deg) scale(0.92);
+  }
+  25% {
+    opacity: 0.95;
+    transform: translate(10px, -10px) rotate(6deg) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-6px, -18px) rotate(-4deg) scale(1.04);
+  }
+  75% {
+    opacity: 0.8;
+    transform: translate(8px, -6px) rotate(10deg) scale(0.98);
+  }
+}
+
+@keyframes pf-control-acceso-tema-caida {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -12px, 0) rotate(0deg) scale(0.8);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(16px, 72vh, 0) rotate(340deg) scale(1);
+  }
+}
+
+@keyframes pf-control-acceso-tema-burst {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.35) rotate(0deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--burst-x), var(--burst-y), 0) scale(1.05)
+      rotate(220deg);
+  }
+}
+
+@keyframes pf-control-acceso-tema-subida {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(12px, -78vh, 0) scale(1.1) rotate(-25deg);
+  }
+}
+
+@keyframes pf-control-acceso-tema-vuelo-left {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(-12deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(55vw, -18px, 0) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(110vw, 10px, 0) rotate(-6deg);
+  }
+}
+
+@keyframes pf-control-acceso-tema-vuelo-right {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(12deg) scaleX(-1);
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(-55vw, -14px, 0) rotate(-8deg) scaleX(-1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-110vw, 12px, 0) rotate(6deg) scaleX(-1);
+  }
+}
+
+@keyframes pf-control-acceso-celeb-flash {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pf-control-acceso-celeb-anillo {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.2);
+  }
+}
+
+@keyframes pf-control-acceso-celeb-hero {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.4) rotate(-12deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.12) rotate(4deg);
+  }
+  100% {
+    opacity: 0.85;
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes pf-control-acceso-celeb-nombre {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes pf-control-acceso-amor-glow {
   0%,
   100% {
@@ -2724,16 +3053,372 @@
   .pf-control-acceso__logo--amor,
   .pf-control-acceso__amor-confetti-item,
   .pf-control-acceso__bienvenida-icono--amor,
-  .pf-control-acceso__amor-copy {
+  .pf-control-acceso__amor-copy,
+  .pf-control-acceso__tema-icono,
+  .pf-control-acceso__celebracion-flash,
+  .pf-control-acceso__celebracion-anillo,
+  .pf-control-acceso__celebracion-hero,
+  .pf-control-acceso__bienvenida-nombre--celebracion {
     animation: none !important;
   }
 
   .pf-control-acceso__amor-particula,
-  .pf-control-acceso__amor-confetti {
+  .pf-control-acceso__amor-confetti,
+  .pf-control-acceso__tema-icono,
+  .pf-control-acceso__celebracion {
     display: none;
   }
 
   .pf-control-acceso__shell--amor .pf-control-acceso__banner-titulo {
+    color: #ffffff;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+  }
+}
+
+/* —— Halloween (tema seleccionable) —— */
+.pf-control-acceso__shell--halloween {
+  position: relative;
+  isolation: isolate;
+}
+
+.pf-control-acceso__shell--halloween.pf-control-acceso__shell--fullscreen
+  .pf-control-acceso__banner {
+  background: linear-gradient(
+    180deg,
+    rgba(124, 58, 237, 0.22) 0%,
+    rgba(234, 88, 12, 0.16) 48%,
+    transparent 100%
+  );
+  border-bottom-color: rgba(168, 85, 247, 0.35);
+}
+
+.pf-control-acceso__banner-eyebrow--halloween {
+  color: #fb923c;
+  letter-spacing: 0.18em;
+}
+
+.pf-control-acceso__shell--halloween .pf-control-acceso__banner-titulo {
+  background: linear-gradient(90deg, #ffffff 0%, #fb923c 42%, #a855f7 100%);
+  background-size: 180% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: pf-control-acceso-halloween-titulo 6s ease-in-out infinite;
+}
+
+.pf-control-acceso__halloween-ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pf-control-acceso__halloween-moon {
+  position: absolute;
+  top: 4%;
+  right: 6%;
+  width: clamp(48px, 8vw, 84px);
+  height: auto;
+  opacity: 0.88;
+  filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.45));
+  animation: pf-control-acceso-halloween-logo 6s ease-in-out infinite;
+}
+
+.pf-control-acceso__halloween-cobweb {
+  position: absolute;
+  width: clamp(72px, 14vw, 140px);
+  height: auto;
+  opacity: 0.42;
+  filter: grayscale(0.2) brightness(1.1);
+}
+
+.pf-control-acceso__halloween-cobweb--tl {
+  top: -2%;
+  left: -1%;
+}
+
+.pf-control-acceso__halloween-cobweb--tr {
+  top: -2%;
+  right: -1%;
+  transform: scaleX(-1);
+}
+
+.pf-control-acceso__shell--halloween > .pf-control-acceso__banner,
+.pf-control-acceso__shell--halloween > .pf-control-acceso,
+.pf-control-acceso__shell--halloween > .pf-loading-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+.pf-control-acceso__shell--halloween > .pf-control-acceso__fullscreen-btn {
+  position: absolute;
+  z-index: 5;
+}
+
+.pf-control-acceso__halloween-mist {
+  position: absolute;
+  inset: auto 0 0;
+  height: 38%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(15, 8, 28, 0.55) 55%,
+    rgba(30, 10, 48, 0.72) 100%
+  );
+  opacity: 0.85;
+}
+
+.pf-control-acceso__halloween-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(52px);
+  opacity: 0.5;
+  animation: pf-control-acceso-halloween-glow 9s ease-in-out infinite;
+}
+
+.pf-control-acceso__halloween-glow--a {
+  width: min(44vw, 400px);
+  height: min(44vw, 400px);
+  top: -10%;
+  right: -8%;
+  background: radial-gradient(
+    circle,
+    rgba(234, 88, 12, 0.5) 0%,
+    transparent 72%
+  );
+}
+
+.pf-control-acceso__halloween-glow--b {
+  width: min(40vw, 360px);
+  height: min(40vw, 360px);
+  left: -6%;
+  bottom: 4%;
+  background: radial-gradient(
+    circle,
+    rgba(124, 58, 237, 0.48) 0%,
+    transparent 70%
+  );
+  animation-delay: -4s;
+}
+
+.pf-control-acceso__halloween-particula {
+  position: absolute;
+  opacity: 0;
+  animation-name: pf-control-acceso-halloween-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.pf-control-acceso__halloween-particula--orb {
+  border-radius: 50%;
+  background: radial-gradient(circle, #fbbf24 0%, #ea580c 70%);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.55);
+}
+
+.pf-control-acceso__halloween-particula--spark {
+  border-radius: 1px;
+  background: linear-gradient(135deg, #a855f7, #f97316);
+  transform: rotate(35deg);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.45);
+}
+
+.pf-control-acceso__halloween-particula--bat {
+  background: #1f102e;
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.35);
+  transform: rotate(-8deg);
+}
+
+.pf-control-acceso__halloween-particula--bat::before,
+.pf-control-acceso__halloween-particula--bat::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  width: 70%;
+  height: 55%;
+  background: #2b1740;
+  border-radius: 50% 10% 50% 10%;
+}
+
+.pf-control-acceso__halloween-particula--bat::before {
+  left: -55%;
+  transform: rotate(-18deg);
+}
+
+.pf-control-acceso__halloween-particula--bat::after {
+  right: -55%;
+  transform: rotate(18deg) scaleX(-1);
+}
+
+.pf-control-acceso__logo--halloween {
+  animation: pf-control-acceso-halloween-logo 4.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(234, 88, 12, 0.4))
+    drop-shadow(0 0 28px rgba(124, 58, 237, 0.28));
+}
+
+.pf-control-acceso--halloween-ingreso {
+  position: relative;
+  overflow: hidden;
+}
+
+.pf-control-acceso__halloween-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pf-control-acceso__halloween-confetti-item {
+  position: absolute;
+  top: -12px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: pf-control-acceso-halloween-confetti;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.pf-control-acceso__bienvenida-icono--halloween {
+  background: linear-gradient(135deg, #ea580c, #7c3aed);
+  box-shadow:
+    0 0 0 0 rgba(168, 85, 247, 0.45),
+    0 10px 36px rgba(234, 88, 12, 0.4);
+  animation:
+    pf-control-acceso-halloween-check 0.55s cubic-bezier(0.34, 1.45, 0.64, 1)
+      both,
+    pf-control-acceso-halloween-ring 1.4s ease-out 0.15s both;
+}
+
+.pf-control-acceso--halloween-ingreso .pf-control-acceso__bienvenida-etiqueta {
+  color: #fb923c;
+}
+
+.pf-control-acceso__halloween-copy {
+  margin: 0;
+  max-width: 28rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: #c4b5fd;
+  animation: pf-control-acceso-fade-in 0.5s ease 0.12s both;
+}
+
+@keyframes pf-control-acceso-halloween-titulo {
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+}
+
+@keyframes pf-control-acceso-halloween-glow {
+  0%,
+  100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.42;
+  }
+  50% {
+    transform: scale(1.14) translate(-2%, 2%);
+    opacity: 0.68;
+  }
+}
+
+@keyframes pf-control-acceso-halloween-float {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.85);
+  }
+  18% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateY(-20px) scale(1);
+  }
+  82% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pf-control-acceso-halloween-logo {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes pf-control-acceso-halloween-confetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-14px, 72vh, 0) rotate(-380deg);
+  }
+}
+
+@keyframes pf-control-acceso-halloween-check {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pf-control-acceso-halloween-ring {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(168, 85, 247, 0.55),
+      0 10px 36px rgba(234, 88, 12, 0.4);
+  }
+  100% {
+    box-shadow:
+      0 0 0 28px rgba(168, 85, 247, 0),
+      0 10px 36px rgba(234, 88, 12, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-control-acceso__shell--halloween .pf-control-acceso__banner-titulo,
+  .pf-control-acceso__halloween-glow,
+  .pf-control-acceso__halloween-particula,
+  .pf-control-acceso__logo--halloween,
+  .pf-control-acceso__halloween-confetti-item,
+  .pf-control-acceso__bienvenida-icono--halloween,
+  .pf-control-acceso__halloween-copy,
+  .pf-control-acceso__halloween-moon,
+  .pf-control-acceso__tema-icono,
+  .pf-control-acceso__celebracion-flash,
+  .pf-control-acceso__celebracion-anillo,
+  .pf-control-acceso__celebracion-hero {
+    animation: none !important;
+  }
+
+  .pf-control-acceso__halloween-particula,
+  .pf-control-acceso__halloween-confetti,
+  .pf-control-acceso__tema-icono,
+  .pf-control-acceso__celebracion {
+    display: none;
+  }
+
+  .pf-control-acceso__shell--halloween .pf-control-acceso__banner-titulo {
     color: #ffffff;
     background: none;
     -webkit-background-clip: unset;

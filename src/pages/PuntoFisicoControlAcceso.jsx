@@ -1,7 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import logo from '../assets/images/logos/logo.webp'
+import {
+  AMOR_ICONOS_BURST,
+  AMOR_ICONOS_IDLE,
+  AMOR_ICONOS_INGRESO,
+  AMOR_ICONOS_SUBIDA,
+  HALLOWEEN_ICONOS_BURST,
+  HALLOWEEN_ICONOS_IDLE,
+  HALLOWEEN_ICONOS_INGRESO,
+  HALLOWEEN_ICONOS_VUELO,
+  ICONOS_AMOR,
+  ICONOS_HALLOWEEN,
+} from '../assets/images/temas/temaIconos.js'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { registrarAsistencia } from '../services/asistenciasService.js'
+import { obtenerContenidoWebPublico } from '../services/contenidoWebService.js'
 import { registrarPagoClaseDia } from '../services/pagosClasesService.js'
 import { formatearFechaCuenta } from './cuenta/cuentaUtils.js'
 import '../components/ActivarPlanModal.css'
@@ -9,6 +22,9 @@ import './PuntoFisico.css'
 
 const PANTALLA_MS = 3000
 const PANTALLA_CUMPLE_MS = 5500
+const PANTALLA_TEMA_MS = 4800
+const TEMA_ASISTENCIA_DEFAULT = 'predeterminado'
+const POLL_TEMA_MS = 15_000
 
 const CONFETTI_PARTICULAS = Array.from({ length: 28 }, (_, indice) => ({
   id: indice,
@@ -21,37 +37,13 @@ const CONFETTI_PARTICULAS = Array.from({ length: 28 }, (_, indice) => ({
   ],
 }))
 
-/** Mes del Amor y la Amistad (septiembre, Colombia). */
-function esTemporadaAmorAmistad(ahora = Date.now()) {
-  const mes = Number(
-    new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Bogota',
-      month: 'numeric',
-    }).format(new Date(ahora)),
-  )
-  return mes === 9
+function normalizarTemaAsistencia(valor) {
+  const limpio = String(valor || '')
+    .trim()
+    .toLowerCase()
+  if (limpio === 'amor_amistad' || limpio === 'halloween') return limpio
+  return TEMA_ASISTENCIA_DEFAULT
 }
-
-const AMOR_PARTICULAS_IDLE = Array.from({ length: 18 }, (_, indice) => ({
-  id: `idle-${indice}`,
-  left: `${(indice * 17 + 5) % 100}%`,
-  top: `${(indice * 23 + 8) % 88}%`,
-  delay: `${(indice % 9) * 0.35}s`,
-  duration: `${7 + (indice % 5) * 1.1}s`,
-  size: `${8 + (indice % 4) * 3}px`,
-  tipo: indice % 3 === 0 ? 'spark' : indice % 3 === 1 ? 'heart' : 'dot',
-}))
-
-const AMOR_CONFETTI_INGRESO = Array.from({ length: 22 }, (_, indice) => ({
-  id: `admit-${indice}`,
-  left: `${(indice * 11 + 9) % 100}%`,
-  delay: `${(indice % 6) * 0.08}s`,
-  duration: `${1.4 + (indice % 5) * 0.22}s`,
-  size: `${7 + (indice % 4) * 2}px`,
-  color: ['#f97316', '#fb7185', '#fbbf24', '#fda4af', '#fdba74', '#ffffff'][
-    indice % 6
-  ],
-}))
 
 function obtenerPrimerNombre(nombre) {
   if (!nombre) return 'atleta'
@@ -491,18 +483,21 @@ function DecoracionAmorIdle() {
     <div className="pf-control-acceso__amor-ambient" aria-hidden="true">
       <div className="pf-control-acceso__amor-glow pf-control-acceso__amor-glow--a" />
       <div className="pf-control-acceso__amor-glow pf-control-acceso__amor-glow--b" />
-      {AMOR_PARTICULAS_IDLE.map((particula) => (
-        <span
-          key={particula.id}
-          className={`pf-control-acceso__amor-particula pf-control-acceso__amor-particula--${particula.tipo}`}
+      {AMOR_ICONOS_IDLE.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className={`pf-control-acceso__tema-icono pf-control-acceso__tema-icono--amor pf-control-acceso__tema-icono--${icono.tipo}`}
           style={{
-            left: particula.left,
-            top: particula.top,
-            animationDelay: particula.delay,
-            animationDuration: particula.duration,
-            width: particula.size,
-            height: particula.size,
+            left: icono.left,
+            top: icono.top,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
+            animationDuration: icono.duration,
           }}
+          draggable={false}
         />
       ))}
     </div>
@@ -511,19 +506,169 @@ function DecoracionAmorIdle() {
 
 function DecoracionAmorIngreso() {
   return (
-    <div className="pf-control-acceso__amor-confetti" aria-hidden="true">
-      {AMOR_CONFETTI_INGRESO.map((particula) => (
-        <span
-          key={particula.id}
-          className="pf-control-acceso__amor-confetti-item"
+    <div className="pf-control-acceso__celebracion" aria-hidden="true">
+      <div className="pf-control-acceso__celebracion-flash pf-control-acceso__celebracion-flash--amor" />
+      <div className="pf-control-acceso__celebracion-anillo pf-control-acceso__celebracion-anillo--amor" />
+      <img
+        src={ICONOS_AMOR.twoHearts}
+        alt=""
+        className="pf-control-acceso__celebracion-hero pf-control-acceso__celebracion-hero--amor"
+        draggable={false}
+      />
+      {AMOR_ICONOS_BURST.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className="pf-control-acceso__tema-icono pf-control-acceso__tema-icono--burst"
           style={{
-            left: particula.left,
-            animationDelay: particula.delay,
-            animationDuration: particula.duration,
-            width: particula.size,
-            height: particula.size,
-            backgroundColor: particula.color,
+            '--burst-x': `${Math.cos((icono.angle * Math.PI) / 180) * icono.dist}px`,
+            '--burst-y': `${Math.sin((icono.angle * Math.PI) / 180) * icono.dist}px`,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
           }}
+          draggable={false}
+        />
+      ))}
+      {AMOR_ICONOS_INGRESO.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className="pf-control-acceso__tema-icono pf-control-acceso__tema-icono--caida pf-control-acceso__tema-icono--amor"
+          style={{
+            left: icono.left,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
+            animationDuration: icono.duration,
+          }}
+          draggable={false}
+        />
+      ))}
+      {AMOR_ICONOS_SUBIDA.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className="pf-control-acceso__tema-icono pf-control-acceso__tema-icono--subida"
+          style={{
+            left: icono.left,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
+            animationDuration: icono.duration,
+          }}
+          draggable={false}
+        />
+      ))}
+    </div>
+  )
+}
+
+function DecoracionHalloweenIdle() {
+  return (
+    <div className="pf-control-acceso__halloween-ambient" aria-hidden="true">
+      <div className="pf-control-acceso__halloween-glow pf-control-acceso__halloween-glow--a" />
+      <div className="pf-control-acceso__halloween-glow pf-control-acceso__halloween-glow--b" />
+      <div className="pf-control-acceso__halloween-mist" />
+      <img
+        src={ICONOS_HALLOWEEN.moon}
+        alt=""
+        className="pf-control-acceso__halloween-moon"
+        draggable={false}
+      />
+      <img
+        src={ICONOS_HALLOWEEN.cobweb}
+        alt=""
+        className="pf-control-acceso__halloween-cobweb pf-control-acceso__halloween-cobweb--tl"
+        draggable={false}
+      />
+      <img
+        src={ICONOS_HALLOWEEN.cobweb}
+        alt=""
+        className="pf-control-acceso__halloween-cobweb pf-control-acceso__halloween-cobweb--tr"
+        draggable={false}
+      />
+      {HALLOWEEN_ICONOS_IDLE.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className={`pf-control-acceso__tema-icono pf-control-acceso__tema-icono--halloween pf-control-acceso__tema-icono--${icono.tipo}`}
+          style={{
+            left: icono.left,
+            top: icono.top,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
+            animationDuration: icono.duration,
+          }}
+          draggable={false}
+        />
+      ))}
+    </div>
+  )
+}
+
+function DecoracionHalloweenIngreso() {
+  return (
+    <div className="pf-control-acceso__celebracion" aria-hidden="true">
+      <div className="pf-control-acceso__celebracion-flash pf-control-acceso__celebracion-flash--halloween" />
+      <div className="pf-control-acceso__celebracion-anillo pf-control-acceso__celebracion-anillo--halloween" />
+      <img
+        src={ICONOS_HALLOWEEN.pumpkin}
+        alt=""
+        className="pf-control-acceso__celebracion-hero pf-control-acceso__celebracion-hero--halloween"
+        draggable={false}
+      />
+      {HALLOWEEN_ICONOS_BURST.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className="pf-control-acceso__tema-icono pf-control-acceso__tema-icono--burst"
+          style={{
+            '--burst-x': `${Math.cos((icono.angle * Math.PI) / 180) * icono.dist}px`,
+            '--burst-y': `${Math.sin((icono.angle * Math.PI) / 180) * icono.dist}px`,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
+          }}
+          draggable={false}
+        />
+      ))}
+      {HALLOWEEN_ICONOS_INGRESO.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className="pf-control-acceso__tema-icono pf-control-acceso__tema-icono--caida pf-control-acceso__tema-icono--halloween"
+          style={{
+            left: icono.left,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
+            animationDuration: icono.duration,
+          }}
+          draggable={false}
+        />
+      ))}
+      {HALLOWEEN_ICONOS_VUELO.map((icono) => (
+        <img
+          key={icono.id}
+          src={icono.src}
+          alt=""
+          className={`pf-control-acceso__tema-icono pf-control-acceso__tema-icono--vuelo pf-control-acceso__tema-icono--vuelo-${icono.from}`}
+          style={{
+            top: icono.top,
+            width: icono.size,
+            height: icono.size,
+            animationDelay: icono.delay,
+            animationDuration: icono.duration,
+          }}
+          draggable={false}
         />
       ))}
     </div>
@@ -600,11 +745,19 @@ function VistaControlAcceso({
   const [error, setError] = useState('')
   const [resultado, setResultado] = useState(null)
   const [pagoPendiente, setPagoPendiente] = useState(null)
-  const temporadaAmor = esTemporadaAmorAmistad()
+  const [temaAsistencia, setTemaAsistencia] = useState(TEMA_ASISTENCIA_DEFAULT)
+
+  const temaAmor = temaAsistencia === 'amor_amistad'
+  const temaHalloween = temaAsistencia === 'halloween'
+  const temaEspecial = temaAmor || temaHalloween
   const enReposo = !resultado && !pagoPendiente
-  const mostrarDecoracionAmor = temporadaAmor && enReposo
-  const celebrarIngresoAmor =
-    temporadaAmor && resultado?.tipo === 'admitido' && !resultado.esCumpleanos
+  const mostrarDecoracionTema = temaEspecial && enReposo
+  const celebrarIngresoTema =
+    temaEspecial && resultado?.tipo === 'admitido' && !resultado.esCumpleanos
+  const primerNombreAdmitido =
+    resultado?.tipo === 'admitido'
+      ? obtenerPrimerNombre(resultado.nombre)
+      : ''
 
   const enfocarInput = useCallback(() => {
     const aplicar = () => {
@@ -626,6 +779,41 @@ function VistaControlAcceso({
       window.setTimeout(aplicar, 320)
     })
   }, [])
+
+  const cargarTemaAsistencia = useCallback(async ({ signal } = {}) => {
+    try {
+      const contenido = await obtenerContenidoWebPublico({ signal })
+      if (signal?.aborted) return
+      setTemaAsistencia(
+        normalizarTemaAsistencia(contenido?.asistencias?.tema),
+      )
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      // Silencioso: se mantiene el tema ya cargado / predeterminado.
+    }
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    cargarTemaAsistencia({ signal: controller.signal })
+
+    const intervalo = window.setInterval(() => {
+      cargarTemaAsistencia()
+    }, POLL_TEMA_MS)
+
+    const alVisibilidad = () => {
+      if (document.visibilityState === 'visible') {
+        cargarTemaAsistencia()
+      }
+    }
+    document.addEventListener('visibilitychange', alVisibilidad)
+
+    return () => {
+      controller.abort()
+      window.clearInterval(intervalo)
+      document.removeEventListener('visibilitychange', alVisibilidad)
+    }
+  }, [cargarTemaAsistencia])
 
   const reiniciar = useCallback(() => {
     setCedula('')
@@ -657,14 +845,23 @@ function VistaControlAcceso({
   ])
 
   const mostrarResultadoTemporal = useCallback(
-    (datos) => {
+    (datos, { celebracionTema = false } = {}) => {
       setResultado(datos)
       if (timerRef.current) clearTimeout(timerRef.current)
-      const duracion =
-        datos.esCumpleanos || datos.rutinaHoy ? PANTALLA_CUMPLE_MS : PANTALLA_MS
+      let duracion = PANTALLA_MS
+      if (datos.esCumpleanos || datos.rutinaHoy) {
+        duracion = PANTALLA_CUMPLE_MS
+      } else if (
+        celebracionTema ||
+        ((temaAsistencia === 'amor_amistad' ||
+          temaAsistencia === 'halloween') &&
+          datos.tipo === 'admitido')
+      ) {
+        duracion = PANTALLA_TEMA_MS
+      }
       timerRef.current = setTimeout(reiniciar, duracion)
     },
-    [reiniciar],
+    [reiniciar, temaAsistencia],
   )
 
   const ejecutarValidacion = async () => {
@@ -733,33 +930,71 @@ function VistaControlAcceso({
     contenido = (
       <section
         className={`pf-control-acceso pf-control-acceso--bienvenida${
-          celebrarIngresoAmor ? ' pf-control-acceso--amor-ingreso' : ''
-        }`}
+          celebrarIngresoTema && temaAmor
+            ? ' pf-control-acceso--amor-ingreso'
+            : ''
+        }${
+          celebrarIngresoTema && temaHalloween
+            ? ' pf-control-acceso--halloween-ingreso'
+            : ''
+        }${celebrarIngresoTema ? ' pf-control-acceso--celebracion-activa' : ''}`}
         aria-live="polite"
       >
-        {celebrarIngresoAmor ? <DecoracionAmorIngreso /> : null}
+        {celebrarIngresoTema && temaAmor ? <DecoracionAmorIngreso /> : null}
+        {celebrarIngresoTema && temaHalloween ? (
+          <DecoracionHalloweenIngreso />
+        ) : null}
         <div className="pf-control-acceso__bienvenida">
           <div
             className={`pf-control-acceso__bienvenida-icono${
-              celebrarIngresoAmor
+              celebrarIngresoTema && temaAmor
                 ? ' pf-control-acceso__bienvenida-icono--amor'
+                : ''
+            }${
+              celebrarIngresoTema && temaHalloween
+                ? ' pf-control-acceso__bienvenida-icono--halloween'
                 : ''
             }`}
             aria-hidden="true"
           >
-            ✓
+            {celebrarIngresoTema && temaHalloween ? (
+              <img
+                src={ICONOS_HALLOWEEN.pumpkin}
+                alt=""
+                className="pf-control-acceso__bienvenida-emoji"
+                draggable={false}
+              />
+            ) : celebrarIngresoTema && temaAmor ? (
+              '♥'
+            ) : (
+              '✓'
+            )}
           </div>
           <p className="pf-control-acceso__bienvenida-etiqueta">
-            {celebrarIngresoAmor
+            {celebrarIngresoTema && temaAmor
               ? 'Ingreso admitido · Amor y amistad'
-              : 'Ingreso admitido'}
+              : celebrarIngresoTema && temaHalloween
+                ? 'Ingreso admitido · Halloween'
+                : 'Ingreso admitido'}
           </p>
-          <h1 className="pf-control-acceso__bienvenida-nombre">
+          <h1
+            className={`pf-control-acceso__bienvenida-nombre${
+              celebrarIngresoTema
+                ? ' pf-control-acceso__bienvenida-nombre--celebracion'
+                : ''
+            }`}
+          >
             ¡Bienvenido/a, {resultado.nombre || 'atleta'}!
           </h1>
-          {celebrarIngresoAmor ? (
+          {celebrarIngresoTema && temaAmor ? (
             <p className="pf-control-acceso__amor-copy">
-              Entrena con tu gente. Buen entrenamiento.
+              {primerNombreAdmitido}, entrena con tu gente. Buen entrenamiento.
+            </p>
+          ) : null}
+          {celebrarIngresoTema && temaHalloween ? (
+            <p className="pf-control-acceso__halloween-copy">
+              {primerNombreAdmitido}, que el entrenamiento te dé miedo… de lo
+              fuerte que vas.
             </p>
           ) : null}
           <p className="pf-control-acceso__bienvenida-plan">
@@ -855,8 +1090,8 @@ function VistaControlAcceso({
     contenido = (
       <section
         className={`pf-control-acceso${
-          temporadaAmor ? ' pf-control-acceso--amor-idle' : ''
-        }`}
+          temaAmor ? ' pf-control-acceso--amor-idle' : ''
+        }${temaHalloween ? ' pf-control-acceso--halloween-idle' : ''}`}
       >
         <div className="pf-control-acceso__contenido">
           <div className="pf-control-acceso__entrada">
@@ -864,8 +1099,8 @@ function VistaControlAcceso({
               src={logo}
               alt="Rangers Box"
               className={`pf-control-acceso__logo${
-                temporadaAmor ? ' pf-control-acceso__logo--amor' : ''
-              }`}
+                temaAmor ? ' pf-control-acceso__logo--amor' : ''
+              }${temaHalloween ? ' pf-control-acceso__logo--halloween' : ''}`}
             />
 
             <label className="pf-control-acceso__field">
@@ -908,20 +1143,35 @@ function VistaControlAcceso({
       className={`pf-control-acceso__shell${
         fullscreen || modoKiosco ? ' pf-control-acceso__shell--fullscreen' : ''
       }${modoKiosco ? ' pf-control-acceso__shell--kiosco' : ''}${
-        temporadaAmor ? ' pf-control-acceso__shell--amor' : ''
-      }`}
+        temaAmor ? ' pf-control-acceso__shell--amor' : ''
+      }${temaHalloween ? ' pf-control-acceso__shell--halloween' : ''}`}
     >
-      {mostrarDecoracionAmor ? <DecoracionAmorIdle /> : null}
+      {mostrarDecoracionTema && temaAmor ? <DecoracionAmorIdle /> : null}
+      {mostrarDecoracionTema && temaHalloween ? (
+        <DecoracionHalloweenIdle />
+      ) : null}
 
       {enReposo ? (
         <header className="pf-control-acceso__banner" aria-label="Bienvenida">
-          {temporadaAmor ? (
+          {temaAmor ? (
             <>
               <p className="pf-control-acceso__banner-eyebrow pf-control-acceso__banner-eyebrow--amor">
                 Mes del amor y la amistad
               </p>
               <h1 className="pf-control-acceso__banner-titulo">
                 Entrena con tu gente
+              </h1>
+              <p className="pf-control-acceso__banner-sub">
+                Registra aquí tu asistencia
+              </p>
+            </>
+          ) : temaHalloween ? (
+            <>
+              <p className="pf-control-acceso__banner-eyebrow pf-control-acceso__banner-eyebrow--halloween">
+                Halloween en Rangers
+              </p>
+              <h1 className="pf-control-acceso__banner-titulo">
+                Noche de entrenamiento
               </h1>
               <p className="pf-control-acceso__banner-sub">
                 Registra aquí tu asistencia

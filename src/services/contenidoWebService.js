@@ -50,7 +50,7 @@ export async function obtenerContenidoWebAdmin({ signal } = {}) {
   return data.contenido ?? {}
 }
 
-export async function actualizarContenidoWebAdmin({ inicio }) {
+export async function actualizarContenidoWebAdmin({ inicio, asistencias }) {
   const token = await requerirAdminToken()
 
   let response
@@ -61,7 +61,7 @@ export async function actualizarContenidoWebAdmin({ inicio }) {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ inicio }),
+      body: JSON.stringify({ inicio, asistencias }),
     })
   } catch {
     throw new Error('No se pudo conectar con el servidor')
