@@ -86,9 +86,13 @@ export async function obtenerUsuarios({
 
     const ordenLimpio = String(orden || '').trim().toLowerCase()
     if (
-      ['recientes', 'pago_reciente', 'antiguedad_asc', 'antiguedad_desc'].includes(
-        ordenLimpio,
-      )
+      [
+        'recientes',
+        'pago_reciente',
+        'antiguedad_asc',
+        'antiguedad_desc',
+        'vencido_reciente',
+      ].includes(ordenLimpio)
     ) {
       params.set('orden', ordenLimpio)
     }
@@ -169,6 +173,35 @@ export async function obtenerReporteCompletoUsuarios({ signal } = {}) {
     },
     generadoEn: data.generadoEn ?? Date.now(),
   }
+}
+
+export async function obtenerInformeUsuarios({ signal } = {}) {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/usuarios/informes`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Cache-Control': 'no-cache',
+      },
+      cache: 'no-store',
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error(
+      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+    )
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo cargar el informe de usuarios')
+  }
+
+  return data.informe
 }
 
 export async function actualizarUsuario(uid, datos) {

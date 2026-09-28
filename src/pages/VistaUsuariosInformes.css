@@ -1,0 +1,292 @@
+.pf-usuarios-informe__volver {
+  margin-bottom: 0.85rem;
+}
+
+.pf-usuarios-informe__meta {
+  margin: -0.75rem 0 1.25rem;
+  font-size: 0.82rem;
+  color: #a3a3a3;
+}
+
+.pf-usuarios-informe__resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.pf-usuarios-informe__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 1rem 1.05rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.pf-usuarios-informe__card:hover {
+  border-color: rgba(249, 115, 22, 0.45);
+  background: rgba(0, 0, 0, 0.55);
+  transform: translateY(-1px);
+}
+
+.pf-usuarios-informe__card--activa {
+  border-color: rgba(249, 115, 22, 0.65);
+  background: rgba(249, 115, 22, 0.12);
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.25);
+}
+
+.pf-usuarios-informe__card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.pf-usuarios-informe__card-valor {
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+.pf-usuarios-informe__card-detalle {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #a3a3a3;
+}
+
+.pf-usuarios-informe__card-explica {
+  display: -webkit-box;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #737373;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pf-usuarios-informe__card-accion {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.pf-usuarios-informe__card--activa .pf-usuarios-informe__card-accion {
+  color: #fdba74;
+}
+
+.pf-usuarios-informe__card--activo .pf-usuarios-informe__card-valor {
+  color: #86efac;
+}
+
+.pf-usuarios-informe__card--vencido .pf-usuarios-informe__card-valor {
+  color: #fca5a5;
+}
+
+.pf-usuarios-informe__card--sin-plan .pf-usuarios-informe__card-valor {
+  color: #d4d4d4;
+}
+
+.pf-usuarios-informe__card--renovacion .pf-usuarios-informe__card-valor {
+  color: #fdba74;
+}
+
+.pf-usuarios-informe__card--una-vez .pf-usuarios-informe__card-valor {
+  color: #93c5fd;
+}
+
+.pf-usuarios-informe__destacado {
+  margin-bottom: 1.5rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(249, 115, 22, 0.18) 0%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+}
+
+.pf-usuarios-informe__destacado-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.pf-usuarios-informe__destacado-titulo {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.pf-usuarios-informe__destacado-detalle {
+  margin: 0.45rem 0 0;
+  font-size: 0.92rem;
+  color: #d4d4d4;
+}
+
+.pf-usuarios-informe__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.pf-usuarios-informe__panel {
+  margin-bottom: 1.5rem;
+  padding: 1.15rem 1.2rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+}
+
+.pf-usuarios-informe__panel--lista {
+  border-color: rgba(249, 115, 22, 0.35);
+  background: rgba(249, 115, 22, 0.06);
+}
+
+.pf-usuarios-informe__lista-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.pf-usuarios-informe__lista-count {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fdba74;
+}
+
+.pf-usuarios-informe__badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 9999px;
+  vertical-align: middle;
+}
+
+.pf-usuarios-informe__panel-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.pf-usuarios-informe__panel-hint {
+  margin: 0.35rem 0 0.9rem;
+  font-size: 0.82rem;
+  color: #a3a3a3;
+}
+
+.pf-usuarios-informe__vacio {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #a3a3a3;
+}
+
+.pf-usuarios-informe__tabla-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pf-usuarios-informe__tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.86rem;
+  color: #e5e5e5;
+}
+
+.pf-usuarios-informe__tabla th {
+  padding: 0.7rem 0.8rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  color: #a3a3a3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.pf-usuarios-informe__tabla td {
+  padding: 0.75rem 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.pf-usuarios-informe__tabla tr:last-child td {
+  border-bottom: none;
+}
+
+.pf-usuarios-informe__formula {
+  margin-top: 0.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #e5e5e5;
+}
+
+.pf-usuarios-informe__formula > p {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+}
+
+.pf-usuarios-informe__formula ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.pf-usuarios-informe__formula li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  font-size: 0.88rem;
+  color: #a3a3a3;
+}
+
+.pf-usuarios-informe__formula li .pf-action-btn {
+  padding-inline: 0.55rem;
+}
+
+@media (max-width: 900px) {
+  .pf-usuarios-informe__grid {
+    grid-template-columns: 1fr;
+  }
+}

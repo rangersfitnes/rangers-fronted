@@ -21,6 +21,7 @@ import {
   exportarReporteUsuariosPdf,
 } from '../utils/exportReporteUsuarios.js'
 import UsuarioDetalleGestion from './UsuarioDetalleGestion.jsx'
+import VistaUsuariosInformes from './VistaUsuariosInformes.jsx'
 import './PuntoFisico.css'
 
 const PAGE_SIZE = 25
@@ -69,6 +70,7 @@ const OPCIONES_VENTANA_NUEVOS = [
 
 const OPCIONES_ORDEN = [
   { id: 'pago_reciente', label: 'Más recientes (por pago)' },
+  { id: 'vencido_reciente', label: 'Vencidos más recientes' },
   { id: 'recientes', label: 'Más recientes (por registro)' },
   { id: 'antiguedad_desc', label: 'Más nuevos primero (antigüedad)' },
   { id: 'antiguedad_asc', label: 'Más antiguos primero' },
@@ -112,6 +114,7 @@ function VistaUsuariosAdmin() {
   const [editarUsuario, setEditarUsuario] = useState(null)
   const [eliminarTarget, setEliminarTarget] = useState(null)
   const [usuarioGestion, setUsuarioGestion] = useState(null)
+  const [vistaInformes, setVistaInformes] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
@@ -502,6 +505,9 @@ function VistaUsuariosAdmin() {
     if (ordenListado === 'pago_reciente') {
       partes.push('ordenados por último pago')
     }
+    if (ordenListado === 'vencido_reciente') {
+      partes.push('ordenados por vencimiento más reciente')
+    }
     if (ordenListado === 'antiguedad_asc') {
       partes.push('ordenados del más antiguo al más nuevo')
     }
@@ -509,6 +515,10 @@ function VistaUsuariosAdmin() {
       partes.push('ordenados del más nuevo al más antiguo')
     }
     return partes.join(' · ')
+  }
+
+  if (vistaInformes) {
+    return <VistaUsuariosInformes onVolver={() => setVistaInformes(false)} />
   }
 
   if (usuarioGestion) {
@@ -567,6 +577,14 @@ function VistaUsuariosAdmin() {
           </p>
         </div>
         <div className="pf-page__view-actions">
+          <button
+            type="button"
+            className="pf-action-btn"
+            onClick={() => setVistaInformes(true)}
+            disabled={loading || exportandoReporte}
+          >
+            Informes
+          </button>
           <button
             type="button"
             className="pf-action-btn pf-action-btn--ghost"
@@ -772,7 +790,13 @@ function VistaUsuariosAdmin() {
             <select
               className="pf-usuarios-busqueda__select"
               value={ordenListado}
-              onChange={(e) => setOrdenListado(e.target.value)}
+              onChange={(e) => {
+                const valor = e.target.value
+                setOrdenListado(valor)
+                if (valor === 'vencido_reciente') {
+                  setFiltroEstadoPlan('vencido')
+                }
+              }}
               disabled={loading || enModoBusqueda}
             >
               {OPCIONES_ORDEN.map((opcion) => (
@@ -807,8 +831,9 @@ function VistaUsuariosAdmin() {
           «Usuarios nuevos» = registrados en la ventana elegida. «Renovaron
           membresía» = 2 o más activaciones de plan confirmadas. «Más recientes
           (por pago)» muestra primero a quienes pagaron o activaron un plan más
-          recientemente. Puedes combinarlo con el estado (Activos / Vencidos /
-          Sin plan).
+          recientemente. «Vencidos más recientes» filtra vencidos y los ordena
+          por fecha de vencimiento (vencidoEn o vigencia). Puedes combinarlo con
+          el estado (Activos / Vencidos / Sin plan).
         </p>
       </div>
 
