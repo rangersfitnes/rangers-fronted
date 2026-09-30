@@ -17,6 +17,7 @@ const estadoInicial = {
   documento: '',
   fechaNacimiento: '',
   password: '',
+  documentoReferidor: '',
 }
 
 function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
@@ -65,6 +66,9 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
       celular: `+57${form.celular}`,
       fechaNacimiento: form.fechaNacimiento,
       password: form.password,
+      ...(form.documentoReferidor.trim()
+        ? { documentoReferidor: form.documentoReferidor.trim() }
+        : {}),
     })
   }
 
@@ -198,6 +202,29 @@ function CrearUsuarioModal({ open, onClose, onSubmit, submitting, error }) {
             minLength={6}
             required
           />
+        </label>
+
+        <label className="crear-usuario__field">
+          <span className="crear-usuario__label">
+            Cédula de quien lo refirió{' '}
+            <span className="crear-usuario__optional">(opcional)</span>
+          </span>
+          <input
+            type="text"
+            className="crear-usuario__input"
+            placeholder="Documento del referidor"
+            value={form.documentoReferidor}
+            onChange={(event) => {
+              const valor = event.target.value.replace(/\s/g, '')
+              setForm((prev) => ({ ...prev, documentoReferidor: valor }))
+            }}
+            inputMode="numeric"
+            disabled={submitting}
+          />
+          <span className="crear-usuario__hint">
+            Si aplica, el referidor recibirá descuento en su próxima mensualidad
+            cuando este usuario active su primera membresía.
+          </span>
         </label>
       </form>
     </Modal>

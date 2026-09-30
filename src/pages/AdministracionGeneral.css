@@ -739,6 +739,12 @@
   color: #7dd3fc;
 }
 
+.ag-liquidacion__origenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .ag-liquidacion__estado {
   display: inline-block;
   font-size: 0.78rem;

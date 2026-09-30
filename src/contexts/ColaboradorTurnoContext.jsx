@@ -198,7 +198,14 @@ export function ColaboradorTurnoProvider({ children }) {
         // El turno ya inició; el esquema se puede recargar después.
       }
 
-      toast.success('Jornada laboral iniciada')
+      const puntualidad = turno?.puntualidad
+      if (puntualidad?.nivel === 'baja' || puntualidad?.nivel === 'media') {
+        toast.error(puntualidad.mensaje || 'Revisa tu puntualidad de llegada')
+      } else if (puntualidad?.mensaje) {
+        toast.success(puntualidad.mensaje)
+      } else {
+        toast.success('Jornada laboral iniciada')
+      }
     } catch (err) {
       toast.error(err.message || 'No se pudo iniciar la jornada')
     } finally {
@@ -266,6 +273,7 @@ export function ColaboradorTurnoProvider({ children }) {
                 estadoHorasExtra={estadoHorasExtra}
                 estadoRecargoDominical={estadoRecargoDominical}
                 estadoRecargoNocturno={estadoRecargoNocturno}
+                puntualidad={turnoActivo?.puntualidad || null}
                 onFinalizar={handleFinalizarTurno}
                 finalizando={finalizando}
               />

@@ -1,0 +1,136 @@
+.malla-asignacion-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.malla-asignacion-modal__modos {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.malla-asignacion-modal__modo {
+  flex: 1;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #a3a3a3;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.malla-asignacion-modal__modo--activo {
+  color: #fff;
+  background: rgba(249, 115, 22, 0.22);
+}
+
+.malla-asignacion-modal__ayuda {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #a3a3a3;
+}
+
+.malla-asignacion-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.malla-asignacion-modal__field select {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.9rem;
+  color: #f5f5f5;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+}
+
+.malla-asignacion-modal__turnos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.malla-asignacion-modal__turno {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  color: #e5e5e5;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.malla-asignacion-modal__turno strong {
+  font-size: 0.88rem;
+}
+
+.malla-asignacion-modal__turno span {
+  font-size: 0.78rem;
+  color: #a3a3a3;
+}
+
+.malla-asignacion-modal__turno--activo {
+  border-color: rgba(249, 115, 22, 0.7);
+  background: rgba(249, 115, 22, 0.14);
+}
+
+.malla-asignacion-modal__preview {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.malla-asignacion-modal__dias-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.malla-asignacion-modal__dias-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.malla-asignacion-modal__dia-btn {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #a3a3a3;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.malla-asignacion-modal__dia-btn--activo {
+  color: #fff;
+  border-color: rgba(249, 115, 22, 0.55);
+  background: rgba(249, 115, 22, 0.18);
+}
+
+.malla-asignacion-modal__error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #f87171;
+}

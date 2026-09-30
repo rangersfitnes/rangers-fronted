@@ -40,6 +40,50 @@
   gap: 0.75rem;
 }
 
+.malla-celda-modal__turnos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.malla-celda-modal__turnos-label {
+  font-size: 0.85rem;
+  color: #d4d4d4;
+}
+
+.malla-celda-modal__turno {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  color: #e5e5e5;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.malla-celda-modal__turno strong {
+  font-size: 0.9rem;
+}
+
+.malla-celda-modal__turno span {
+  font-size: 0.78rem;
+  color: #a3a3a3;
+}
+
+.malla-celda-modal__turno:hover {
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
+.malla-celda-modal__turno--activo {
+  border-color: rgba(249, 115, 22, 0.7);
+  background: rgba(249, 115, 22, 0.14);
+}
+
 .malla-celda-modal__error {
   margin: 0;
   font-size: 0.82rem;

@@ -4,6 +4,44 @@
   gap: 1rem;
 }
 
+.activar-plan__descuento-referido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #fdba74;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 8px;
+}
+
+.activar-plan__descuento-referido strong {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.activar-plan__descuento-referido-total {
+  color: #f5f5f5;
+  font-weight: 600;
+}
+
+.activar-plan__descuento-referido-total em {
+  font-style: normal;
+  font-weight: 500;
+  color: #a3a3a3;
+}
+
+.activar-plan__referidor {
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
 .activar-plan__user {
   margin: 0;
   font-size: 0.91rem;

@@ -28,7 +28,18 @@ function ActivarPlanModal({
   const [seleccionado, setSeleccionado] = useState(null)
   const [acompanantes, setAcompanantes] = useState([])
   const [metodoPago, setMetodoPago] = useState('')
+  const [documentoReferidor, setDocumentoReferidor] = useState('')
   const [localError, setLocalError] = useState('')
+
+  const esPrimeraActivacion =
+    !usuario?.referidoCreditoOtorgado &&
+    !usuario?.primeraActivacionEn &&
+    !(Number(usuario?.activacionesPlanCount) > 0)
+
+  const descuentoPendiente = Math.max(
+    0,
+    Math.round(Number(usuario?.descuentoReferidosPendiente) || 0),
+  )
 
   useEffect(() => {
     if (!open) {
@@ -36,9 +47,12 @@ function ActivarPlanModal({
       setLoadError('')
       setAcompanantes([])
       setMetodoPago('')
+      setDocumentoReferidor('')
       setLocalError('')
       return
     }
+
+    setDocumentoReferidor(usuario?.referidoPorDocumento || '')
 
     const controller = new AbortController()
 
@@ -67,12 +81,16 @@ function ActivarPlanModal({
     cargar()
 
     return () => controller.abort()
-  }, [open])
+  }, [open, usuario?.referidoPorDocumento])
 
   const planSeleccionado = useMemo(
     () => planes.find((p) => p.id === seleccionado) ?? null,
     [planes, seleccionado],
   )
+
+  const precioPlan = Math.max(0, Math.round(Number(planSeleccionado?.precio) || 0))
+  const descuentoAplicar = Math.min(descuentoPendiente, precioPlan)
+  const precioConDescuento = Math.max(0, precioPlan - descuentoAplicar)
 
   const cantidadPersonas = Number.isFinite(planSeleccionado?.cantidadPersonas)
     ? planSeleccionado.cantidadPersonas
@@ -143,6 +161,9 @@ function ActivarPlanModal({
       planId: seleccionado,
       acompanantes: limpios,
       metodoPago,
+      ...(esPrimeraActivacion && documentoReferidor.trim()
+        ? { documentoReferidor: documentoReferidor.trim() }
+        : {}),
     })
   }
 
@@ -357,6 +378,59 @@ function ActivarPlanModal({
               </label>
             ))}
           </div>
+        )}
+
+        {descuentoPendiente > 0 && planSeleccionado && (
+          <div className="activar-plan__descuento-referido" role="status">
+            <strong>Descuento por referidos</strong>
+            <span>
+              Crédito pendiente: {formatearPrecio(descuentoPendiente)}. En esta
+              mensualidad se aplica como máximo el valor del plan (
+              {formatearPrecio(descuentoAplicar)}).
+            </span>
+            <span className="activar-plan__descuento-referido-total">
+              Total a cobrar: {formatearPrecio(precioConDescuento)}
+              {descuentoAplicar > 0 ? (
+                <em> (antes {formatearPrecio(precioPlan)})</em>
+              ) : null}
+            </span>
+            {descuentoPendiente > precioPlan ? (
+              <span className="crear-usuario__hint">
+                El excedente no se arrastra: el descuento solo vale para esta
+                siguiente mensualidad.
+              </span>
+            ) : (
+              <span className="crear-usuario__hint">
+                Se consume completo en esta renovación; no aplica en meses
+                posteriores.
+              </span>
+            )}
+          </div>
+        )}
+
+        {esPrimeraActivacion && (
+          <label className="crear-usuario__field activar-plan__referidor">
+            <span className="crear-usuario__label">
+              Cédula de quien lo refirió{' '}
+              <span className="crear-usuario__optional">(opcional)</span>
+            </span>
+            <input
+              type="text"
+              className="crear-usuario__input"
+              placeholder="Documento del referidor"
+              value={documentoReferidor}
+              onChange={(event) => {
+                setDocumentoReferidor(event.target.value.replace(/\s/g, ''))
+                setLocalError('')
+              }}
+              inputMode="numeric"
+              disabled={submitting}
+            />
+            <span className="crear-usuario__hint">
+              Disponible al activar desde el panel admin. El referidor recibe el
+              descuento solo en su siguiente mensualidad.
+            </span>
+          </label>
         )}
 
         <p className="activar-plan__hint">

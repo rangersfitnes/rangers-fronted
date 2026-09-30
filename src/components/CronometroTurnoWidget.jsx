@@ -11,6 +11,36 @@ export function formatearTiempoLaborado(ms) {
     .join(':')
 }
 
+function etiquetaNivelPuntualidad(nivel) {
+  if (nivel === 'excelente') return 'Puntualidad excelente'
+  if (nivel === 'media') return 'Puntualidad media'
+  if (nivel === 'baja') return 'Puntualidad baja'
+  if (nivel === 'sin_malla') return 'Sin turno en malla'
+  return 'Puntualidad'
+}
+
+function renderPuntualidad(puntualidad) {
+  if (!puntualidad?.nivel) return null
+
+  const nivel = puntualidad.nivel
+  return (
+    <div
+      className={`cronometro-turno__puntualidad cronometro-turno__puntualidad--${nivel}`}
+      role="status"
+    >
+      <span className="cronometro-turno__puntualidad-nivel">
+        {etiquetaNivelPuntualidad(nivel)}
+      </span>
+      <span className="cronometro-turno__puntualidad-msg">
+        {puntualidad.mensaje ||
+          (puntualidad.horaEntradaPlanificada
+            ? `Hora de entrada: ${puntualidad.horaEntradaPlanificada}`
+            : '')}
+      </span>
+    </div>
+  )
+}
+
 function renderEstadoExtra({ horasTurno, estadoHorasExtra }) {
   if (!horasTurno) {
     return (
@@ -99,6 +129,7 @@ function CronometroTurnoWidget({
   estadoHorasExtra,
   estadoRecargoDominical,
   estadoRecargoNocturno,
+  puntualidad = null,
   onFinalizar,
   finalizando,
 }) {
@@ -109,6 +140,8 @@ function CronometroTurnoWidget({
     'cronometro-turno',
     enDominical ? 'cronometro-turno--dominical' : '',
     enNocturno ? 'cronometro-turno--nocturno' : '',
+    puntualidad?.nivel === 'baja' ? 'cronometro-turno--puntualidad-baja' : '',
+    puntualidad?.nivel === 'media' ? 'cronometro-turno--puntualidad-media' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -120,6 +153,7 @@ function CronometroTurnoWidget({
         <span className="cronometro-turno__tiempo">
           {formatearTiempoLaborado(tiempoMs)}
         </span>
+        {renderPuntualidad(puntualidad)}
         {renderEstadoExtra({ horasTurno, estadoHorasExtra })}
         {renderEstadoDominical(estadoRecargoDominical)}
         {renderEstadoNocturno(estadoRecargoNocturno)}

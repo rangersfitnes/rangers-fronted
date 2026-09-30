@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import Modal from './Modal.jsx'
-import { esHoraValida, normalizarHoraInput } from '../utils/mallasUtils.js'
+import {
+  esHoraValida,
+  normalizarHoraInput,
+  resolverTurnoEstablecido,
+  TURNOS_ESTABLECIDOS,
+} from '../utils/mallasUtils.js'
 import './MallaCeldaModal.css'
 
 const OPCIONES_ESTADO = [
   { value: 'vacio', label: 'Sin asignar' },
-  { value: 'labora', label: 'Labora (horario)' },
+  { value: 'labora', label: 'Labora (turno)' },
   { value: 'libre', label: 'Día libre' },
   { value: 'vacaciones', label: 'Vacaciones' },
   { value: 'permiso', label: 'Permiso' },
@@ -16,6 +21,11 @@ function inferirEstado(bloques = []) {
   const primero = bloques[0]
   if (primero?.tipo && primero.tipo !== 'labora') return primero.tipo
   return 'labora'
+}
+
+function inferirTurnoId(inicio, fin) {
+  const turno = resolverTurnoEstablecido(inicio, fin)
+  return turno?.id || TURNOS_ESTABLECIDOS[0].id
 }
 
 function bloquesDesdeEstado(estado, inicio, fin) {
@@ -42,13 +52,13 @@ function MallaCeldaModal({
   onGuardar,
 }) {
   const [estado, setEstado] = useState('vacio')
-  const [inicio, setInicio] = useState('06:00')
-  const [fin, setFin] = useState('14:00')
+  const [turnoId, setTurnoId] = useState(TURNOS_ESTABLECIDOS[0].id)
   const [error, setError] = useState('')
 
-  const inicioRef = useRef(null)
-  const finRef = useRef(null)
   const celdaActivaRef = useRef('')
+
+  const turnoSeleccionado =
+    TURNOS_ESTABLECIDOS.find((t) => t.id === turnoId) || TURNOS_ESTABLECIDOS[0]
 
   useEffect(() => {
     if (!open) {
@@ -64,47 +74,30 @@ function MallaCeldaModal({
     setEstado(detectado)
 
     if (detectado === 'labora' && bloquesIniciales[0]) {
-      setInicio(
-        normalizarHoraInput(bloquesIniciales[0].inicio) || '06:00',
+      setTurnoId(
+        inferirTurnoId(bloquesIniciales[0].inicio, bloquesIniciales[0].fin),
       )
-      setFin(normalizarHoraInput(bloquesIniciales[0].fin) || '14:00')
     } else {
-      setInicio('06:00')
-      setFin('14:00')
+      setTurnoId(TURNOS_ESTABLECIDOS[0].id)
     }
 
     setError('')
   }, [open, celdaId, bloquesIniciales])
 
-  const actualizarHora = (campo, valor) => {
-    const normalizada = normalizarHoraInput(valor) || valor
-    if (campo === 'inicio') setInicio(normalizada)
-    if (campo === 'fin') setFin(normalizada)
-    setError('')
-  }
-
   const handleGuardar = () => {
-    const inicioRaw = inicioRef.current?.value || inicio
-    const finRaw = finRef.current?.value || fin
-    const inicioNorm = normalizarHoraInput(inicioRaw)
-    const finNorm = normalizarHoraInput(finRaw)
-
     if (estado === 'labora') {
+      const inicioNorm = normalizarHoraInput(turnoSeleccionado.inicio)
+      const finNorm = normalizarHoraInput(turnoSeleccionado.fin)
       if (!esHoraValida(inicioNorm) || !esHoraValida(finNorm)) {
-        setError('Selecciona una hora de entrada y salida válidas')
+        setError('Selecciona un turno válido')
         return
       }
-
-      const [hi, mi] = inicioNorm.split(':').map(Number)
-      const [hf, mf] = finNorm.split(':').map(Number)
-      const minutos = hf * 60 + mf - (hi * 60 + mi)
-      if (minutos <= 0) {
-        setError('La hora de salida debe ser posterior a la de entrada')
-        return
-      }
+      onGuardar?.(bloquesDesdeEstado(estado, inicioNorm, finNorm))
+      onClose?.()
+      return
     }
 
-    onGuardar?.(bloquesDesdeEstado(estado, inicioNorm, finNorm))
+    onGuardar?.(bloquesDesdeEstado(estado, '', ''))
     onClose?.()
   }
 
@@ -152,29 +145,27 @@ function MallaCeldaModal({
         </label>
 
         {estado === 'labora' && (
-          <div className="malla-celda-modal__horas">
-            <label className="malla-celda-modal__field">
-              <span>Entrada</span>
-              <input
-                ref={inicioRef}
-                type="time"
-                step="60"
-                value={inicio}
-                onChange={(e) => actualizarHora('inicio', e.target.value)}
-                onInput={(e) => actualizarHora('inicio', e.target.value)}
-              />
-            </label>
-            <label className="malla-celda-modal__field">
-              <span>Salida</span>
-              <input
-                ref={finRef}
-                type="time"
-                step="60"
-                value={fin}
-                onChange={(e) => actualizarHora('fin', e.target.value)}
-                onInput={(e) => actualizarHora('fin', e.target.value)}
-              />
-            </label>
+          <div className="malla-celda-modal__turnos" role="group" aria-label="Turno">
+            <span className="malla-celda-modal__turnos-label">Turno establecido</span>
+            {TURNOS_ESTABLECIDOS.map((turno) => {
+              const activo = turno.id === turnoId
+              return (
+                <button
+                  key={turno.id}
+                  type="button"
+                  className={`malla-celda-modal__turno${activo ? ' malla-celda-modal__turno--activo' : ''}`}
+                  onClick={() => {
+                    setTurnoId(turno.id)
+                    setError('')
+                  }}
+                >
+                  <strong>{turno.etiqueta}</strong>
+                  <span>
+                    {turno.inicio} – {turno.fin}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         )}
 

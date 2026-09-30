@@ -153,6 +153,7 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
     planId,
     acompanantes = [],
     metodoPago,
+    documentoReferidor,
   }) => {
     if (!usuario) return
     setErrorPlan('')
@@ -164,13 +165,23 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
         planId,
         acompanantes,
         metodoPago,
+        undefined,
+        { documentoReferidor },
       )
       const totalAtletas = 1 + (res?.acompanantes?.length ?? 0)
-      toast.success(
+      let mensaje =
         totalAtletas > 1
           ? `Plan activado para ${totalAtletas} atletas (titular: ${usuario.nombre})`
-          : `Plan activado para "${usuario.nombre}"`,
-      )
+          : `Plan activado para "${usuario.nombre}"`
+
+      if (res?.descuentoReferidos?.descuentoAplicado > 0) {
+        mensaje += ` · Descuento referidos aplicado`
+      }
+      if (res?.referidoCredito?.monto > 0) {
+        mensaje += ` · Crédito otorgado a ${res.referidoCredito.referidorNombre || res.referidoCredito.referidorDocumento}`
+      }
+
+      toast.success(mensaje)
       setActivarPlanOpen(false)
       await recargarUsuario()
       if (usuario.uid) await cargarHistoriales(usuario.uid)

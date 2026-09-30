@@ -3,6 +3,7 @@ import ConfirmModal from './ConfirmModal.jsx'
 import Modal from './Modal.jsx'
 import { etiquetaMetodoPagoColaborador } from '../constants/metodosPagoColaborador.js'
 import { obtenerPreviewColaborador } from '../services/liquidacionNominaService.js'
+import { obtenerLiquidezHistorica } from '../services/reportesFinancierosService.js'
 import { eliminarTurnoLaboral } from '../services/turnosService.js'
 import {
   formatearFechaTabla,
@@ -10,6 +11,12 @@ import {
   formatearPrecioCuenta,
 } from '../pages/cuenta/cuentaUtils.js'
 import './LiquidarColaboradorModal.css'
+
+const ALMACENAMIENTOS = [
+  { id: 'efectivo', label: 'Efectivo' },
+  { id: 'transferencia', label: 'Transferencia' },
+  { id: 'wompi', label: 'Wompi' },
+]
 
 function formatearHoras(valor) {
   const n = Number(valor) || 0
@@ -23,6 +30,39 @@ function parseMontoCargo(valor) {
     .replace(/,/g, '.')
   const numero = Number(limpio)
   return Number.isFinite(numero) ? numero : NaN
+}
+
+function metodoAlmacenamientoDesdeColaborador(metodoPago) {
+  const metodo = String(metodoPago || '')
+    .trim()
+    .toLowerCase()
+  if (metodo === 'efectivo') return 'efectivo'
+  if (metodo === 'wompi') return 'wompi'
+  if (
+    metodo === 'transferencia' ||
+    metodo === 'nequi' ||
+    metodo === 'daviplata' ||
+    metodo === 'bancolombia' ||
+    metodo === 'nubank'
+  ) {
+    return 'transferencia'
+  }
+  return 'efectivo'
+}
+
+function montosVacios() {
+  return { efectivo: '', transferencia: '', wompi: '' }
+}
+
+function prellenarMontos(total, metodoPreferido) {
+  const base = montosVacios()
+  const preferido = ALMACENAMIENTOS.some((a) => a.id === metodoPreferido)
+    ? metodoPreferido
+    : 'efectivo'
+  if (total > 0) {
+    base[preferido] = String(total)
+  }
+  return base
 }
 
 function LiquidarColaboradorModal({
@@ -46,6 +86,10 @@ function LiquidarColaboradorModal({
     'Cargo adicional',
   )
   const [cargoError, setCargoError] = useState('')
+  const [montosOrigen, setMontosOrigen] = useState(montosVacios)
+  const [saldosDisponibles, setSaldosDisponibles] = useState(null)
+  const [cargandoSaldos, setCargandoSaldos] = useState(false)
+  const [origenError, setOrigenError] = useState('')
 
   const cargarPreview = useCallback(async () => {
     if (!colaborador?.uid) return
@@ -76,6 +120,9 @@ function LiquidarColaboradorModal({
       setCargoAdicional(0)
       setCargoAdicionalConcepto('Cargo adicional')
       setCargoError('')
+      setMontosOrigen(montosVacios())
+      setSaldosDisponibles(null)
+      setOrigenError('')
       return
     }
 
@@ -87,10 +134,21 @@ function LiquidarColaboradorModal({
     setCargoAdicional(0)
     setCargoAdicionalConcepto('Cargo adicional')
     setCargoError('')
+    setPresupuestoExterno(false)
+    setOrigenError('')
+    setMontosOrigen(montosVacios())
 
     obtenerPreviewColaborador({ colaboradorUid: colaborador.uid })
       .then((data) => {
-        if (!cancelado) setPreview(data)
+        if (cancelado) return
+        setPreview(data)
+        const total = Math.round(Number(data?.resumen?.pagoTotal) || 0)
+        setMontosOrigen(
+          prellenarMontos(
+            total,
+            metodoAlmacenamientoDesdeColaborador(data?.metodoPago),
+          ),
+        )
       })
       .catch((err) => {
         if (!cancelado) {
@@ -102,10 +160,73 @@ function LiquidarColaboradorModal({
         if (!cancelado) setLoading(false)
       })
 
+    setCargandoSaldos(true)
+    obtenerLiquidezHistorica()
+      .then((liquidez) => {
+        if (cancelado) return
+        setSaldosDisponibles({
+          efectivo: Math.round(Number(liquidez?.efectivo?.disponible) || 0),
+          transferencia: Math.round(
+            Number(liquidez?.transferencia?.disponible) || 0,
+          ),
+          wompi: Math.round(Number(liquidez?.wompi?.disponible) || 0),
+        })
+      })
+      .catch(() => {
+        if (!cancelado) setSaldosDisponibles(null)
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoSaldos(false)
+      })
+
     return () => {
       cancelado = true
     }
   }, [open, colaborador?.uid])
+
+  const resumen = preview?.resumen ?? {}
+  const turnos = preview?.turnos ?? []
+  const totalAPagar = useMemo(() => {
+    const base = Math.round(Number(resumen.pagoTotal) || 0)
+    return base + Math.round(Number(cargoAdicional) || 0)
+  }, [resumen.pagoTotal, cargoAdicional])
+
+  useEffect(() => {
+    if (!open || !preview || presupuestoExterno) return
+    setMontosOrigen((prev) => {
+      const sumaActual = ALMACENAMIENTOS.reduce(
+        (acc, item) => acc + (Math.round(parseMontoCargo(prev[item.id])) || 0),
+        0,
+      )
+      const conValor = ALMACENAMIENTOS.filter(
+        (item) => (Math.round(parseMontoCargo(prev[item.id])) || 0) > 0,
+      )
+      if (conValor.length === 1 && sumaActual !== totalAPagar) {
+        return prellenarMontos(totalAPagar, conValor[0].id)
+      }
+      if (sumaActual === 0 && totalAPagar > 0) {
+        return prellenarMontos(
+          totalAPagar,
+          metodoAlmacenamientoDesdeColaborador(preview.metodoPago),
+        )
+      }
+      return prev
+    })
+  }, [open, preview, totalAPagar, presupuestoExterno])
+
+  const origenesCalculados = useMemo(() => {
+    return ALMACENAMIENTOS.map((item) => ({
+      metodo: item.id,
+      monto: Math.round(parseMontoCargo(montosOrigen[item.id])) || 0,
+    })).filter((item) => item.monto > 0)
+  }, [montosOrigen])
+
+  const sumaOrigenes = useMemo(
+    () => origenesCalculados.reduce((acc, item) => acc + item.monto, 0),
+    [origenesCalculados],
+  )
+
+  const faltanteOrigenes = totalAPagar - sumaOrigenes
 
   const handleAgregarCargo = () => {
     const monto = Math.round(parseMontoCargo(cargoValorInput))
@@ -151,17 +272,65 @@ function LiquidarColaboradorModal({
     }
   }
 
-  const resumen = preview?.resumen ?? {}
-  const turnos = preview?.turnos ?? []
-  const totalAPagar = useMemo(() => {
-    const base = Math.round(Number(resumen.pagoTotal) || 0)
-    return base + Math.round(Number(cargoAdicional) || 0)
-  }, [resumen.pagoTotal, cargoAdicional])
+  const handleCompletarRestante = (metodoId) => {
+    const otros = ALMACENAMIENTOS.filter((item) => item.id !== metodoId).reduce(
+      (acc, item) =>
+        acc + (Math.round(parseMontoCargo(montosOrigen[item.id])) || 0),
+      0,
+    )
+    const restante = Math.max(0, totalAPagar - otros)
+    setMontosOrigen((prev) => ({
+      ...prev,
+      [metodoId]: restante > 0 ? String(restante) : '',
+    }))
+    setOrigenError('')
+  }
+
+  const handleLiquidarClick = () => {
+    setOrigenError('')
+
+    if (!presupuestoExterno) {
+      if (sumaOrigenes !== totalAPagar) {
+        setOrigenError(
+          `La suma de los presupuestos (${formatearPrecioCuenta(sumaOrigenes)}) debe ser igual al total (${formatearPrecioCuenta(totalAPagar)})`,
+        )
+        return
+      }
+      if (origenesCalculados.length === 0) {
+        setOrigenError('Indica al menos un almacenamiento con monto')
+        return
+      }
+
+      if (saldosDisponibles) {
+        for (const origen of origenesCalculados) {
+          const disponible = saldosDisponibles[origen.metodo] ?? 0
+          if (origen.monto > disponible) {
+            const label =
+              ALMACENAMIENTOS.find((a) => a.id === origen.metodo)?.label ||
+              origen.metodo
+            setOrigenError(
+              `No hay suficiente disponible en ${label}: pide ${formatearPrecioCuenta(origen.monto)} y hay ${formatearPrecioCuenta(disponible)}`,
+            )
+            return
+          }
+        }
+      }
+    }
+
+    onLiquidar?.(colaborador, {
+      presupuestoExterno,
+      cargoAdicional,
+      cargoAdicionalConcepto,
+      origenesPresupuesto: presupuestoExterno ? [] : origenesCalculados,
+    })
+  }
+
   const ocupado = loading || liquidando || eliminando
   const puedeLiquidar =
     turnos.length > 0 &&
     Boolean(preview?.metodoPago) &&
-    !ocupado
+    !ocupado &&
+    (presupuestoExterno || sumaOrigenes === totalAPagar)
 
   const footer = (
     <>
@@ -176,13 +345,7 @@ function LiquidarColaboradorModal({
       <button
         type="button"
         className="modal__btn modal__btn--primary"
-        onClick={() =>
-          onLiquidar?.(colaborador, {
-            presupuestoExterno,
-            cargoAdicional,
-            cargoAdicionalConcepto,
-          })
-        }
+        onClick={handleLiquidarClick}
         disabled={!puedeLiquidar}
       >
         {liquidando ? 'Liquidando…' : 'Liquidar'}
@@ -221,7 +384,7 @@ function LiquidarColaboradorModal({
                     <dd>{preview.colaboradorDocumento || '—'}</dd>
                   </div>
                   <div>
-                    <dt>Método</dt>
+                    <dt>Método al colaborador</dt>
                     <dd>
                       {preview.metodoPago
                         ? etiquetaMetodoPagoColaborador(preview.metodoPago)
@@ -251,7 +414,10 @@ function LiquidarColaboradorModal({
                   <input
                     type="checkbox"
                     checked={presupuestoExterno}
-                    onChange={(e) => setPresupuestoExterno(e.target.checked)}
+                    onChange={(e) => {
+                      setPresupuestoExterno(e.target.checked)
+                      setOrigenError('')
+                    }}
                     disabled={ocupado}
                   />
                   <span>
@@ -263,6 +429,91 @@ function LiquidarColaboradorModal({
                   </span>
                 </label>
               </section>
+
+              {!presupuestoExterno ? (
+                <section className="liquidar-colaborador__origenes">
+                  <h3>Desde qué presupuesto sale</h3>
+                  <p>
+                    Reparte el total entre efectivo, transferencia y/o Wompi. Se
+                    descuenta el disponible de cada almacenamiento.
+                    {cargandoSaldos ? ' Cargando saldos…' : ''}
+                  </p>
+                  <div className="liquidar-colaborador__origenes-grid">
+                    {ALMACENAMIENTOS.map((item) => {
+                      const disponible = saldosDisponibles?.[item.id]
+                      const monto =
+                        Math.round(parseMontoCargo(montosOrigen[item.id])) || 0
+                      const excede =
+                        disponible != null && monto > disponible && monto > 0
+                      return (
+                        <label
+                          key={item.id}
+                          className={`liquidar-colaborador__origen-field${
+                            excede
+                              ? ' liquidar-colaborador__origen-field--alerta'
+                              : ''
+                          }`}
+                        >
+                          <span className="liquidar-colaborador__origen-label">
+                            {item.label}
+                            {disponible != null ? (
+                              <small>
+                                Disp. {formatearPrecioCuenta(disponible)}
+                              </small>
+                            ) : null}
+                          </span>
+                          <div className="liquidar-colaborador__origen-input-row">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={montosOrigen[item.id]}
+                              onChange={(e) => {
+                                setMontosOrigen((prev) => ({
+                                  ...prev,
+                                  [item.id]: e.target.value.replace(
+                                    /[^\d.,]/g,
+                                    '',
+                                  ),
+                                }))
+                                setOrigenError('')
+                              }}
+                              placeholder="0"
+                              disabled={ocupado}
+                            />
+                            <button
+                              type="button"
+                              className="liquidar-colaborador__btn-restante"
+                              onClick={() => handleCompletarRestante(item.id)}
+                              disabled={ocupado || totalAPagar <= 0}
+                              title="Completar con el restante del total"
+                            >
+                              Restante
+                            </button>
+                          </div>
+                        </label>
+                      )
+                    })}
+                  </div>
+                  <div className="liquidar-colaborador__origenes-resumen">
+                    <span>
+                      Asignado:{' '}
+                      <strong>{formatearPrecioCuenta(sumaOrigenes)}</strong>
+                    </span>
+                    <span>
+                      {faltanteOrigenes === 0
+                        ? 'Cuadra con el total'
+                        : faltanteOrigenes > 0
+                          ? `Faltan ${formatearPrecioCuenta(faltanteOrigenes)}`
+                          : `Sobran ${formatearPrecioCuenta(Math.abs(faltanteOrigenes))}`}
+                    </span>
+                  </div>
+                  {origenError ? (
+                    <p className="liquidar-colaborador__error" role="alert">
+                      {origenError}
+                    </p>
+                  ) : null}
+                </section>
+              ) : null}
 
               <section className="liquidar-colaborador__desglose">
                 <h3>Desglose</h3>

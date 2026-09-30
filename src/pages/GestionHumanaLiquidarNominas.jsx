@@ -110,6 +110,7 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
         presupuestoExterno: Boolean(opciones.presupuestoExterno),
         cargoAdicional: Number(opciones.cargoAdicional) || 0,
         cargoAdicionalConcepto: opciones.cargoAdicionalConcepto,
+        origenesPresupuesto: opciones.origenesPresupuesto,
       })
       toast.success(
         opciones.presupuestoExterno
@@ -386,6 +387,23 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
                       {item.presupuestoExterno ? (
                         <span className="ag-liquidacion__badge ag-liquidacion__badge--externo">
                           Presupuesto externo
+                        </span>
+                      ) : Array.isArray(item.origenesPresupuesto) &&
+                        item.origenesPresupuesto.length > 0 ? (
+                        <span className="ag-liquidacion__origenes">
+                          {item.origenesPresupuesto.map((origen) => (
+                            <span
+                              key={`${item.id}-${origen.metodo}`}
+                              className="ag-liquidacion__badge"
+                            >
+                              {origen.metodo === 'efectivo'
+                                ? 'Efectivo'
+                                : origen.metodo === 'wompi'
+                                  ? 'Wompi'
+                                  : 'Transferencia'}{' '}
+                              {formatearPrecioCuenta(origen.monto)}
+                            </span>
+                          ))}
                         </span>
                       ) : (
                         <span className="ag-liquidacion__badge">Caja del box</span>

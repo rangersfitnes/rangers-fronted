@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ConfirmModal from '../components/ConfirmModal.jsx'
+import ConfigReferidosModal from '../components/ConfigReferidosModal.jsx'
 import CrearUsuarioModal from '../components/CrearUsuarioModal.jsx'
 import EditarUsuarioModal from '../components/EditarUsuarioModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
@@ -111,6 +112,7 @@ function parametrosBusquedaUsuarios(busqueda) {
 function VistaUsuariosAdmin() {
   const toast = useToast()
   const [crearOpen, setCrearOpen] = useState(false)
+  const [referidosOpen, setReferidosOpen] = useState(false)
   const [editarUsuario, setEditarUsuario] = useState(null)
   const [eliminarTarget, setEliminarTarget] = useState(null)
   const [usuarioGestion, setUsuarioGestion] = useState(null)
@@ -588,6 +590,14 @@ function VistaUsuariosAdmin() {
           <button
             type="button"
             className="pf-action-btn pf-action-btn--ghost"
+            onClick={() => setReferidosOpen(true)}
+            disabled={loading || exportandoReporte}
+          >
+            Referidos
+          </button>
+          <button
+            type="button"
+            className="pf-action-btn pf-action-btn--ghost"
             onClick={() => handleExportarReporte('pdf')}
             disabled={loading || exportandoReporte}
           >
@@ -900,6 +910,11 @@ function VistaUsuariosAdmin() {
         onSubmit={handleCrearUsuario}
         submitting={submitting}
         error={error}
+      />
+
+      <ConfigReferidosModal
+        open={referidosOpen}
+        onClose={() => setReferidosOpen(false)}
       />
 
       <EditarUsuarioModal

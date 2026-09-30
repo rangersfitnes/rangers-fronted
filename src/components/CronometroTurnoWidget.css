@@ -42,6 +42,75 @@
   color: #a3a3a3;
 }
 
+.cronometro-turno__puntualidad {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0.15rem 0 0.1rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cronometro-turno__puntualidad-nivel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cronometro-turno__puntualidad-msg {
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #d4d4d4;
+}
+
+.cronometro-turno__puntualidad--excelente {
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.cronometro-turno__puntualidad--excelente .cronometro-turno__puntualidad-nivel {
+  color: #4ade80;
+}
+
+.cronometro-turno__puntualidad--media {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.cronometro-turno__puntualidad--media .cronometro-turno__puntualidad-nivel {
+  color: #fbbf24;
+}
+
+.cronometro-turno__puntualidad--baja {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.cronometro-turno__puntualidad--baja .cronometro-turno__puntualidad-nivel {
+  color: #f87171;
+}
+
+.cronometro-turno__puntualidad--sin_malla {
+  border-color: rgba(163, 163, 163, 0.35);
+  background: rgba(163, 163, 163, 0.08);
+}
+
+.cronometro-turno__puntualidad--sin_malla .cronometro-turno__puntualidad-nivel {
+  color: #a3a3a3;
+}
+
+.cronometro-turno--puntualidad-baja {
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.cronometro-turno--puntualidad-media {
+  border-color: rgba(251, 191, 36, 0.45);
+}
+
 .cronometro-turno__extra {
   font-size: 0.72rem;
   font-weight: 600;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import ConfirmModal from '../components/ConfirmModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
+import MallaAsignacionRapidaModal from '../components/MallaAsignacionRapidaModal.jsx'
 import MallaCeldaModal from '../components/MallaCeldaModal.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { obtenerColaboradores } from '../services/colaboradoresService.js'
@@ -12,8 +13,10 @@ import {
 import {
   aplicarPlantillasSemana,
   copiarSemanaAnteriorMallas,
+  duplicarMallaASemanaSiguiente,
   guardarMallasSemana,
   guardarPlantillasSede,
+  obtenerLlegadasSemana,
   obtenerMallasSemana,
   obtenerPlantillasSede,
 } from '../services/mallasService.js'
@@ -33,12 +36,32 @@ import {
   restarDiasFecha,
   sumarDiasFecha,
   textoBloqueCelda,
+  TURNOS_ESTABLECIDOS,
 } from '../utils/mallasUtils.js'
 import './AdministracionGeneral.css'
 import './GestionHumanaMallas.css'
 
 function etiquetaSede(sedeId) {
   return SEDES.find((sede) => sede.id === sedeId)?.nombre ?? sedeId ?? '—'
+}
+
+function etiquetaNivelLlegada(nivel) {
+  if (nivel === 'excelente') return 'Excelente'
+  if (nivel === 'media') return 'Media'
+  if (nivel === 'baja') return 'Baja'
+  if (nivel === 'sin_malla') return 'Sin malla'
+  return '—'
+}
+
+function formatearFechaLlegada(fecha) {
+  if (!fecha) return '—'
+  const [y, m, d] = String(fecha).split('-').map(Number)
+  if (!y || !m || !d) return fecha
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString('es-CO', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
 }
 
 function GestionHumanaMallas({ onVolver }) {
@@ -55,6 +78,7 @@ function GestionHumanaMallas({ onVolver }) {
     useState(0)
   const [numeroColaboradoresInput, setNumeroColaboradoresInput] = useState('0')
   const [plantillaSlots, setPlantillaSlots] = useState([])
+  const [llegadas, setLlegadas] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [copiando, setCopiando] = useState(false)
@@ -63,7 +87,10 @@ function GestionHumanaMallas({ onVolver }) {
   const [dirtyPlantilla, setDirtyPlantilla] = useState(false)
   const [celdaEditando, setCeldaEditando] = useState(null)
   const [confirmCopiar, setConfirmCopiar] = useState(false)
+  const [confirmDuplicarSiguiente, setConfirmDuplicarSiguiente] = useState(null)
+  const [asignacionRapidaOpen, setAsignacionRapidaOpen] = useState(false)
   const [confirmAplicarPlantillas, setConfirmAplicarPlantillas] = useState(null)
+  const [duplicandoSiguiente, setDuplicandoSiguiente] = useState(false)
 
   const esVistaSemana = vista === 'semana'
   const edicion = esVistaSemana ? edicionSemana : edicionPlantilla
@@ -96,8 +123,14 @@ function GestionHumanaMallas({ onVolver }) {
   )
 
   const cargarSemana = useCallback(async () => {
-    const mallasData = await obtenerMallasSemana({ sede, semanaInicio })
+    const [mallasData, llegadasData] = await Promise.all([
+      obtenerMallasSemana({ sede, semanaInicio }),
+      obtenerLlegadasSemana({ sede, semanaInicio }).catch(() => ({
+        llegadas: [],
+      })),
+    ])
     setEdicionSemana(construirEstadoEdicionDesdeMallas(mallasData.mallas))
+    setLlegadas(llegadasData.llegadas ?? [])
     setDirtySemana(false)
     return mallasData
   }, [sede, semanaInicio])
@@ -147,6 +180,7 @@ function GestionHumanaMallas({ onVolver }) {
       setColaboradores([])
       setEdicionSemana({})
       setEdicionPlantilla({})
+      setLlegadas([])
       setNumeroColaboradoresPlantilla(0)
       setNumeroColaboradoresInput('0')
       setPlantillaSlots([])
@@ -302,6 +336,52 @@ function GestionHumanaMallas({ onVolver }) {
     }
   }
 
+  const handleAplicarAsignacionRapida = ({ cambios }) => {
+    if (!cambios || typeof cambios !== 'object') return
+
+    setEdicionSemana((prev) => {
+      const siguiente = { ...prev }
+      for (const [uid, bloques] of Object.entries(cambios)) {
+        siguiente[uid] = normalizarBloquesEdicion(bloques)
+      }
+      return siguiente
+    })
+    setDirtySemana(true)
+    toast.success(
+      'Turnos aplicados a la semana actual. Revisa y guarda la malla.',
+    )
+  }
+
+  const handleDuplicarSemanaSiguiente = async (invertirTurnos) => {
+    setConfirmDuplicarSiguiente(null)
+
+    if (dirtySemana) {
+      toast.error('Guarda la malla actual antes de duplicarla a la semana siguiente')
+      return
+    }
+
+    setDuplicandoSiguiente(true)
+    try {
+      const resultado = await duplicarMallaASemanaSiguiente({
+        sede,
+        semanaInicio,
+        invertirTurnos,
+      })
+      setSemanaInicio(resultado.semanaInicio)
+      setEdicionSemana(construirEstadoEdicionDesdeMallas(resultado.mallas))
+      setDirtySemana(false)
+      toast.success(
+        invertirTurnos
+          ? `Semana siguiente duplicada con turnos intercalados (${resultado.copiadas} colaborador(es))`
+          : `Semana siguiente duplicada (${resultado.copiadas} colaborador(es))`,
+      )
+    } catch (err) {
+      toast.error(err.message || 'No se pudo duplicar a la semana siguiente')
+    } finally {
+      setDuplicandoSiguiente(false)
+    }
+  }
+
   const handleCopiarSemanaAnterior = async () => {
     setConfirmCopiar(false)
     setCopiando(true)
@@ -361,7 +441,12 @@ function GestionHumanaMallas({ onVolver }) {
     })
   }
 
-  const ocupado = loading || saving || copiando || aplicandoPlantillas
+  const ocupado =
+    loading ||
+    saving ||
+    copiando ||
+    aplicandoPlantillas ||
+    duplicandoSiguiente
 
   return (
     <section className="ag-page__view">
@@ -378,7 +463,7 @@ function GestionHumanaMallas({ onVolver }) {
             <h1 className="ag-page__title">Mallas</h1>
             <p className="ag-page__subtitle">
               {esVistaSemana
-                ? 'Planificación semanal por sede'
+                ? 'Turnos fijos (5:00–12:00 y 14:00–21:00) asignados por semana'
                 : 'Horario recurrente de referencia'}
             </p>
           </div>
@@ -386,6 +471,30 @@ function GestionHumanaMallas({ onVolver }) {
         <div className="ag-mallas__acciones-header">
           {esVistaSemana && (
             <>
+              <button
+                type="button"
+                className="ag-action-btn ag-action-btn--ghost"
+                disabled={ocupado || colaboradoresSede.length === 0}
+                onClick={() => setAsignacionRapidaOpen(true)}
+              >
+                Asignar turnos
+              </button>
+              <button
+                type="button"
+                className="ag-action-btn ag-action-btn--ghost"
+                disabled={ocupado}
+                onClick={() => setConfirmDuplicarSiguiente('igual')}
+              >
+                Duplicar a semana siguiente
+              </button>
+              <button
+                type="button"
+                className="ag-action-btn ag-action-btn--ghost"
+                disabled={ocupado}
+                onClick={() => setConfirmDuplicarSiguiente('invertir')}
+              >
+                Duplicar e intercalar
+              </button>
               <button
                 type="button"
                 className="ag-action-btn ag-action-btn--ghost"
@@ -673,6 +782,77 @@ function GestionHumanaMallas({ onVolver }) {
         )}
       </div>
 
+      {esVistaSemana && (
+        <section className="ag-mallas__llegadas ag-panel" aria-label="Registros de llegada">
+          <div className="ag-mallas__llegadas-header">
+            <div>
+              <h2 className="ag-mallas__llegadas-title">Registros de llegada</h2>
+              <p className="ag-mallas__llegadas-sub">
+                Inicios de jornada de la semana · turnos{' '}
+                {TURNOS_ESTABLECIDOS.map((t) => `${t.inicio}–${t.fin}`).join(' / ')}
+              </p>
+            </div>
+          </div>
+
+          {llegadas.length === 0 && !loading ? (
+            <p className="ag-panel__empty">
+              Aún no hay llegadas registradas en esta semana.
+            </p>
+          ) : (
+            <div className="ag-finanzas__tabla-wrap">
+              <table className="ag-finanzas__tabla ag-mallas__llegadas-tabla">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Colaborador</th>
+                    <th>Hora llegada</th>
+                    <th>Entrada planificada</th>
+                    <th>Puntualidad</th>
+                    <th>Detalle</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {llegadas.map((item) => {
+                    const nivel = item.puntualidad?.nivel || 'sin_malla'
+                    return (
+                      <tr key={item.id}>
+                        <td>{formatearFechaLlegada(item.fecha)}</td>
+                        <td>
+                          <strong>{item.colaboradorNombre || '—'}</strong>
+                        </td>
+                        <td className="ag-mallas__llegadas-hora">
+                          {item.horaRegistro || '—'}
+                        </td>
+                        <td>
+                          {item.puntualidad?.horaEntradaPlanificada || '—'}
+                        </td>
+                        <td>
+                          <span
+                            className={`ag-mallas__puntualidad ag-mallas__puntualidad--${nivel}`}
+                          >
+                            {etiquetaNivelLlegada(nivel)}
+                          </span>
+                        </td>
+                        <td className="ag-mallas__llegadas-msg">
+                          {item.puntualidad?.mensaje || '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      <MallaAsignacionRapidaModal
+        open={asignacionRapidaOpen}
+        colaboradores={colaboradoresSede}
+        onClose={() => setAsignacionRapidaOpen(false)}
+        onAplicar={handleAplicarAsignacionRapida}
+      />
+
       <MallaCeldaModal
         open={Boolean(celdaEditando)}
         celdaId={
@@ -697,6 +877,24 @@ function GestionHumanaMallas({ onVolver }) {
         confirmLabel="Copiar"
         onConfirm={handleCopiarSemanaAnterior}
         onClose={() => setConfirmCopiar(false)}
+      />
+
+      <ConfirmModal
+        open={confirmDuplicarSiguiente === 'igual'}
+        title="Duplicar a semana siguiente"
+        message={`Se copiará la malla guardada de ${formatearEtiquetaSemana(semanaInicio)} a la semana siguiente (mismos turnos mañana/tarde). Guarda cambios pendientes antes de continuar.`}
+        confirmLabel="Duplicar"
+        onConfirm={() => handleDuplicarSemanaSiguiente(false)}
+        onClose={() => setConfirmDuplicarSiguiente(null)}
+      />
+
+      <ConfirmModal
+        open={confirmDuplicarSiguiente === 'invertir'}
+        title="Duplicar e intercalar"
+        message={`Se copiará la malla a la semana siguiente intercambiando mañana ↔ tarde. Ideal para rotar una pareja: quien entró de mañana pasa a tarde y viceversa.`}
+        confirmLabel="Duplicar e intercalar"
+        onConfirm={() => handleDuplicarSemanaSiguiente(true)}
+        onClose={() => setConfirmDuplicarSiguiente(null)}
       />
 
       <ConfirmModal

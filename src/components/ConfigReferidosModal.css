@@ -1,0 +1,117 @@
+.config-referidos-modal__form {
+  gap: 1rem;
+}
+
+.config-referidos-modal__ayuda {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #a3a3a3;
+}
+
+.config-referidos-modal__hint {
+  font-size: 0.78rem;
+  color: #737373;
+}
+
+.config-referidos-modal__ok {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  border-radius: 8px;
+}
+
+.config-referidos-modal__check {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+  color: #e5e5e5;
+  cursor: pointer;
+}
+
+.config-referidos-modal__check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #f97316;
+}
+
+.config-referidos-modal__lista {
+  margin-top: 1.35rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.config-referidos-modal__lista-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f5f5f5;
+}
+
+.config-referidos-modal__lista-title--sub {
+  margin-top: 1.1rem;
+}
+
+.config-referidos-modal__lista-empty {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #a3a3a3;
+}
+
+.config-referidos-modal__tabla-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.config-referidos-modal__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.config-referidos-modal__tabla th,
+.config-referidos-modal__tabla td {
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.config-referidos-modal__tabla th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.config-referidos-modal__tabla td {
+  color: #e5e5e5;
+}
+
+.config-referidos-modal__tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.config-referidos-modal__celda-sec,
+.config-referidos-modal__celda-fecha {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #a3a3a3;
+  font-weight: 400;
+}
+
+.modal.config-referidos-modal .modal__dialog {
+  max-width: min(720px, 100%);
+  width: 100%;
+}

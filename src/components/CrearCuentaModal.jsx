@@ -23,6 +23,7 @@ const estadoInicial = {
   fechaNacimiento: '',
   password: '',
   confirmar: '',
+  documentoReferidor: '',
 }
 
 function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
@@ -88,6 +89,9 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
       fechaNacimiento: form.fechaNacimiento,
       password: form.password,
       autorizacionDatos: true,
+      ...(form.documentoReferidor.trim()
+        ? { documentoReferidor: form.documentoReferidor.trim() }
+        : {}),
     })
   }
 
@@ -241,6 +245,25 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
               disabled={submitting}
               minLength={6}
               required
+            />
+          </label>
+
+          <label className="crear-usuario__field">
+            <span className="crear-usuario__label">
+              Cédula de quien te refirió{' '}
+              <span className="crear-usuario__optional">(opcional)</span>
+            </span>
+            <input
+              type="text"
+              className="crear-usuario__input"
+              placeholder="Documento del referidor"
+              value={form.documentoReferidor}
+              onChange={(event) => {
+                const valor = event.target.value.replace(/\s/g, '')
+                setForm((prev) => ({ ...prev, documentoReferidor: valor }))
+              }}
+              inputMode="numeric"
+              disabled={submitting}
             />
           </label>
 

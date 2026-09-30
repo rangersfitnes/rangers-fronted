@@ -71,6 +71,118 @@
   color: #93c5fd;
 }
 
+.liquidar-colaborador__origenes {
+  margin-bottom: 1.1rem;
+  padding: 0.9rem 0.95rem;
+  border: 1px solid rgba(249, 115, 22, 0.28);
+  border-radius: 10px;
+  background: rgba(67, 20, 7, 0.22);
+}
+
+.liquidar-colaborador__origenes h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.liquidar-colaborador__origenes > p {
+  margin: 0 0 0.8rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #a3a3a3;
+}
+
+.liquidar-colaborador__origenes-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.liquidar-colaborador__origen-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.liquidar-colaborador__origen-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e5e5e5;
+}
+
+.liquidar-colaborador__origen-label small {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #a3a3a3;
+}
+
+.liquidar-colaborador__origen-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+}
+
+.liquidar-colaborador__origen-field input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #404040;
+  background: #171717;
+  color: #fff;
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.liquidar-colaborador__origen-field input:focus {
+  border-color: rgba(249, 115, 22, 0.65);
+}
+
+.liquidar-colaborador__origen-field--alerta input {
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.liquidar-colaborador__btn-restante {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  background: rgba(249, 115, 22, 0.12);
+  color: #fdba74;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.liquidar-colaborador__btn-restante:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.22);
+}
+
+.liquidar-colaborador__btn-restante:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.liquidar-colaborador__origenes-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: #a3a3a3;
+}
+
+.liquidar-colaborador__origenes-resumen strong {
+  color: #fff;
+}
+
 .liquidar-colaborador__conceptos {
   list-style: none;
   margin: 0;

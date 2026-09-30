@@ -204,3 +204,80 @@ export async function copiarSemanaAnteriorMallas({ sede, semanaInicio }) {
     mallas: data.mallas ?? [],
   }
 }
+
+export async function duplicarMallaASemanaSiguiente({
+  sede,
+  semanaInicio,
+  invertirTurnos = false,
+}) {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nominas/mallas/duplicar-semana-siguiente`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sede, semanaInicio, invertirTurnos }),
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await parseJsonResponse(
+    response,
+    'No se pudo duplicar la malla a la semana siguiente',
+  )
+  return {
+    sede: data.sede,
+    semanaInicio: data.semanaInicio,
+    semanaOrigen: data.semanaOrigen,
+    mallas: data.mallas ?? [],
+    invertidos: Boolean(data.invertidos),
+    copiadas: data.copiadas ?? 0,
+  }
+}
+
+export async function obtenerLlegadasSemana({ sede, semanaInicio, signal } = {}) {
+  const token = await requerirAdminToken()
+
+  const params = new URLSearchParams({
+    sede: sede || '',
+    semanaInicio: semanaInicio || '',
+  })
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nominas/mallas/llegadas?${params}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const rutaError = errorRutaMallasNoDisponible(response)
+  if (rutaError) throw rutaError
+
+  const data = await parseJsonResponse(
+    response,
+    'No se pudieron cargar los registros de llegada',
+  )
+  return {
+    sede: data.sede,
+    semanaInicio: data.semanaInicio,
+    semanaFin: data.semanaFin,
+    turnosEstablecidos: data.turnosEstablecidos ?? [],
+    llegadas: data.llegadas ?? [],
+  }
+}

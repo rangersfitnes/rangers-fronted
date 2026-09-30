@@ -62,6 +62,7 @@ export async function ejecutarLiquidacionColaborador({
   presupuestoExterno = false,
   cargoAdicional = 0,
   cargoAdicionalConcepto = 'Cargo adicional',
+  origenesPresupuesto = null,
 }) {
   let response
   try {
@@ -78,6 +79,7 @@ export async function ejecutarLiquidacionColaborador({
           presupuestoExterno: Boolean(presupuestoExterno),
           cargoAdicional,
           cargoAdicionalConcepto,
+          origenesPresupuesto,
         }),
       },
     )

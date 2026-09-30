@@ -2,6 +2,32 @@ import { DIAS_SEMANA } from '../services/horariosService.js'
 
 const TIPOS_BLOQUE_SIN_HORARIO = new Set(['libre', 'vacaciones', 'permiso'])
 
+/** Turnos fijos de la sede (asignación semanal). */
+export const TURNOS_ESTABLECIDOS = [
+  {
+    id: 'manana',
+    etiqueta: 'Turno mañana',
+    inicio: '05:00',
+    fin: '12:00',
+  },
+  {
+    id: 'tarde',
+    etiqueta: 'Turno tarde',
+    inicio: '14:00',
+    fin: '21:00',
+  },
+]
+
+export function resolverTurnoEstablecido(inicio, fin) {
+  const inicioNorm = normalizarHoraInput(inicio)
+  const finNorm = normalizarHoraInput(fin)
+  return (
+    TURNOS_ESTABLECIDOS.find(
+      (turno) => turno.inicio === inicioNorm && turno.fin === finNorm,
+    ) || null
+  )
+}
+
 export function normalizarHoraInput(valor) {
   const limpio = String(valor || '').trim()
   if (!limpio) return ''
@@ -113,8 +139,109 @@ export function textoBloqueCelda(bloque) {
   if (tipo === 'libre') return 'Libre'
   if (tipo === 'vacaciones') return 'Vacaciones'
   if (tipo === 'permiso') return 'Permiso'
+  const turno = resolverTurnoEstablecido(bloque.inicio, bloque.fin)
+  if (turno) return `${turno.etiqueta} ${turno.inicio}–${turno.fin}`
   if (bloque.inicio && bloque.fin) return `${bloque.inicio}–${bloque.fin}`
   return null
+}
+
+export const DIAS_LABORABLES_DEFAULT = [
+  'lunes',
+  'martes',
+  'miercoles',
+  'jueves',
+  'viernes',
+]
+
+export function obtenerTurnoEstablecidoPorId(turnoId) {
+  return (
+    TURNOS_ESTABLECIDOS.find((turno) => turno.id === String(turnoId || '').trim()) ||
+    null
+  )
+}
+
+export function turnoComplementarioId(turnoId) {
+  return String(turnoId) === 'tarde' ? 'manana' : 'tarde'
+}
+
+/** Aplica un turno establecido solo en los días indicados; el resto queda vacío. */
+export function crearBloquesConTurno({ turnoId, diasKeys = DIAS_LABORABLES_DEFAULT }) {
+  const turno = obtenerTurnoEstablecidoPorId(turnoId)
+  const bloques = crearBloquesVacios()
+  if (!turno) return bloques
+
+  const dias = new Set(
+    (Array.isArray(diasKeys) ? diasKeys : []).map((d) => String(d).trim()),
+  )
+
+  for (const dia of DIAS_SEMANA) {
+    if (!dias.has(dia.key)) continue
+    bloques[dia.key] = [
+      {
+        tipo: 'labora',
+        inicio: turno.inicio,
+        fin: turno.fin,
+      },
+    ]
+  }
+
+  return bloques
+}
+
+/** Invierte mañana ↔ tarde en bloques labora; deja libre/vacaciones/permiso igual. */
+export function invertirTurnosBloques(bloquesRaw = {}) {
+  const bloques = normalizarBloquesEdicion(bloquesRaw)
+  const resultado = crearBloquesVacios()
+
+  for (const dia of DIAS_SEMANA) {
+    const lista = Array.isArray(bloques[dia.key]) ? bloques[dia.key] : []
+    resultado[dia.key] = lista.map((bloque) => {
+      if (!bloque || bloque.tipo !== 'labora') {
+        return { ...bloque }
+      }
+
+      const actual = resolverTurnoEstablecido(bloque.inicio, bloque.fin)
+      const destinoId = actual
+        ? turnoComplementarioId(actual.id)
+        : null
+      const destino = destinoId ? obtenerTurnoEstablecidoPorId(destinoId) : null
+
+      if (!destino) return { ...bloque }
+
+      return {
+        tipo: 'labora',
+        inicio: destino.inicio,
+        fin: destino.fin,
+      }
+    })
+  }
+
+  return resultado
+}
+
+/**
+ * Intercala mañana/tarde entre dos colaboradores.
+ * El primero recibe `turnoAId`; el segundo recibe el complemento.
+ */
+export function construirIntercaladoPareja({
+  colaboradorAUid,
+  colaboradorBUid,
+  turnoAId = 'manana',
+  diasKeys = DIAS_LABORABLES_DEFAULT,
+}) {
+  const uidA = String(colaboradorAUid || '').trim()
+  const uidB = String(colaboradorBUid || '').trim()
+  if (!uidA || !uidB || uidA === uidB) {
+    throw new Error('Selecciona dos colaboradores distintos')
+  }
+
+  const turnoA = obtenerTurnoEstablecidoPorId(turnoAId) ? turnoAId : 'manana'
+  const turnoB = turnoComplementarioId(turnoA)
+
+  return {
+    [uidA]: crearBloquesConTurno({ turnoId: turnoA, diasKeys }),
+    [uidB]: crearBloquesConTurno({ turnoId: turnoB, diasKeys }),
+  }
 }
 
 export function bloquesDiaVacios(lista) {

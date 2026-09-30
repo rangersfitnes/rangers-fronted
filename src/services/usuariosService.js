@@ -302,6 +302,7 @@ export async function activarPlanUsuario(
   acompanantes = [],
   metodoPago,
   sede = SEDE_HORARIOS,
+  { documentoReferidor = null } = {},
 ) {
   const token = await requerirAdminToken()
 
@@ -316,7 +317,15 @@ export async function activarPlanUsuario(
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ planId, acompanantes, metodoPago, sede }),
+        body: JSON.stringify({
+          planId,
+          acompanantes,
+          metodoPago,
+          sede,
+          ...(documentoReferidor
+            ? { documentoReferidor: String(documentoReferidor).trim() }
+            : {}),
+        }),
       },
     )
   } catch {
