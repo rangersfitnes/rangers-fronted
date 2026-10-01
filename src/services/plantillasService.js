@@ -120,3 +120,45 @@ export async function guardarPlantillaAutomatica({ id, contenido }) {
 
   return data.plantilla
 }
+
+export async function previsualizarPlantillaAutomatica({
+  id,
+  contenido,
+  sede,
+  signal,
+} = {}) {
+  const token = await requerirAdminToken()
+  const plantillaId = String(id || '').trim()
+  if (!plantillaId) throw new Error('La plantilla es obligatoria')
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/plantillas/automaticas/${encodeURIComponent(plantillaId)}/preview`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contenido: contenido ?? '',
+          sede: sede || undefined,
+        }),
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error(
+      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+    )
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo generar la vista previa')
+  }
+
+  return data.preview
+}

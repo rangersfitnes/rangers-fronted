@@ -12,9 +12,12 @@ import {
 import {
   obtenerPlantillas,
   obtenerPlantillasAutomaticas,
+  previsualizarPlantillaAutomatica,
 } from '../services/plantillasService.js'
 import './CrearPlanModal.css'
 import './PlantillaFormModal.css'
+
+const ID_ENTRENAMIENTO_PROXIMO_DIA = 'entrenamiento-proximo-dia'
 
 const estadoInicial = {
   nombre: '',
@@ -38,6 +41,9 @@ function PlantillaFormModal({
   )
   const [contenidoAutomatico, setContenidoAutomatico] = useState('')
   const [cargandoLista, setCargandoLista] = useState(false)
+  const [preview, setPreview] = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState('')
   const contenidoRef = useRef(null)
 
   useEffect(() => {
@@ -48,6 +54,9 @@ function PlantillaFormModal({
       setPlantillasAutomaticas([])
       setAutomaticaSeleccionada(PLANTILLAS_AUTOMATICAS[0]?.id ?? '')
       setContenidoAutomatico('')
+      setPreview(null)
+      setPreviewError('')
+      setPreviewLoading(false)
       return undefined
     }
 
@@ -87,6 +96,48 @@ function PlantillaFormModal({
 
     return () => controller.abort()
   }, [open])
+
+  useEffect(() => {
+    const mostrarPreview =
+      open &&
+      pestaña === 'automaticas' &&
+      automaticaSeleccionada === ID_ENTRENAMIENTO_PROXIMO_DIA
+
+    if (!mostrarPreview) {
+      setPreview(null)
+      setPreviewError('')
+      setPreviewLoading(false)
+      return undefined
+    }
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      setPreviewLoading(true)
+      setPreviewError('')
+      previsualizarPlantillaAutomatica({
+        id: ID_ENTRENAMIENTO_PROXIMO_DIA,
+        contenido: contenidoAutomatico,
+        signal: controller.signal,
+      })
+        .then((data) => {
+          if (controller.signal.aborted) return
+          setPreview(data)
+        })
+        .catch((err) => {
+          if (err?.name === 'AbortError' || controller.signal.aborted) return
+          setPreview(null)
+          setPreviewError(err.message || 'No se pudo generar la vista previa')
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setPreviewLoading(false)
+        })
+    }, 350)
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [open, pestaña, automaticaSeleccionada, contenidoAutomatico])
 
   const handleChange = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }))
@@ -327,23 +378,45 @@ function PlantillaFormModal({
         )}
 
         <div className="plantilla-form__variables">
-          <span className="crear-plan__label">Variables disponibles</span>
+          <span className="crear-plan__label">
+            {esAutomaticas
+              ? 'Valores fijos del sistema'
+              : 'Variables disponibles'}
+          </span>
           <p className="plantilla-form__variables-hint">
-            Haz clic en una variable para insertarla en el mensaje. Se reemplazarán
-            con los datos de cada usuario al enviar.
+            {esAutomaticas ? (
+              <>
+                El texto del mensaje es <strong>editable</strong>. Los tokens{' '}
+                <code>{'{…}'}</code> son <strong>valores fijos</strong> que el
+                sistema completa al enviar (haz clic para insertarlos). No
+                cambies el nombre del token si quieres que se rellene solo.
+              </>
+            ) : (
+              <>
+                Haz clic en una variable para insertarla en el mensaje. Se
+                reemplazarán con los datos de cada usuario al enviar.
+              </>
+            )}
           </p>
           <ul className="plantilla-form__variables-list">
             {variablesVisibles.map((variable) => (
               <li key={variable.clave}>
                 <button
                   type="button"
-                  className="plantilla-form__variable-btn"
+                  className={`plantilla-form__variable-btn${
+                    variable.tipo === 'fijo'
+                      ? ' plantilla-form__variable-btn--fijo'
+                      : ''
+                  }`}
                   onClick={() => insertarVariable(variable.clave)}
                   disabled={submitting || (esAutomaticas && cargandoLista)}
                   title={variable.descripcion}
                 >
                   <code>{variablePlantilla(variable.clave)}</code>
                   <span>{variable.etiqueta}</span>
+                  {variable.tipo === 'fijo' ? (
+                    <em className="plantilla-form__variable-badge">Fijo</em>
+                  ) : null}
                 </button>
               </li>
             ))}
@@ -386,6 +459,45 @@ function PlantillaFormModal({
               </p>
             )}
           </div>
+        ) : null}
+
+        {esAutomaticas &&
+        automaticaSeleccionada === ID_ENTRENAMIENTO_PROXIMO_DIA ? (
+          <section
+            className="plantilla-form__preview"
+            aria-label="Vista previa del próximo mensaje"
+          >
+            <span className="crear-plan__label">
+              Vista previa del próximo mensaje
+            </span>
+            <p className="plantilla-form__preview-meta">
+              Se enviará al grupo de WhatsApp{' '}
+              <strong>{preview?.nombreGrupo || 'Rangers box 🔥🔥'}</strong>
+              {preview?.diaLabel ? (
+                <>
+                  {' '}
+                  · entrenamiento de <strong>{preview.diaLabel}</strong>
+                  {preview.fecha ? ` (${preview.fecha})` : ''}
+                </>
+              ) : null}
+            </p>
+            <p className="plantilla-form__preview-meta">
+              Envío automático diario a las 7:00 p. m. (Colombia).
+            </p>
+            {previewLoading ? (
+              <p className="plantilla-form__lista-hint">
+                Generando vista previa con las clases de mañana…
+              </p>
+            ) : null}
+            {previewError ? (
+              <p className="crear-plan__error" role="alert">
+                {previewError}
+              </p>
+            ) : null}
+            {!previewLoading && preview?.mensaje ? (
+              <pre className="plantilla-form__preview-msg">{preview.mensaje}</pre>
+            ) : null}
+          </section>
         ) : null}
       </form>
     </Modal>

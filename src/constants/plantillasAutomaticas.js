@@ -101,6 +101,61 @@ HECHOS PARA RESISTIR. ENTRENADOS PARA VENCER. 🧡🖤`,
         clave: 'fecha_fin',
         etiqueta: 'Vencimiento',
         descripcion: 'Fecha de vencimiento del plan',
+        tipo: 'fijo',
+      },
+    ],
+  },
+  {
+    id: 'entrenamiento-proximo-dia',
+    nombre: 'Entrenamiento del próximo día',
+    descripcion:
+      'Se envía todos los días a las 7:00 p. m. (Colombia) al grupo Rangers box 🔥🔥 con el cronograma de clases del día siguiente (clases grupales).',
+    contenidoPorDefecto: `🔥 *RANGERS BOX | CLASES DE MAÑANA* 🔥
+
+¡Rangers! 💪 Mañana tenemos:
+
+{horario}
+
+Prepárate para entrenar, superar tus límites y seguir construyendo tu mejor versión. 🧡
+
+💡 *¿Quieres entrenar algo diferente?*
+No hay problema. Puedes utilizar los *espacios y elementos disponibles del Box* para realizar tu propio entrenamiento, siempre respetando las zonas y el material que estén disponibles.
+
+¡Nos vemos mañana, Rangers! 🦾🔥
+
+*RANGERS BOX*
+_Entrena. Supera. Evoluciona._`,
+    variables: [
+      {
+        clave: 'horario',
+        etiqueta: 'Clase(s) del día',
+        descripcion:
+          'Bloque fijo con nombre, hora y enfoque de cada clase (una encima de otra si hay 2+). Sale del cronograma de clases grupales.',
+        tipo: 'fijo',
+      },
+      {
+        clave: 'dia_label',
+        etiqueta: 'Día',
+        descripcion: 'Nombre del día siguiente (ej. Lunes). Opcional.',
+        tipo: 'fijo',
+      },
+      {
+        clave: 'fecha',
+        etiqueta: 'Fecha',
+        descripcion: 'Fecha del día siguiente. Opcional.',
+        tipo: 'fijo',
+      },
+      {
+        clave: 'dia',
+        etiqueta: 'Clave del día',
+        descripcion: 'Clave interna del día (ej. lunes). Opcional.',
+        tipo: 'fijo',
+      },
+      {
+        clave: 'clases_count',
+        etiqueta: 'Cantidad de clases',
+        descripcion: 'Número de clases programadas. Opcional.',
+        tipo: 'fijo',
       },
     ],
   },
