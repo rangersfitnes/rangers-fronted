@@ -1045,8 +1045,8 @@ function VistaControlAcceso({
           {resultado.usuarioEncontrado ? (
             resultado.tiqueteraAgotada ? (
               <p className="pf-control-acceso__denegado-detalle">
-                Tu tiquetera sigue vigente, pero ya usaste todas las entradas
-                incluidas.
+                Tu tiquetera se registró como vencida: ya usaste todas las
+                entradas incluidas. Renueva para volver a ingresar.
               </p>
             ) : resultado.planVencido && resultado.fechaVencimientoUltimoPlan ? (
               <p className="pf-control-acceso__denegado-detalle">

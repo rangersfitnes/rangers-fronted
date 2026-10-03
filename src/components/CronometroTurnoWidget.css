@@ -1,21 +1,90 @@
 .cronometro-turno {
   position: fixed;
-  /* Izquierda para no tapar el botón de pantalla completa (arriba-derecha). */
-  top: 1rem;
-  left: 1rem;
-  right: auto;
   z-index: 1200;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.55rem;
   min-width: 210px;
-  max-width: min(280px, calc(100vw - 2rem));
-  padding: 0.85rem 1rem;
+  max-width: min(280px, calc(100vw - 1rem));
+  padding: 0.55rem 0.65rem 0.75rem;
   background: rgba(18, 18, 18, 0.96);
   border: 1px solid #404040;
   border-radius: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(8px);
+  touch-action: none;
+  user-select: none;
+}
+
+.cronometro-turno--colapsado {
+  min-width: 0;
+  max-width: min(220px, calc(100vw - 1rem));
+  padding: 0.4rem 0.5rem;
+  gap: 0;
+}
+
+.cronometro-turno--arrastrando {
+  opacity: 0.96;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  cursor: grabbing;
+}
+
+.cronometro-turno__barra {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: grab;
+  min-height: 2rem;
+}
+
+.cronometro-turno--arrastrando .cronometro-turno__barra {
+  cursor: grabbing;
+}
+
+.cronometro-turno__toggle {
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e5e5e5;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cronometro-turno__toggle:hover {
+  border-color: #f97316;
+  color: #ffffff;
+}
+
+.cronometro-turno__resumen {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.cronometro-turno__agarre {
+  flex-shrink: 0;
+  color: #737373;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.15rem 0.1rem;
+}
+
+.cronometro-turno__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .cronometro-turno__info {
@@ -33,10 +102,15 @@
 }
 
 .cronometro-turno__tiempo {
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #ffffff;
+  line-height: 1.15;
+}
+
+.cronometro-turno--colapsado .cronometro-turno__tiempo {
+  font-size: 1.05rem;
 }
 
 .cronometro-turno__jornada {
@@ -182,6 +256,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
+  touch-action: manipulation;
 }
 
 .cronometro-turno__btn:hover:not(:disabled) {
@@ -192,15 +267,4 @@
 .cronometro-turno__btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-@media (max-width: 640px) {
-  .cronometro-turno {
-    top: auto;
-    bottom: 1rem;
-    left: 1rem;
-    right: 1rem;
-    max-width: none;
-    min-width: 0;
-  }
 }
