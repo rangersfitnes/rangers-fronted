@@ -43,19 +43,19 @@ function millisOrdenRegistro(item) {
 }
 
 /**
- * Orden de registro: del primero al último (creadoEn ascendente).
+ * Más recientes arriba, más antiguas abajo (creadoEn descendente).
  */
 export function ordenarAsistenciasPorRegistro(items = []) {
   return [...(Array.isArray(items) ? items : [])].sort((a, b) => {
     const ta = millisOrdenRegistro(a)
     const tb = millisOrdenRegistro(b)
-    if (ta !== tb) return ta - tb
+    if (ta !== tb) return tb - ta
 
     const fa = String(a?.fecha || '')
     const fb = String(b?.fecha || '')
-    if (fa !== fb) return fa.localeCompare(fb)
+    if (fa !== fb) return fb.localeCompare(fa)
 
-    return String(a?.id || '').localeCompare(String(b?.id || ''))
+    return String(b?.id || '').localeCompare(String(a?.id || ''))
   })
 }
 

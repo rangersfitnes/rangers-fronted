@@ -56,9 +56,8 @@ function CuentaAsistencias() {
 
   const resumen = useMemo(() => {
     const delMes = asistencias.filter((item) => esDelMesActual(item.fecha))
-    // Lista en orden de registro (antiguo → nuevo); la última es la más reciente.
-    const ultima =
-      asistencias.length > 0 ? asistencias[asistencias.length - 1] : null
+    // Lista: más recientes arriba; la primera es la más reciente.
+    const ultima = asistencias[0] ?? null
 
     return {
       total: asistencias.length,
