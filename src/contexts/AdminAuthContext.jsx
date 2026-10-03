@@ -35,7 +35,15 @@ export function AdminAuthProvider({ children }) {
 
   const syncToken = useCallback(async (user) => {
     if (!user) {
-      if (getAdminToken()) {
+      // Firebase a veces emite null de forma transitoria (refresh/red).
+      // No tirar la sesión admin si el token guardado sigue vigente.
+      const almacenado = getAdminToken()
+      if (almacenado && !tokenAdminExpirado(almacenado)) {
+        setAutenticado(true)
+        return
+      }
+
+      if (almacenado) {
         clearAdminSession()
       }
       ultimoTokenVerificadoRef.current = null
@@ -71,7 +79,10 @@ export function AdminAuthProvider({ children }) {
         return
       }
 
-      setAutenticado(Boolean(getAdminToken()) && !tokenAdminExpirado(getAdminToken()))
+      // Fallo de red / backend: conservar sesión local si el token aún sirve.
+      setAutenticado(
+        Boolean(getAdminToken()) && !tokenAdminExpirado(getAdminToken()),
+      )
     }
   }, [])
 

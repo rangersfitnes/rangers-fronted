@@ -30,10 +30,40 @@ function claveIngresoDia(item) {
   return `${item.sedeId || ''}::${cedula}::${fecha}`
 }
 
+function millisOrdenRegistro(item) {
+  const creado = Number(item?.creadoEn)
+  if (Number.isFinite(creado) && creado > 0) return creado
+
+  const fecha = String(item?.fecha || '').trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return new Date(`${fecha}T12:00:00-05:00`).getTime()
+  }
+
+  return 0
+}
+
+/**
+ * Orden de registro: del primero al último (creadoEn ascendente).
+ */
+export function ordenarAsistenciasPorRegistro(items = []) {
+  return [...(Array.isArray(items) ? items : [])].sort((a, b) => {
+    const ta = millisOrdenRegistro(a)
+    const tb = millisOrdenRegistro(b)
+    if (ta !== tb) return ta - tb
+
+    const fa = String(a?.fecha || '')
+    const fb = String(b?.fecha || '')
+    if (fa !== fb) return fa.localeCompare(fb)
+
+    return String(a?.id || '').localeCompare(String(b?.id || ''))
+  })
+}
+
 /**
  * Un mismo ingreso de clase/cortesía puede llegar como pago-clase y como
  * asistencia. En la tabla solo mostramos uno (preferimos la asistencia).
  * Si ya hay cualquier asistencia del día para esa cédula, ocultamos el pago.
+ * El resultado queda en orden de registro.
  */
 export function deduplicarRegistrosAsistencia(items = []) {
   const lista = Array.isArray(items) ? items : []
@@ -51,7 +81,7 @@ export function deduplicarRegistrosAsistencia(items = []) {
     if (clave) diasConAsistencia.add(clave)
   }
 
-  return lista.filter((item) => {
+  const filtrados = lista.filter((item) => {
     if (item?.origen !== 'pago-clase') return true
 
     if (pagosCubiertos.has(`${item.sedeId || ''}::${item.id}`)) return false
@@ -61,6 +91,8 @@ export function deduplicarRegistrosAsistencia(items = []) {
 
     return true
   })
+
+  return ordenarAsistenciasPorRegistro(filtrados)
 }
 
 export function mensajeEliminarRegistro(item) {

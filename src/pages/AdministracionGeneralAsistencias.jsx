@@ -130,8 +130,8 @@ function AdministracionGeneralAsistencias({ puedeEliminar = true } = {}) {
             <h2 className="ag-finanzas__salidas-title">Registros de asistencia</h2>
             <p className="ag-finanzas__salidas-meta">
               {verTodoHistorial
-                ? `${asistencias.length} registro(s) en el historial completo${asistencias.length >= 1000 ? ' (mostrando los 1000 más recientes)' : ''}`
-                : `${asistencias.length} registro(s) en el periodo seleccionado`}
+                ? `${asistencias.length} registro(s) en el historial completo${asistencias.length >= 1000 ? ' (últimos 1000, en orden de registro)' : ''}`
+                : `${asistencias.length} registro(s) en el periodo, en orden de registro`}
             </p>
           </div>
         </header>
