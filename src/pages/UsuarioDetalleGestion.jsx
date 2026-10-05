@@ -421,8 +421,12 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
             <dd>
               {usuario.rolEnPlan
                 ? usuario.rolEnPlan === 'titular'
-                  ? 'Titular'
-                  : 'Beneficiario'
+                  ? planEstaVencido(usuario)
+                    ? 'Titular (plan vencido)'
+                    : 'Titular'
+                  : planEstaVencido(usuario)
+                    ? 'Beneficiario (plan vencido)'
+                    : 'Beneficiario'
                 : '—'}
             </dd>
           </div>
@@ -430,7 +434,13 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
 
         {usuario.planGrupo?.miembros?.length > 0 && (
           <div className="pf-entrenamientos__grupo">
-            <h3 className="pf-entrenamientos__grupo-title">Grupo del plan</h3>
+            <h3 className="pf-entrenamientos__grupo-title">
+              {planEstaVencido(usuario)
+                ? usuario.planGrupo.tipo === 'titular'
+                  ? 'Plan pareja vencido · titular'
+                  : 'Plan pareja vencido · compañero(s)'
+                : 'Grupo del plan'}
+            </h3>
             <ul>
               {usuario.planGrupo.miembros.map((m) => (
                 <li key={m.uid || m.documento}>
