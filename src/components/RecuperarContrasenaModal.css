@@ -1,0 +1,118 @@
+.recuperar-password-modal .modal__dialog {
+  max-width: 28rem;
+}
+
+.recuperar-password__intro {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.recuperar-password__intro strong {
+  color: #fb923c;
+}
+
+.recuperar-password__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.recuperar-password__row {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.recuperar-password__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.recuperar-password__field--tipo {
+  flex: 0 0 5.5rem;
+}
+
+.recuperar-password__field input,
+.recuperar-password__field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.recuperar-password__error {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #fda4af;
+}
+
+.recuperar-password__ok {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #86efac;
+}
+
+.recuperar-password__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.recuperar-password__btn {
+  min-width: 7rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 9999px;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recuperar-password__btn--primary {
+  background: #f97316;
+  color: #ffffff;
+  flex: 1;
+}
+
+.recuperar-password__btn--primary:hover:not(:disabled) {
+  background: #ea580c;
+}
+
+.recuperar-password__btn--ghost {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.recuperar-password__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.recuperar-password__exito {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recuperar-password__exito > p:first-child {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #86efac;
+}

@@ -9,6 +9,7 @@ import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import logo from '../assets/images/logos/logo.webp'
 import CrearCuentaModal from '../components/CrearCuentaModal.jsx'
 import BienvenidaModal from '../components/BienvenidaModal.jsx'
+import RecuperarContrasenaModal from '../components/RecuperarContrasenaModal.jsx'
 import RecordarSesionCheckbox from '../components/RecordarSesionCheckbox.jsx'
 import EyeIcon from '../components/icons/EyeIcon.jsx'
 import loginBg from '../assets/images/hero/bk_login.webp'
@@ -65,6 +66,7 @@ function Login() {
   const [signupOpen, setSignupOpen] = useState(false)
   const [signupSubmitting, setSignupSubmitting] = useState(false)
   const [signupError, setSignupError] = useState('')
+  const [recuperarOpen, setRecuperarOpen] = useState(false)
   const [bienvenida, setBienvenida] = useState({ open: false, nombre: '' })
 
   const handleDocumentoChange = (event) => {
@@ -306,6 +308,15 @@ function Login() {
             />
 
             <button
+              type="button"
+              className="login-form__forgot"
+              onClick={() => setRecuperarOpen(true)}
+              disabled={loading}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+
+            <button
               type="submit"
               className="login-form__submit"
               style={{ backgroundColor: colors.primary_orange }}
@@ -331,6 +342,13 @@ function Login() {
         onSubmit={handleCrearCuenta}
         submitting={signupSubmitting}
         error={signupError}
+      />
+
+      <RecuperarContrasenaModal
+        open={recuperarOpen}
+        onClose={() => setRecuperarOpen(false)}
+        tipoDocumentoInicial={tipoDocumento}
+        documentoInicial={documento}
       />
 
       <BienvenidaModal
