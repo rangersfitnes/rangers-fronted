@@ -8,15 +8,8 @@ import { AdminAuthProvider } from './contexts/AdminAuthContext.jsx'
 import { UsuarioProvider } from './contexts/UsuarioContext.jsx'
 import { inicializarPersistenciaActiva } from './utils/recordarSesion.js'
 import { iniciarRenovacionAutomaticaToken } from './utils/firebaseTokenRefresh.js'
-import logo from './assets/images/logos/logo.webp'
 
 iniciarRenovacionAutomaticaToken()
-
-const favicon = document.createElement('link')
-favicon.rel = 'icon'
-favicon.type = 'image/webp'
-favicon.href = logo
-document.head.appendChild(favicon)
 
 const root = createRoot(document.getElementById('root'))
 
