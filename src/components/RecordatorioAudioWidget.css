@@ -1,0 +1,129 @@
+.recordatorio-audio {
+  position: fixed;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.4rem;
+  background: rgba(18, 18, 18, 0.96);
+  border: 1px solid #404040;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  touch-action: none;
+  user-select: none;
+}
+
+.recordatorio-audio--expandido {
+  min-width: 210px;
+  max-width: min(260px, calc(100vw - 1rem));
+  padding: 0.55rem 0.65rem 0.75rem;
+}
+
+.recordatorio-audio--arrastrando {
+  opacity: 0.96;
+  cursor: grabbing;
+}
+
+.recordatorio-audio__barra {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: grab;
+}
+
+.recordatorio-audio--arrastrando .recordatorio-audio__barra {
+  cursor: grabbing;
+}
+
+.recordatorio-audio__fab {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  border-radius: 9999px;
+  background: rgba(249, 115, 22, 0.12);
+  font-size: 1.1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.recordatorio-audio__fab:hover {
+  background: rgba(249, 115, 22, 0.22);
+  border-color: #f97316;
+}
+
+.recordatorio-audio__titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.recordatorio-audio__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.recordatorio-audio__switch {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #e5e5e5;
+  cursor: pointer;
+}
+
+.recordatorio-audio__switch input {
+  width: 0.95rem;
+  height: 0.95rem;
+  accent-color: #f97316;
+}
+
+.recordatorio-audio__hint {
+  margin: 0;
+  font-size: 0.65rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.recordatorio-audio__btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: inherit;
+  color: #fdba74;
+  background: transparent;
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.recordatorio-audio__btn:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.12);
+}
+
+.recordatorio-audio__btn--primary {
+  color: #ffffff;
+  background: rgba(249, 115, 22, 0.85);
+  border-color: #f97316;
+}
+
+.recordatorio-audio__btn--primary:hover:not(:disabled) {
+  background: #ea580c;
+}
+
+.recordatorio-audio__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

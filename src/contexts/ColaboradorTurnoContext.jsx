@@ -10,9 +10,15 @@ import {
 import CronometroTurnoWidget from '../components/CronometroTurnoWidget.jsx'
 import FinJornadaTurnoModal from '../components/FinJornadaTurnoModal.jsx'
 import IniciarJornadaModal from '../components/IniciarJornadaModal.jsx'
+import RecordatorioAudioWidget from '../components/RecordatorioAudioWidget.jsx'
 import { useToast } from '../components/Toast.jsx'
+import { useAdminAuth } from './AdminAuthContext.jsx'
 import { obtenerAdminToken } from '../services/authService.js'
 import { obtenerContenidoWebPublico } from '../services/contenidoWebService.js'
+import {
+  esCreadorStaff,
+  rolesStaffActuales,
+} from '../utils/adminRoles.js'
 import {
   finalizarTurnoLaboral,
   iniciarTurnoLaboral,
@@ -33,6 +39,9 @@ const RECORDATORIO_INTERVALO_MS = 30 * 60 * 1000
 
 export function ColaboradorTurnoProvider({ children }) {
   const toast = useToast()
+  const { roles, autenticado } = useAdminAuth()
+  const rolesActuales = rolesStaffActuales(roles)
+  const esOwner = esCreadorStaff(rolesActuales)
   const [perfil, setPerfil] = useState(null)
   const [esquemaLaboral, setEsquemaLaboral] = useState(null)
   const [turnoActivo, setTurnoActivo] = useState(null)
@@ -47,6 +56,7 @@ export function ColaboradorTurnoProvider({ children }) {
   const [audioRecordatorioUrl, setAudioRecordatorioUrl] = useState(null)
   const [probandoAudio, setProbandoAudio] = useState(false)
   const turnoPrevioIdRef = useRef(null)
+  const ownerRecordatorioInitRef = useRef(false)
 
   const cargarEstadoTurno = useCallback(async () => {
     const token = await obtenerAdminToken()
@@ -199,9 +209,16 @@ export function ColaboradorTurnoProvider({ children }) {
     turnoPrevioIdRef.current = idActual
   }, [turnoActivo?.id])
 
+  const mostrarCronometraje =
+    Boolean(perfil?.cronometrajeActivo) && Boolean(turnoActivo)
+  const mostrarRecordatorioOwner =
+    autenticado && esOwner && !perfil?.cronometrajeActivo
+  const necesitaAudioRecordatorio =
+    Boolean(turnoActivo) || mostrarRecordatorioOwner
+
   useEffect(() => {
-    if (!turnoActivo) {
-      setAudioRecordatorioUrl(null)
+    if (!necesitaAudioRecordatorio) {
+      if (!turnoActivo) setAudioRecordatorioUrl(null)
       return undefined
     }
 
@@ -230,7 +247,18 @@ export function ColaboradorTurnoProvider({ children }) {
       controller.abort()
       window.clearInterval(poll)
     }
-  }, [turnoActivo?.id])
+  }, [necesitaAudioRecordatorio, turnoActivo?.id])
+
+  // Owner sin nómina: enciende el recordatorio al entrar a la sesión admin.
+  useEffect(() => {
+    if (!mostrarRecordatorioOwner) {
+      ownerRecordatorioInitRef.current = false
+      return
+    }
+    if (ownerRecordatorioInitRef.current) return
+    ownerRecordatorioInitRef.current = true
+    setRecordatorioActivo(true)
+  }, [mostrarRecordatorioOwner])
 
   const reproducirRecordatorio = useCallback(async () => {
     if (!audioRecordatorioUrl) {
@@ -240,9 +268,12 @@ export function ColaboradorTurnoProvider({ children }) {
   }, [audioRecordatorioUrl])
 
   useEffect(() => {
-    if (!recordatorioActivo || !audioRecordatorioUrl || !turnoActivo) {
-      return undefined
-    }
+    const puedeCiclo =
+      recordatorioActivo &&
+      audioRecordatorioUrl &&
+      (Boolean(turnoActivo) || mostrarRecordatorioOwner)
+
+    if (!puedeCiclo) return undefined
 
     const intervaloId = window.setInterval(() => {
       if (document.visibilityState === 'hidden') return
@@ -256,8 +287,20 @@ export function ColaboradorTurnoProvider({ children }) {
     recordatorioActivo,
     audioRecordatorioUrl,
     turnoActivo?.id,
+    mostrarRecordatorioOwner,
     reproducirRecordatorio,
   ])
+
+  const handleAudioConfigurado = useCallback((contenido) => {
+    const asistencias = contenido?.asistencias || {}
+    const url = String(asistencias.audioUrl || '').trim()
+    const habilitado =
+      asistencias.audioActivo === undefined
+        ? Boolean(url)
+        : Boolean(asistencias.audioActivo && url)
+    setAudioRecordatorioUrl(habilitado ? url : null)
+    if (habilitado) setRecordatorioActivo(true)
+  }, [])
 
   const handleProbarAudio = useCallback(async () => {
     if (probandoAudio) return
@@ -331,9 +374,6 @@ export function ColaboradorTurnoProvider({ children }) {
     setContinuarTiempoExtra(true)
   }
 
-  const mostrarCronometraje =
-    Boolean(perfil?.cronometrajeActivo) && Boolean(turnoActivo)
-
   return (
     <ColaboradorTurnoContext.Provider
       value={{
@@ -382,6 +422,17 @@ export function ColaboradorTurnoProvider({ children }) {
             </>
           ) : null}
         </>
+      ) : null}
+
+      {mostrarRecordatorioOwner ? (
+        <RecordatorioAudioWidget
+          recordatorioActivo={recordatorioActivo}
+          onRecordatorioChange={setRecordatorioActivo}
+          onProbarAudio={handleProbarAudio}
+          probandoAudio={probandoAudio}
+          audioDisponible={Boolean(audioRecordatorioUrl)}
+          onAudioConfigurado={handleAudioConfigurado}
+        />
       ) : null}
     </ColaboradorTurnoContext.Provider>
   )
