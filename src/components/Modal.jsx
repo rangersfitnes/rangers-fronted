@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import './Modal.css'
 
 function Modal({ open, onClose, title, children, footer, className = '' }) {
@@ -9,18 +10,19 @@ function Modal({ open, onClose, title, children, footer, className = '' }) {
       if (e.key === 'Escape') onClose?.()
     }
 
+    const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', handleKey)
 
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = prevOverflow
       window.removeEventListener('keydown', handleKey)
     }
   }, [open, onClose])
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div
       className={`modal${className ? ` ${className}` : ''}`}
       role="dialog"
@@ -50,7 +52,8 @@ function Modal({ open, onClose, title, children, footer, className = '' }) {
 
         {footer && <footer className="modal__footer">{footer}</footer>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

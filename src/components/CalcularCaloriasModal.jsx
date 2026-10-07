@@ -19,6 +19,100 @@ function formatearFechaComida(fechaLocal, horaLocal) {
   return fechaLocal || horaLocal
 }
 
+function DetalleIngesta({ comida, mostrarRegistro = true, historialUsado }) {
+  if (!comida) return null
+
+  return (
+    <div className="calcular-calorias__resultado">
+      <div className="calcular-calorias__kcal">
+        <span className="calcular-calorias__kcal-valor">
+          {comida.caloriasEstimadas}
+        </span>
+        <span className="calcular-calorias__kcal-unidad">kcal</span>
+      </div>
+      <h3 className="calcular-calorias__plato">{comida.plato || 'Comida'}</h3>
+      {(comida.rangoCalorias || comida.confianza) && (
+        <p className="calcular-calorias__meta">
+          {comida.rangoCalorias
+            ? `Rango ${comida.rangoCalorias.min}–${comida.rangoCalorias.max} kcal`
+            : null}
+          {comida.rangoCalorias && comida.confianza ? ' · ' : null}
+          {comida.confianza ? `Confianza ${comida.confianza}` : null}
+        </p>
+      )}
+      {comida.porcionEstimada && (
+        <p className="calcular-calorias__porcion">
+          Porción: {comida.porcionEstimada}
+        </p>
+      )}
+      {comida.macros && (
+        <ul className="calcular-calorias__macros">
+          <li>Proteínas {comida.macros.proteinasG ?? 0} g</li>
+          <li>Carbohidratos {comida.macros.carbohidratosG ?? 0} g</li>
+          <li>Grasas {comida.macros.grasasG ?? 0} g</li>
+        </ul>
+      )}
+      {Array.isArray(comida.alimentosDetectados) &&
+        comida.alimentosDetectados.length > 0 && (
+          <p className="calcular-calorias__alimentos">
+            Detectado: {comida.alimentosDetectados.join(', ')}
+          </p>
+        )}
+
+      {comida.resumen && (
+        <div className="calcular-calorias__resumen">
+          {comida.resumen.comoFunciona && (
+            <section>
+              <h4>Cómo funciona en tu cuerpo</h4>
+              <p>{comida.resumen.comoFunciona}</p>
+            </section>
+          )}
+          {comida.resumen.beneficios?.length > 0 && (
+            <section>
+              <h4>Beneficios</h4>
+              <ul>
+                {comida.resumen.beneficios.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {comida.resumen.afectaciones?.length > 0 && (
+            <section>
+              <h4>En qué podría afectarte</h4>
+              <ul>
+                {comida.resumen.afectaciones.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {comida.resumen.personalizado && (
+            <section className="calcular-calorias__resumen-personalizado">
+              <h4>Resumen para ti</h4>
+              <p>{comida.resumen.personalizado}</p>
+            </section>
+          )}
+        </div>
+      )}
+
+      {mostrarRegistro && (comida.fechaLocal || comida.horaLocal) && (
+        <p className="calcular-calorias__notas">
+          Registrado:{' '}
+          {formatearFechaComida(comida.fechaLocal, comida.horaLocal)}
+          {historialUsado > 0
+            ? ` · Contexto de ${historialUsado} comida(s) previa(s)`
+            : ''}
+        </p>
+      )}
+
+      {comida.notas && (
+        <p className="calcular-calorias__notas">{comida.notas}</p>
+      )}
+    </div>
+  )
+}
+
 function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
   const { usuario } = useUsuario()
   const camaraRef = useRef(null)
@@ -29,6 +123,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
   const [previewUrl, setPreviewUrl] = useState('')
   const [resultado, setResultado] = useState(null)
   const [historial, setHistorial] = useState([])
+  const [comidaExpandidaId, setComidaExpandidaId] = useState(null)
   const [cupo, setCupo] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -74,12 +169,14 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
       setError('')
       setLoading(false)
       setCupo(null)
+      setComidaExpandidaId(null)
       if (camaraRef.current) camaraRef.current.value = ''
       if (galeriaRef.current) galeriaRef.current.value = ''
       return undefined
     }
 
     setSugerenciaDescartada(false)
+    setComidaExpandidaId(null)
     const controller = new AbortController()
     cargarHistorial(controller.signal)
     cargarCupo(controller.signal)
@@ -266,87 +363,10 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
       )}
 
       {resultado && (
-        <div className="calcular-calorias__resultado">
-          <div className="calcular-calorias__kcal">
-            <span className="calcular-calorias__kcal-valor">
-              {resultado.caloriasEstimadas}
-            </span>
-            <span className="calcular-calorias__kcal-unidad">kcal</span>
-          </div>
-          <h3 className="calcular-calorias__plato">{resultado.plato}</h3>
-          <p className="calcular-calorias__meta">
-            Rango {resultado.rangoCalorias?.min}–{resultado.rangoCalorias?.max}{' '}
-            kcal · Confianza {resultado.confianza}
-          </p>
-          {resultado.porcionEstimada && (
-            <p className="calcular-calorias__porcion">
-              Porción: {resultado.porcionEstimada}
-            </p>
-          )}
-          {resultado.macros && (
-            <ul className="calcular-calorias__macros">
-              <li>Proteínas {resultado.macros.proteinasG} g</li>
-              <li>Carbohidratos {resultado.macros.carbohidratosG} g</li>
-              <li>Grasas {resultado.macros.grasasG} g</li>
-            </ul>
-          )}
-          {Array.isArray(resultado.alimentosDetectados) &&
-            resultado.alimentosDetectados.length > 0 && (
-              <p className="calcular-calorias__alimentos">
-                Detectado: {resultado.alimentosDetectados.join(', ')}
-              </p>
-            )}
-
-          {resultado.resumen && (
-            <div className="calcular-calorias__resumen">
-              {resultado.resumen.comoFunciona && (
-                <section>
-                  <h4>Cómo funciona en tu cuerpo</h4>
-                  <p>{resultado.resumen.comoFunciona}</p>
-                </section>
-              )}
-              {resultado.resumen.beneficios?.length > 0 && (
-                <section>
-                  <h4>Beneficios</h4>
-                  <ul>
-                    {resultado.resumen.beneficios.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-              {resultado.resumen.afectaciones?.length > 0 && (
-                <section>
-                  <h4>En qué podría afectarte</h4>
-                  <ul>
-                    {resultado.resumen.afectaciones.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-              {resultado.resumen.personalizado && (
-                <section className="calcular-calorias__resumen-personalizado">
-                  <h4>Resumen para ti</h4>
-                  <p>{resultado.resumen.personalizado}</p>
-                </section>
-              )}
-            </div>
-          )}
-
-          {(resultado.fechaLocal || resultado.horaLocal) && (
-            <p className="calcular-calorias__notas">
-              Registrado: {formatearFechaComida(resultado.fechaLocal, resultado.horaLocal)}
-              {resultado.historialUsado > 0
-                ? ` · Contexto de ${resultado.historialUsado} comida(s) previa(s)`
-                : ''}
-            </p>
-          )}
-
-          {resultado.notas && (
-            <p className="calcular-calorias__notas">{resultado.notas}</p>
-          )}
-        </div>
+        <DetalleIngesta
+          comida={resultado}
+          historialUsado={resultado.historialUsado}
+        />
       )}
 
       {historial.length > 0 && (
@@ -354,22 +374,51 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
           <h3 className="calcular-calorias__historial-title">
             Comidas registradas
           </h3>
+          <p className="calcular-calorias__historial-hint">
+            Toca una comida para ver el detalle guardado
+          </p>
           <ul className="calcular-calorias__historial-list">
-            {historial.map((item) => (
-              <li key={item.id} className="calcular-calorias__historial-item">
-                <div className="calcular-calorias__historial-main">
-                  <span className="calcular-calorias__historial-plato">
-                    {item.plato || 'Comida'}
-                  </span>
-                  <span className="calcular-calorias__historial-kcal">
-                    {item.caloriasEstimadas} kcal
-                  </span>
-                </div>
-                <span className="calcular-calorias__historial-meta">
-                  {formatearFechaComida(item.fechaLocal, item.horaLocal)}
-                </span>
-              </li>
-            ))}
+            {historial.map((item) => {
+              const expandida = comidaExpandidaId === item.id
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className={`calcular-calorias__historial-item${
+                      expandida
+                        ? ' calcular-calorias__historial-item--abierta'
+                        : ''
+                    }`}
+                    onClick={() =>
+                      setComidaExpandidaId((actual) =>
+                        actual === item.id ? null : item.id,
+                      )
+                    }
+                    aria-expanded={expandida}
+                  >
+                    <div className="calcular-calorias__historial-main">
+                      <span className="calcular-calorias__historial-plato">
+                        {item.plato || 'Comida'}
+                      </span>
+                      <span className="calcular-calorias__historial-kcal">
+                        {item.caloriasEstimadas} kcal
+                      </span>
+                    </div>
+                    <span className="calcular-calorias__historial-meta">
+                      {formatearFechaComida(item.fechaLocal, item.horaLocal)}
+                      <span className="calcular-calorias__historial-chevron" aria-hidden="true">
+                        {expandida ? '▴' : '▾'}
+                      </span>
+                    </span>
+                  </button>
+                  {expandida && (
+                    <div className="calcular-calorias__historial-detalle">
+                      <DetalleIngesta comida={item} mostrarRegistro={false} />
+                    </div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </section>
       )}

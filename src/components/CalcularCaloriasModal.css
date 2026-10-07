@@ -306,12 +306,18 @@
 }
 
 .calcular-calorias__historial-title {
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.35rem;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.7);
+}
+
+.calcular-calorias__historial-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .calcular-calorias__historial-list {
@@ -321,15 +327,36 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-height: 220px;
+  max-height: min(48vh, 420px);
   overflow-y: auto;
 }
 
 .calcular-calorias__historial-item {
+  display: block;
+  width: 100%;
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.calcular-calorias__historial-item:hover,
+.calcular-calorias__historial-item:focus-visible {
+  border-color: rgba(249, 115, 22, 0.45);
+  background: rgba(249, 115, 22, 0.08);
+  outline: none;
+}
+
+.calcular-calorias__historial-item--abierta {
+  border-color: rgba(249, 115, 22, 0.55);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: rgba(249, 115, 22, 0.1);
 }
 
 .calcular-calorias__historial-main {
@@ -353,10 +380,40 @@
 }
 
 .calcular-calorias__historial-meta {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   margin-top: 0.25rem;
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.55);
+}
+
+.calcular-calorias__historial-chevron {
+  flex-shrink: 0;
+  color: #fb923c;
+  font-size: 0.7rem;
+}
+
+.calcular-calorias__historial-detalle {
+  margin-top: -1px;
+  padding: 0.75rem 0.85rem 0.9rem;
+  border: 1px solid rgba(249, 115, 22, 0.55);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.calcular-calorias__historial-detalle .calcular-calorias__resultado {
+  margin-top: 0;
+}
+
+.calcular-calorias__historial-detalle .calcular-calorias__kcal-valor {
+  font-size: 1.75rem;
+}
+
+.calcular-calorias__historial-detalle .calcular-calorias__plato {
+  font-size: 1rem;
 }
 
 @media (min-width: 480px) {
