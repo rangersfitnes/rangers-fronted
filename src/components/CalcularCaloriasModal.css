@@ -205,6 +205,16 @@
   color: rgba(255, 255, 255, 0.65);
 }
 
+.calcular-calorias__cupo {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.calcular-calorias__cupo--agotado {
+  color: #fda4af;
+}
+
 .calcular-calorias__resumen {
   margin-top: 1rem;
   display: flex;

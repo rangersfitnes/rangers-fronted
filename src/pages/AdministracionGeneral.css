@@ -1079,6 +1079,13 @@
   font-size: 0.75rem !important;
 }
 
+.ag-comidas-ia__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
 .ag-comidas-ia__drawer {
   position: fixed;
   inset: 0;

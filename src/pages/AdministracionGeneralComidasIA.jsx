@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import CampoFechaCalendario from '../components/CampoFechaCalendario.jsx'
+import ConfirmModal from '../components/ConfirmModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { useToast } from '../components/Toast.jsx'
-import { obtenerComidasAdmin } from '../services/caloriasService.js'
+import {
+  eliminarComidaAdmin,
+  obtenerComidasAdmin,
+} from '../services/caloriasService.js'
 import {
   formatearFechaCuenta,
   formatearFechaHoraCuenta,
@@ -33,6 +37,8 @@ function AdministracionGeneralComidasIA() {
   const [verTodoHistorial, setVerTodoHistorial] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [detalle, setDetalle] = useState(null)
+  const [eliminarTarget, setEliminarTarget] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
 
   const cargar = useCallback(
     async ({ signal } = {}) => {
@@ -75,6 +81,25 @@ function AdministracionGeneralComidasIA() {
       kcal,
     }
   }, [comidas])
+
+  const handleConfirmEliminar = async () => {
+    if (!eliminarTarget?.id) return
+    setEliminando(true)
+    try {
+      await eliminarComidaAdmin({
+        comidaId: eliminarTarget.id,
+        uid: eliminarTarget.uid,
+      })
+      toast.success('Registro de comida eliminado')
+      if (detalle?.id === eliminarTarget.id) setDetalle(null)
+      setEliminarTarget(null)
+      await cargar()
+    } catch (err) {
+      toast.error(err.message || 'No se pudo eliminar el registro')
+    } finally {
+      setEliminando(false)
+    }
+  }
 
   return (
     <section className="ag-page__view">
@@ -203,13 +228,23 @@ function AdministracionGeneralComidasIA() {
                       : '—'}
                   </td>
                   <td data-label="">
-                    <button
-                      type="button"
-                      className="ag-action-btn ag-action-btn--ghost ag-comidas-ia__detalle-btn"
-                      onClick={() => setDetalle(item)}
-                    >
-                      Ver
-                    </button>
+                    <div className="ag-comidas-ia__row-actions">
+                      <button
+                        type="button"
+                        className="ag-action-btn ag-action-btn--ghost ag-comidas-ia__detalle-btn"
+                        onClick={() => setDetalle(item)}
+                      >
+                        Ver
+                      </button>
+                      <button
+                        type="button"
+                        className="ag-action-btn ag-action-btn--ghost pf-action-btn--danger ag-comidas-ia__detalle-btn"
+                        onClick={() => setEliminarTarget(item)}
+                        disabled={eliminando}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -232,13 +267,23 @@ function AdministracionGeneralComidasIA() {
           <aside className="ag-comidas-ia__drawer-panel">
             <header>
               <h2>{detalle.plato || 'Comida'}</h2>
-              <button
-                type="button"
-                className="ag-action-btn ag-action-btn--ghost"
-                onClick={() => setDetalle(null)}
-              >
-                Cerrar
-              </button>
+              <div className="ag-comidas-ia__row-actions">
+                <button
+                  type="button"
+                  className="ag-action-btn ag-action-btn--ghost pf-action-btn--danger"
+                  onClick={() => setEliminarTarget(detalle)}
+                  disabled={eliminando}
+                >
+                  Eliminar
+                </button>
+                <button
+                  type="button"
+                  className="ag-action-btn ag-action-btn--ghost"
+                  onClick={() => setDetalle(null)}
+                >
+                  Cerrar
+                </button>
+              </div>
             </header>
             <p>
               <strong>{detalle.usuarioNombre}</strong>
@@ -300,7 +345,26 @@ function AdministracionGeneralComidasIA() {
         </div>
       )}
 
-      <LoadingOverlay visible={loading} label="Cargando comidas IA" />
+      <ConfirmModal
+        open={Boolean(eliminarTarget)}
+        onClose={eliminando ? undefined : () => setEliminarTarget(null)}
+        onConfirm={handleConfirmEliminar}
+        title="Eliminar registro"
+        message={
+          eliminarTarget
+            ? `¿Eliminar el análisis de "${eliminarTarget.plato || 'comida'}" de ${eliminarTarget.usuarioNombre || 'este usuario'}?`
+            : ''
+        }
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={eliminando}
+      />
+
+      <LoadingOverlay
+        visible={loading || eliminando}
+        label={eliminando ? 'Eliminando registro' : 'Cargando comidas IA'}
+      />
     </section>
   )
 }

@@ -39,6 +39,57 @@ export async function obtenerComidasAdmin({
   return data.comidas ?? []
 }
 
+export async function eliminarComidaAdmin({ comidaId, uid }) {
+  const token = await requerirAdminToken()
+  const id = String(comidaId || '').trim()
+  if (!id) throw new Error('El id de la comida es obligatorio')
+
+  const params = new URLSearchParams()
+  if (uid) params.set('uid', String(uid))
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nutricion/comidas/admin/${encodeURIComponent(id)}?${params.toString()}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo eliminar el registro')
+  }
+  return data
+}
+
+export async function obtenerCupoAnalisisDiario({ signal } = {}) {
+  const token = getUserToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/nutricion/cupo-diario`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo consultar el cupo diario')
+  }
+  return data.cupo ?? null
+}
+
 export async function obtenerMisComidas({ signal, limite = 20 } = {}) {
   const token = getUserToken()
   if (!token) throw new Error('No hay sesión activa')

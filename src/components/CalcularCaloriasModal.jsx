@@ -4,6 +4,7 @@ import LoadingOverlay from './LoadingOverlay.jsx'
 import { useUsuario } from '../contexts/UsuarioContext.jsx'
 import {
   calcularCaloriasDesdeFoto,
+  obtenerCupoAnalisisDiario,
   obtenerMisComidas,
 } from '../services/caloriasService.js'
 import {
@@ -28,6 +29,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
   const [previewUrl, setPreviewUrl] = useState('')
   const [resultado, setResultado] = useState(null)
   const [historial, setHistorial] = useState([])
+  const [cupo, setCupo] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [sugerenciaDescartada, setSugerenciaDescartada] = useState(false)
@@ -54,6 +56,16 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
     }
   }
 
+  const cargarCupo = async (signal) => {
+    try {
+      const data = await obtenerCupoAnalisisDiario({ signal })
+      if (!signal?.aborted) setCupo(data)
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      console.warn('[calorias] cupo:', err.message)
+    }
+  }
+
   useEffect(() => {
     if (!open) {
       limpiarPreview()
@@ -61,6 +73,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
       setResultado(null)
       setError('')
       setLoading(false)
+      setCupo(null)
       if (camaraRef.current) camaraRef.current.value = ''
       if (galeriaRef.current) galeriaRef.current.value = ''
       return undefined
@@ -69,6 +82,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
     setSugerenciaDescartada(false)
     const controller = new AbortController()
     cargarHistorial(controller.signal)
+    cargarCupo(controller.signal)
     return () => controller.abort()
   }, [open])
 
@@ -94,8 +108,10 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
     asignarArchivo(file)
   }
 
+  const sinCupo = Boolean(cupo && cupo.restantes <= 0)
+
   const handleAnalizar = async () => {
-    if (!archivo || loading) return
+    if (!archivo || loading || sinCupo) return
     setLoading(true)
     setError('')
     setResultado(null)
@@ -106,9 +122,12 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
         edad: perfil.edad,
       })
       setResultado(data)
+      if (data.cupo) setCupo(data.cupo)
+      else await cargarCupo()
       await cargarHistorial()
     } catch (err) {
       setError(err.message || 'No se pudieron estimar las calorías')
+      await cargarCupo()
     } finally {
       setLoading(false)
     }
@@ -134,7 +153,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
             type="button"
             className="calcular-calorias__btn calcular-calorias__btn--primary"
             onClick={handleAnalizar}
-            disabled={!archivo || loading}
+            disabled={!archivo || loading || sinCupo}
           >
             {loading ? 'Analizando…' : 'Analizar plato'}
           </button>
@@ -145,6 +164,14 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
         Toma o sube una foto de tu comida. Cada análisis se guarda con fecha y
         hora para personalizar futuros resúmenes según lo que ya comiste.
       </p>
+
+      {cupo && (
+        <p className={`calcular-calorias__cupo${sinCupo ? ' calcular-calorias__cupo--agotado' : ''}`}>
+          {sinCupo
+            ? `Límite diario alcanzado (${cupo.limite}/día). Vuelve mañana.`
+            : `Análisis hoy: ${cupo.cantidad}/${cupo.limite} · Te quedan ${cupo.restantes}`}
+        </p>
+      )}
 
       {mostrarSugerencia && (
         <div className="calcular-calorias__sugerencia" role="status">
