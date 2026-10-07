@@ -171,6 +171,11 @@ function CronometroTurnoWidget({
   puntualidad = null,
   onFinalizar,
   finalizando,
+  recordatorioActivo = false,
+  onRecordatorioChange,
+  onProbarAudio,
+  probandoAudio = false,
+  audioDisponible = false,
 }) {
   const rootRef = useRef(null)
   const dragRef = useRef(null)
@@ -347,6 +352,32 @@ function CronometroTurnoWidget({
             {renderEstadoDominical(estadoRecargoDominical)}
             {renderEstadoNocturno(estadoRecargoNocturno)}
           </div>
+
+          <div className="cronometro-turno__recordatorio" data-no-drag="true">
+            <label className="cronometro-turno__switch">
+              <input
+                type="checkbox"
+                checked={Boolean(recordatorioActivo)}
+                onChange={(e) => onRecordatorioChange?.(e.target.checked)}
+                disabled={!audioDisponible}
+              />
+              <span>Reproducir recordatorio</span>
+            </label>
+            <p className="cronometro-turno__recordatorio-hint">
+              {audioDisponible
+                ? 'Cada 30 min mientras esté activo'
+                : 'Sin audio configurado en Eventos'}
+            </p>
+            <button
+              type="button"
+              className="cronometro-turno__btn cronometro-turno__btn--secondary"
+              onClick={onProbarAudio}
+              disabled={!audioDisponible || probandoAudio || finalizando}
+            >
+              {probandoAudio ? 'Reproduciendo…' : 'Probar audio'}
+            </button>
+          </div>
+
           <button
             type="button"
             className="cronometro-turno__btn"

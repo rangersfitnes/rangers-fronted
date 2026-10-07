@@ -243,6 +243,45 @@
   color: #60a5fa;
 }
 
+.cronometro-turno__recordatorio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cronometro-turno__switch {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #e5e5e5;
+  cursor: pointer;
+}
+
+.cronometro-turno__switch input {
+  width: 0.95rem;
+  height: 0.95rem;
+  accent-color: #f97316;
+  cursor: pointer;
+}
+
+.cronometro-turno__switch input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.cronometro-turno__recordatorio-hint {
+  margin: 0;
+  font-size: 0.65rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.45);
+}
+
 .cronometro-turno__btn {
   padding: 0.55rem 0.85rem;
   font-size: 0.72rem;
@@ -257,6 +296,16 @@
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
   touch-action: manipulation;
+}
+
+.cronometro-turno__btn--secondary {
+  color: #fdba74;
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
+.cronometro-turno__btn--secondary:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.7);
 }
 
 .cronometro-turno__btn:hover:not(:disabled) {

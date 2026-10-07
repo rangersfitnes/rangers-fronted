@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import CronometroTurnoWidget from '../components/CronometroTurnoWidget.jsx'
@@ -11,6 +12,7 @@ import FinJornadaTurnoModal from '../components/FinJornadaTurnoModal.jsx'
 import IniciarJornadaModal from '../components/IniciarJornadaModal.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { obtenerAdminToken } from '../services/authService.js'
+import { obtenerContenidoWebPublico } from '../services/contenidoWebService.js'
 import {
   finalizarTurnoLaboral,
   iniciarTurnoLaboral,
@@ -23,9 +25,11 @@ import {
   obtenerEstadoRecargoNocturno,
 } from '../utils/calculoPagoTurnoUtils.js'
 import { resolverJornadaEsquema } from '../utils/esquemaPagoUtils.js'
+import { reproducirAudioAsistencias } from '../utils/reproducirAudioAsistencias.js'
 import { normalizarTimestampMs } from '../pages/cuenta/cuentaUtils.js'
 
 const ColaboradorTurnoContext = createContext(null)
+const RECORDATORIO_INTERVALO_MS = 30 * 60 * 1000
 
 export function ColaboradorTurnoProvider({ children }) {
   const toast = useToast()
@@ -39,6 +43,10 @@ export function ColaboradorTurnoProvider({ children }) {
   const [finalizando, setFinalizando] = useState(false)
   const [continuarTiempoExtra, setContinuarTiempoExtra] = useState(false)
   const [ahora, setAhora] = useState(Date.now())
+  const [recordatorioActivo, setRecordatorioActivo] = useState(false)
+  const [audioRecordatorioUrl, setAudioRecordatorioUrl] = useState(null)
+  const [probandoAudio, setProbandoAudio] = useState(false)
+  const turnoPrevioIdRef = useRef(null)
 
   const cargarEstadoTurno = useCallback(async () => {
     const token = await obtenerAdminToken()
@@ -176,6 +184,93 @@ export function ColaboradorTurnoProvider({ children }) {
     setContinuarTiempoExtra(false)
   }, [turnoActivo?.id])
 
+  // Enciende el recordatorio al iniciar turno; lo apaga al finalizar.
+  useEffect(() => {
+    const idActual = turnoActivo?.id || null
+    const idPrevio = turnoPrevioIdRef.current
+
+    if (idActual && idActual !== idPrevio) {
+      setRecordatorioActivo(true)
+    }
+    if (!idActual && idPrevio) {
+      setRecordatorioActivo(false)
+    }
+
+    turnoPrevioIdRef.current = idActual
+  }, [turnoActivo?.id])
+
+  useEffect(() => {
+    if (!turnoActivo) {
+      setAudioRecordatorioUrl(null)
+      return undefined
+    }
+
+    const controller = new AbortController()
+
+    const cargarAudio = async () => {
+      try {
+        const contenido = await obtenerContenidoWebPublico({
+          signal: controller.signal,
+        })
+        const asistencias = contenido?.asistencias || {}
+        const url = String(asistencias.audioUrl || '').trim()
+        const habilitado =
+          asistencias.audioActivo === undefined
+            ? Boolean(url)
+            : Boolean(asistencias.audioActivo && url)
+        setAudioRecordatorioUrl(habilitado ? url : null)
+      } catch (err) {
+        if (err?.name === 'AbortError') return
+      }
+    }
+
+    cargarAudio()
+    const poll = window.setInterval(cargarAudio, 60_000)
+    return () => {
+      controller.abort()
+      window.clearInterval(poll)
+    }
+  }, [turnoActivo?.id])
+
+  const reproducirRecordatorio = useCallback(async () => {
+    if (!audioRecordatorioUrl) {
+      throw new Error('No hay audio de recordatorio configurado')
+    }
+    await reproducirAudioAsistencias(audioRecordatorioUrl)
+  }, [audioRecordatorioUrl])
+
+  useEffect(() => {
+    if (!recordatorioActivo || !audioRecordatorioUrl || !turnoActivo) {
+      return undefined
+    }
+
+    const intervaloId = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return
+      reproducirRecordatorio().catch(() => {
+        // Silencioso en el ciclo automático.
+      })
+    }, RECORDATORIO_INTERVALO_MS)
+
+    return () => window.clearInterval(intervaloId)
+  }, [
+    recordatorioActivo,
+    audioRecordatorioUrl,
+    turnoActivo?.id,
+    reproducirRecordatorio,
+  ])
+
+  const handleProbarAudio = useCallback(async () => {
+    if (probandoAudio) return
+    setProbandoAudio(true)
+    try {
+      await reproducirRecordatorio()
+    } catch (err) {
+      toast.error(err.message || 'No se pudo reproducir el audio')
+    } finally {
+      setProbandoAudio(false)
+    }
+  }, [probandoAudio, reproducirRecordatorio, toast])
+
   const handleCerrarModalInicio = () => {
     if (iniciando) return
     setJornadaPospuesta(true)
@@ -187,6 +282,7 @@ export function ColaboradorTurnoProvider({ children }) {
     try {
       const turno = await iniciarTurnoLaboral()
       setTurnoActivo(turno)
+      setRecordatorioActivo(true)
       setContinuarTiempoExtra(false)
       setModalInicioOpen(false)
 
@@ -220,6 +316,7 @@ export function ColaboradorTurnoProvider({ children }) {
     try {
       await finalizarTurnoLaboral({ turnoId: turnoActivo.id })
       setTurnoActivo(null)
+      setRecordatorioActivo(false)
       setContinuarTiempoExtra(false)
       setJornadaPospuesta(false)
       toast.success('Turno finalizado correctamente')
@@ -276,6 +373,11 @@ export function ColaboradorTurnoProvider({ children }) {
                 puntualidad={turnoActivo?.puntualidad || null}
                 onFinalizar={handleFinalizarTurno}
                 finalizando={finalizando}
+                recordatorioActivo={recordatorioActivo}
+                onRecordatorioChange={setRecordatorioActivo}
+                onProbarAudio={handleProbarAudio}
+                probandoAudio={probandoAudio}
+                audioDisponible={Boolean(audioRecordatorioUrl)}
               />
             </>
           ) : null}

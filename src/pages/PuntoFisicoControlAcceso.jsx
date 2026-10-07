@@ -25,22 +25,6 @@ const PANTALLA_CUMPLE_MS = 5500
 const PANTALLA_TEMA_MS = 4800
 const TEMA_ASISTENCIA_DEFAULT = 'predeterminado'
 const POLL_TEMA_MS = 15_000
-const AUDIO_INTERVALO_DEFAULT_MS = 5 * 60 * 1000
-
-function normalizarConfigAudioAsistencias(asistencias = {}) {
-  const url = String(asistencias.audioUrl || '').trim()
-  const intervaloSegundos = Number(asistencias.audioIntervaloSegundos)
-  const intervaloMs =
-    Number.isFinite(intervaloSegundos) && intervaloSegundos >= 30
-      ? Math.round(intervaloSegundos * 1000)
-      : AUDIO_INTERVALO_DEFAULT_MS
-
-  return {
-    url: url || null,
-    activo: Boolean(asistencias.audioActivo && url),
-    intervaloMs,
-  }
-}
 
 const CONFETTI_PARTICULAS = Array.from({ length: 28 }, (_, indice) => ({
   id: indice,
@@ -762,10 +746,6 @@ function VistaControlAcceso({
   const [resultado, setResultado] = useState(null)
   const [pagoPendiente, setPagoPendiente] = useState(null)
   const [temaAsistencia, setTemaAsistencia] = useState(TEMA_ASISTENCIA_DEFAULT)
-  const [audioConfig, setAudioConfig] = useState(() =>
-    normalizarConfigAudioAsistencias(),
-  )
-  const audioRef = useRef(null)
 
   const temaAmor = temaAsistencia === 'amor_amistad'
   const temaHalloween = temaAsistencia === 'halloween'
@@ -807,7 +787,6 @@ function VistaControlAcceso({
       setTemaAsistencia(
         normalizarTemaAsistencia(contenido?.asistencias?.tema),
       )
-      setAudioConfig(normalizarConfigAudioAsistencias(contenido?.asistencias))
     } catch (err) {
       if (err?.name === 'AbortError') return
       // Silencioso: se mantiene el tema ya cargado / predeterminado.
@@ -835,48 +814,6 @@ function VistaControlAcceso({
       document.removeEventListener('visibilitychange', alVisibilidad)
     }
   }, [cargarTemaAsistencia])
-
-  useEffect(() => {
-    const audioActual = audioRef.current
-    if (audioActual) {
-      audioActual.pause()
-      audioActual.src = ''
-      audioRef.current = null
-    }
-
-    if (!audioConfig.activo || !audioConfig.url) {
-      return undefined
-    }
-
-    const audio = new Audio(audioConfig.url)
-    audio.preload = 'auto'
-    audioRef.current = audio
-
-    const reproducir = () => {
-      if (document.visibilityState === 'hidden') return
-      const instancia = audioRef.current
-      if (!instancia) return
-      instancia.currentTime = 0
-      const promesa = instancia.play()
-      if (promesa?.catch) {
-        promesa.catch(() => {
-          // Autplay bloqueado hasta la primera interacción del usuario.
-        })
-      }
-    }
-
-    // Primera reproducción al abrir (o tras desbloquear con interacción).
-    const primerTimeout = window.setTimeout(reproducir, 800)
-    const intervaloId = window.setInterval(reproducir, audioConfig.intervaloMs)
-
-    return () => {
-      window.clearTimeout(primerTimeout)
-      window.clearInterval(intervaloId)
-      audio.pause()
-      audio.src = ''
-      if (audioRef.current === audio) audioRef.current = null
-    }
-  }, [audioConfig.activo, audioConfig.url, audioConfig.intervaloMs])
 
   const reiniciar = useCallback(() => {
     setCedula('')

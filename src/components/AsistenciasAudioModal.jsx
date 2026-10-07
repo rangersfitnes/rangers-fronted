@@ -9,32 +9,13 @@ import {
 import './CrearPlanModal.css'
 import './AsistenciasAudioModal.css'
 
-const INTERVALO_MIN_MINUTOS = 0.5
-const INTERVALO_MAX_MINUTOS = 60
-const INTERVALO_DEFAULT_MINUTOS = 5
-
-function segundosAMinutos(segundos) {
-  const n = Number(segundos)
-  if (!Number.isFinite(n) || n <= 0) return INTERVALO_DEFAULT_MINUTOS
-  return Math.round((n / 60) * 10) / 10
-}
-
-function minutosASegundos(minutos) {
-  const n = Number(minutos)
-  if (!Number.isFinite(n) || n <= 0) {
-    return INTERVALO_DEFAULT_MINUTOS * 60
-  }
-  return Math.round(n * 60)
-}
+const INTERVALO_RECORDATORIO_SEGUNDOS = 30 * 60
 
 function AsistenciasAudioModal({ open, onClose }) {
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [archivo, setArchivo] = useState(null)
-  const [intervaloMinutos, setIntervaloMinutos] = useState(
-    String(INTERVALO_DEFAULT_MINUTOS),
-  )
   const [audioActivo, setAudioActivo] = useState(true)
   const [audioActual, setAudioActual] = useState(null)
 
@@ -44,7 +25,6 @@ function AsistenciasAudioModal({ open, onClose }) {
       setError('')
       setSubmitting(false)
       setLoading(false)
-      setIntervaloMinutos(String(INTERVALO_DEFAULT_MINUTOS))
       setAudioActivo(true)
       setAudioActual(null)
       return undefined
@@ -63,9 +43,6 @@ function AsistenciasAudioModal({ open, onClose }) {
           nombre: asistencias.audioNombre || null,
           activo: Boolean(asistencias.audioActivo && asistencias.audioUrl),
         })
-        setIntervaloMinutos(
-          String(segundosAMinutos(asistencias.audioIntervaloSegundos)),
-        )
         setAudioActivo(
           asistencias.audioActivo === undefined
             ? Boolean(asistencias.audioUrl)
@@ -107,20 +84,6 @@ function AsistenciasAudioModal({ open, onClose }) {
   const handleGuardar = async (event) => {
     event.preventDefault()
     setError('')
-
-    const minutos = Number(intervaloMinutos)
-    if (
-      !Number.isFinite(minutos) ||
-      minutos < INTERVALO_MIN_MINUTOS ||
-      minutos > INTERVALO_MAX_MINUTOS
-    ) {
-      setError(
-        `El intervalo debe estar entre ${INTERVALO_MIN_MINUTOS} y ${INTERVALO_MAX_MINUTOS} minutos`,
-      )
-      return
-    }
-
-    const intervaloSegundos = minutosASegundos(minutos)
     setSubmitting(true)
 
     try {
@@ -128,13 +91,13 @@ function AsistenciasAudioModal({ open, onClose }) {
       if (archivo) {
         contenido = await subirAudioAsistenciasAdmin({
           archivo,
-          intervaloSegundos,
+          intervaloSegundos: INTERVALO_RECORDATORIO_SEGUNDOS,
           audioActivo,
         })
       } else if (audioActual?.url) {
         contenido = await actualizarContenidoWebAdmin({
           asistencias: {
-            audioIntervaloSegundos: intervaloSegundos,
+            audioIntervaloSegundos: INTERVALO_RECORDATORIO_SEGUNDOS,
             audioActivo,
           },
         })
@@ -214,9 +177,9 @@ function AsistenciasAudioModal({ open, onClose }) {
       }
     >
       <p className="asistencias-audio__intro">
-        Este MP3 se reproducirá en bucle por el intervalo elegido mientras esté
-        abierta la pantalla de registro de asistencias (control de acceso /
-        kiosco).
+        Este MP3 es el recordatorio de asistencias. Los colaboradores lo
+        reproducen desde el cronómetro flotante (switch “Reproducir
+        recordatorio”, cada 30 minutos) o con “Probar audio”.
       </p>
 
       {loading ? (
@@ -272,25 +235,10 @@ function AsistenciasAudioModal({ open, onClose }) {
             ) : null}
           </label>
 
-          <label className="crear-plan__field">
-            <span className="crear-plan__label">
-              Intervalo de reproducción (minutos)
-            </span>
-            <input
-              type="number"
-              className="crear-plan__input"
-              min={INTERVALO_MIN_MINUTOS}
-              max={INTERVALO_MAX_MINUTOS}
-              step="0.5"
-              value={intervaloMinutos}
-              onChange={(e) => setIntervaloMinutos(e.target.value)}
-              disabled={submitting}
-              required
-            />
-            <span className="asistencias-audio__hint">
-              Ej. 5 = se reproduce cada 5 minutos. Mínimo 0.5 (30 s), máximo 60.
-            </span>
-          </label>
+          <p className="asistencias-audio__hint">
+            Con el switch del cronómetro activo, el recordatorio suena cada 30
+            minutos.
+          </p>
 
           <label className="asistencias-audio__switch">
             <input
@@ -299,7 +247,7 @@ function AsistenciasAudioModal({ open, onClose }) {
               onChange={(e) => setAudioActivo(e.target.checked)}
               disabled={submitting}
             />
-            <span>Audio activo en el registro de asistencias</span>
+            <span>Audio disponible para el recordatorio</span>
           </label>
         </form>
       )}
