@@ -47,12 +47,14 @@ import { crearPlantilla, guardarPlantillaAutomatica } from '../services/plantill
 import VistaFinanzas from './AdministracionGeneralFinanzas.jsx'
 import VistaGestionHumana from './AdministracionGeneralGestionHumana.jsx'
 import VistaAsistencias from './AdministracionGeneralAsistencias.jsx'
+import VistaComidasIA from './AdministracionGeneralComidasIA.jsx'
 import VistaContenidoWeb from './AdministracionGeneralContenidoWeb.jsx'
 import VistaUsuariosAdmin from './VistaUsuariosAdmin.jsx'
+import { getAdminRole } from '../services/authService.js'
 import { exportarPlanesExcel } from '../utils/exportPlanesExcel.js'
 import './AdministracionGeneral.css'
 
-const tabs = [
+const TABS_BASE = [
   { id: 'usuarios', label: 'Usuarios' },
   { id: 'planes', label: 'Planes' },
   { id: 'horarios', label: 'Horarios' },
@@ -63,6 +65,15 @@ const tabs = [
   { id: 'finanzas', label: 'Finanzas' },
   { id: 'gestion-humana', label: 'Gestión humana' },
 ]
+
+function tabsParaRol(rol) {
+  if (rol !== 'creador') return TABS_BASE
+  const tabs = [...TABS_BASE]
+  const idx = tabs.findIndex((t) => t.id === 'asistencias')
+  const insertAt = idx >= 0 ? idx + 1 : tabs.length
+  tabs.splice(insertAt, 0, { id: 'comidas-ia', label: 'Comidas IA' })
+  return tabs
+}
 
 function VistaPlanes() {
   const toast = useToast()
@@ -947,6 +958,7 @@ function VistaEventos() {
 
 function AdministracionGeneral() {
   const [activeTab, setActiveTab] = useState('usuarios')
+  const tabs = tabsParaRol(getAdminRole())
 
   return (
     <div
@@ -967,6 +979,7 @@ function AdministracionGeneral() {
         {activeTab === 'clases-grupales' && <ConfiguracionClasesGrupales />}
         {activeTab === 'eventos' && <VistaEventos />}
         {activeTab === 'asistencias' && <VistaAsistencias />}
+        {activeTab === 'comidas-ia' && <VistaComidasIA />}
         {activeTab === 'contenido-web' && <VistaContenidoWeb />}
         {activeTab === 'finanzas' && <VistaFinanzas />}
         {activeTab === 'gestion-humana' && <VistaGestionHumana />}

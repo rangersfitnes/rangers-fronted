@@ -1015,6 +1015,130 @@
   color: #737373;
 }
 
+.ag-comidas-ia__filtros {
+  margin-bottom: 1rem;
+  align-items: end;
+}
+
+.ag-comidas-ia__busqueda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #737373;
+  min-width: 14rem;
+}
+
+.ag-comidas-ia__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.ag-comidas-ia__stats article {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ag-comidas-ia__stats strong {
+  font-size: 1.35rem;
+  color: #fb923c;
+}
+
+.ag-comidas-ia__stats span {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+
+.ag-comidas-ia__plato {
+  display: block;
+  font-weight: 600;
+  color: #f5f5f5;
+}
+
+.ag-comidas-ia__alimentos {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: #a3a3a3;
+}
+
+.ag-comidas-ia__detalle-btn {
+  padding: 0.35rem 0.75rem !important;
+  font-size: 0.75rem !important;
+}
+
+.ag-comidas-ia__drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ag-comidas-ia__drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.ag-comidas-ia__drawer-panel {
+  position: relative;
+  width: min(28rem, 100%);
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.25rem 1.35rem 2rem;
+  background: #111111;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -18px 0 48px rgba(0, 0, 0, 0.45);
+}
+
+.ag-comidas-ia__drawer-panel header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.ag-comidas-ia__drawer-panel h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #ffffff;
+}
+
+.ag-comidas-ia__drawer-panel h3 {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.ag-comidas-ia__drawer-panel p,
+.ag-comidas-ia__drawer-panel li {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #d4d4d4;
+}
+
+.ag-comidas-ia__drawer-panel ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
 .ag-contenido-web__panel {
   display: flex;
   flex-direction: column;

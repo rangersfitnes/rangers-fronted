@@ -1,5 +1,43 @@
 import { API_BASE_URL } from '../variables/api.jsx'
+import { requerirAdminToken } from './authService.js'
 import { getUserToken } from './userService.js'
+
+export async function obtenerComidasAdmin({
+  signal,
+  fechaDesde,
+  fechaHasta,
+  limite = 200,
+  q,
+} = {}) {
+  const token = await requerirAdminToken()
+  const params = new URLSearchParams()
+  if (fechaDesde) params.set('fechaDesde', fechaDesde)
+  if (fechaHasta) params.set('fechaHasta', fechaHasta)
+  if (limite) params.set('limite', String(limite))
+  if (q) params.set('q', q)
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nutricion/comidas/admin?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo cargar el registro de comidas IA')
+  }
+
+  return data.comidas ?? []
+}
 
 export async function obtenerMisComidas({ signal, limite = 20 } = {}) {
   const token = getUserToken()
