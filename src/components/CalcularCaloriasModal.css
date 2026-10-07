@@ -173,9 +173,66 @@
   background: #ea580c;
 }
 
+.calcular-calorias__btn--reject {
+  background: transparent;
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.calcular-calorias__btn--reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.12);
+}
+
 .calcular-calorias__btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.calcular-calorias__decision {
+  margin: 0.85rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.calcular-calorias__decision p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.calcular-calorias__decision-ok {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: #86efac;
+}
+
+.calcular-calorias__estado {
+  display: inline-block;
+  margin-left: 0.45rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.calcular-calorias__estado--consumido {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.calcular-calorias__estado--rechazado {
+  color: #fdba74;
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.calcular-calorias__estado--consultado {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.15);
 }
 
 .calcular-calorias__sugerencia {

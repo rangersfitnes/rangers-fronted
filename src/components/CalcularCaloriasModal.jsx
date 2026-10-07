@@ -4,6 +4,7 @@ import LoadingOverlay from './LoadingOverlay.jsx'
 import { useUsuario } from '../contexts/UsuarioContext.jsx'
 import {
   calcularCaloriasDesdeFoto,
+  decidirComidaAnalizada,
   obtenerCupoAnalisisDiario,
   obtenerMisComidas,
 } from '../services/caloriasService.js'
@@ -17,6 +18,13 @@ function formatearFechaComida(fechaLocal, horaLocal) {
   if (!fechaLocal && !horaLocal) return '—'
   if (fechaLocal && horaLocal) return `${fechaLocal} · ${horaLocal}`
   return fechaLocal || horaLocal
+}
+
+function etiquetaEstadoComida(estado) {
+  if (estado === 'consumido') return 'Consumido'
+  if (estado === 'rechazado') return 'Solo consultado'
+  if (estado === 'consultado') return 'Pendiente'
+  return 'Consumido'
 }
 
 function DetalleIngesta({ comida, mostrarRegistro = true, historialUsado }) {
@@ -127,6 +135,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
   const [cupo, setCupo] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [decidiendo, setDecidiendo] = useState(false)
   const [sugerenciaDescartada, setSugerenciaDescartada] = useState(false)
 
   const perfil = useMemo(() => perfilCorporalCompleto(usuario), [usuario])
@@ -168,6 +177,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
       setResultado(null)
       setError('')
       setLoading(false)
+      setDecidiendo(false)
       setCupo(null)
       setComidaExpandidaId(null)
       if (camaraRef.current) camaraRef.current.value = ''
@@ -218,7 +228,11 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
         alturaCm: perfil.alturaCm,
         edad: perfil.edad,
       })
-      setResultado(data)
+      setResultado({
+        ...data,
+        estado: data.estado || 'consultado',
+        id: data.registroId || data.id || null,
+      })
       if (data.cupo) setCupo(data.cupo)
       else await cargarCupo()
       await cargarHistorial()
@@ -230,10 +244,40 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
     }
   }
 
+  const handleDecision = async (decision) => {
+    const comidaId = resultado?.registroId || resultado?.id
+    if (!comidaId || decidiendo || loading) return
+    setDecidiendo(true)
+    setError('')
+    try {
+      const comida = await decidirComidaAnalizada(comidaId, decision)
+      setResultado((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...comida,
+              registroId: comida.id,
+              estado: comida.estado,
+            }
+          : prev,
+      )
+      await cargarHistorial()
+    } catch (err) {
+      setError(err.message || 'No se pudo guardar la decisión')
+    } finally {
+      setDecidiendo(false)
+    }
+  }
+
+  const pendienteDecision =
+    Boolean(resultado) &&
+    (resultado.estado === 'consultado' || !resultado.estado) &&
+    Boolean(resultado.registroId || resultado.id)
+
   return (
     <Modal
       open={open}
-      onClose={loading ? undefined : onClose}
+      onClose={loading || decidiendo ? undefined : onClose}
       title="Calcular calorías"
       className="calcular-calorias-modal"
       footer={
@@ -242,24 +286,46 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
             type="button"
             className="calcular-calorias__btn calcular-calorias__btn--ghost"
             onClick={onClose}
-            disabled={loading}
+            disabled={loading || decidiendo}
           >
             Cerrar
           </button>
-          <button
-            type="button"
-            className="calcular-calorias__btn calcular-calorias__btn--primary"
-            onClick={handleAnalizar}
-            disabled={!archivo || loading || sinCupo}
-          >
-            {loading ? 'Analizando…' : 'Analizar plato'}
-          </button>
+          {pendienteDecision ? (
+            <>
+              <button
+                type="button"
+                className="calcular-calorias__btn calcular-calorias__btn--reject"
+                onClick={() => handleDecision('rechazado')}
+                disabled={decidiendo}
+              >
+                {decidiendo ? 'Guardando…' : 'No lo consumí'}
+              </button>
+              <button
+                type="button"
+                className="calcular-calorias__btn calcular-calorias__btn--primary"
+                onClick={() => handleDecision('consumido')}
+                disabled={decidiendo}
+              >
+                {decidiendo ? 'Guardando…' : 'Sí, lo consumí'}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="calcular-calorias__btn calcular-calorias__btn--primary"
+              onClick={handleAnalizar}
+              disabled={!archivo || loading || sinCupo}
+            >
+              {loading ? 'Analizando…' : 'Analizar plato'}
+            </button>
+          )}
         </>
       }
     >
       <p className="calcular-calorias__intro">
-        Toma o sube una foto de tu comida. Cada análisis se guarda con fecha y
-        hora para personalizar futuros resúmenes según lo que ya comiste.
+        Toma o sube una foto de tu comida. Tras el análisis elige si la
+        consumiste o solo la consultaste; así el historial separa consultas y
+        ingestas reales.
       </p>
 
       {cupo && (
@@ -363,23 +429,43 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
       )}
 
       {resultado && (
-        <DetalleIngesta
-          comida={resultado}
-          historialUsado={resultado.historialUsado}
-        />
+        <>
+          <DetalleIngesta
+            comida={resultado}
+            historialUsado={resultado.historialUsado}
+          />
+          {pendienteDecision ? (
+            <div className="calcular-calorias__decision" role="status">
+              <p>
+                ¿Consumiste este plato? Confirma para registrarlo en tu
+                historial de ingestas, o márcalo como solo consulta.
+              </p>
+            </div>
+          ) : resultado.estado === 'consumido' ? (
+            <p className="calcular-calorias__decision-ok">
+              Registrado como consumido.
+            </p>
+          ) : resultado.estado === 'rechazado' ? (
+            <p className="calcular-calorias__decision-ok">
+              Guardado como consulta (no consumido).
+            </p>
+          ) : null}
+        </>
       )}
 
       {historial.length > 0 && (
         <section className="calcular-calorias__historial" aria-label="Comidas registradas">
           <h3 className="calcular-calorias__historial-title">
-            Comidas registradas
+            Consultas e ingestas
           </h3>
           <p className="calcular-calorias__historial-hint">
-            Toca una comida para ver el detalle guardado
+            Toca una comida para ver el detalle. Solo las consumidas alimentan
+            futuros resúmenes.
           </p>
           <ul className="calcular-calorias__historial-list">
             {historial.map((item) => {
               const expandida = comidaExpandidaId === item.id
+              const estado = item.estado || 'consumido'
               return (
                 <li key={item.id}>
                   <button
@@ -405,7 +491,14 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
                       </span>
                     </div>
                     <span className="calcular-calorias__historial-meta">
-                      {formatearFechaComida(item.fechaLocal, item.horaLocal)}
+                      <span>
+                        {formatearFechaComida(item.fechaLocal, item.horaLocal)}
+                        <span
+                          className={`calcular-calorias__estado calcular-calorias__estado--${estado}`}
+                        >
+                          {etiquetaEstadoComida(estado)}
+                        </span>
+                      </span>
                       <span className="calcular-calorias__historial-chevron" aria-hidden="true">
                         {expandida ? '▴' : '▾'}
                       </span>
@@ -423,7 +516,10 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
         </section>
       )}
 
-      <LoadingOverlay visible={loading} label="Estimando calorías" />
+      <LoadingOverlay
+        visible={loading || decidiendo}
+        label={decidiendo ? 'Guardando decisión' : 'Estimando calorías'}
+      />
     </Modal>
   )
 }
