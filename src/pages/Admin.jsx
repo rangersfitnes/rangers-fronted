@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { colors } from '../variables/colors.jsx'
 import { auth } from '../variables/firebase.jsx'
 import logo from '../assets/images/logos/logo.webp'
@@ -24,12 +24,14 @@ import './Admin.css'
 
 function Admin() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { establecerSesion } = useAdminAuth()
   const credencialesGuardadas = leerCredencialesRecordadas('admin')
   const [email, setEmail] = useState(credencialesGuardadas?.email || '')
   const [password, setPassword] = useState('')
   const [recordar, setRecordar] = useState(() => leerPreferenciaRecordarSesion('admin'))
   const [error, setError] = useState('')
+  const [aviso] = useState(() => location.state?.aviso || '')
   const [loading, setLoading] = useState(false)
 
   const handleRecordarChange = (valor) => {
@@ -53,7 +55,11 @@ function Admin() {
       const idToken = await credential.user.getIdToken()
       const result = await verifyAdminAccess(idToken)
 
-      establecerSesion(result.token || idToken, result.rol, { persistente: recordar })
+      establecerSesion(result.token || idToken, result.rol, {
+        persistente: recordar,
+        roles: result.roles,
+        perfil: result.perfil,
+      })
 
       if (recordar) {
         guardarCredencialesRecordadas('admin', { email: email.trim() })
@@ -95,10 +101,16 @@ function Admin() {
         <img src={logo} alt="Rangers Box" className="admin-card__logo" />
         <h1 className="admin-card__title">Administración</h1>
         <p className="admin-card__subtitle">
-          Inicia sesión como administrador de Rangers Box
+          Inicia sesión como administrador, colaborador o entrenador de Rangers
+          Box
         </p>
 
         <form className="admin-form" onSubmit={handleSubmit}>
+          {aviso && !error && (
+            <p className="admin-form__aviso" role="status">
+              {aviso}
+            </p>
+          )}
           {error && (
             <p className="admin-form__error" role="alert">
               {error}

@@ -74,3 +74,60 @@ export async function actualizarContenidoWebAdmin({ inicio, asistencias }) {
 
   return data.contenido ?? {}
 }
+
+export async function subirAudioAsistenciasAdmin({
+  archivo,
+  intervaloSegundos,
+  audioActivo = true,
+}) {
+  const token = await requerirAdminToken()
+  const form = new FormData()
+  form.append('audio', archivo)
+  form.append('intervaloSegundos', String(intervaloSegundos))
+  form.append('audioActivo', audioActivo ? 'true' : 'false')
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/contenido-web/asistencias-audio`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo subir el audio')
+  }
+
+  return data.contenido ?? {}
+}
+
+export async function eliminarAudioAsistenciasAdmin() {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/contenido-web/asistencias-audio`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo eliminar el audio')
+  }
+
+  return data.contenido ?? {}
+}

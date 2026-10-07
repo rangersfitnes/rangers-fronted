@@ -1,0 +1,180 @@
+.soy-entrenador {
+  min-height: 100vh;
+  padding: 2rem 1.25rem 3rem;
+  padding-top: max(2rem, env(safe-area-inset-top, 0px));
+}
+
+.soy-entrenador__wrap {
+  width: min(100%, 560px);
+  margin: 0 auto;
+}
+
+.soy-entrenador__back {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+}
+
+.soy-entrenador__back:hover {
+  color: #fb923c;
+}
+
+.soy-entrenador__hero {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.soy-entrenador__logo {
+  display: block;
+  width: auto;
+  height: 88px;
+  margin: 0 auto 1rem;
+}
+
+.soy-entrenador__title {
+  margin: 0 0 0.75rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.2rem, 6vw, 2.8rem);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.soy-entrenador__lead {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.soy-entrenador__beneficios {
+  margin: 0 0 1.75rem;
+  padding: 1rem 1.15rem 1rem 1.75rem;
+  list-style: disc;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.soy-entrenador__beneficios li {
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.soy-entrenador__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 1.25rem;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+}
+
+.soy-entrenador__form-title {
+  margin: 0 0 0.25rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.55rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.soy-entrenador__error {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #fecaca;
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+}
+
+.soy-entrenador__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.soy-entrenador__field span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.soy-entrenador__field input {
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  font-size: 1rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  outline: none;
+}
+
+.soy-entrenador__field input:focus {
+  border-color: rgba(249, 115, 22, 0.7);
+}
+
+.soy-entrenador__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.soy-entrenador__submit {
+  margin-top: 0.25rem;
+  padding: 0.95rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background-color: #f97316;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.soy-entrenador__submit:hover:not(:disabled) {
+  background-color: #ea580c;
+  transform: translateY(-1px);
+}
+
+.soy-entrenador__submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.soy-entrenador__login {
+  margin: 0.25rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.soy-entrenador__login a {
+  color: #fb923c;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.soy-entrenador__login a:hover {
+  text-decoration: underline;
+}

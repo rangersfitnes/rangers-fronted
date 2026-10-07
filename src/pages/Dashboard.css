@@ -22,6 +22,13 @@
   color: #ffffff;
 }
 
+.dashboard-page__subtitle {
+  margin: -1.5rem 0 2rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.65);
+}
+
 .dashboard-page__actions {
   display: flex;
   flex-direction: column;

@@ -12,6 +12,7 @@ import ConfiguracionHorarios from '../components/ConfiguracionHorarios.jsx'
 import ConfiguracionClasesGrupales from '../components/ConfiguracionClasesGrupales.jsx'
 import EventosTable from '../components/EventosTable.jsx'
 import EventoFormModal from '../components/EventoFormModal.jsx'
+import AsistenciasAudioModal from '../components/AsistenciasAudioModal.jsx'
 import EnviarMensajeWhatsAppModal from '../components/EnviarMensajeWhatsAppModal.jsx'
 import WhatsAppConexionModal from '../components/WhatsAppConexionModal.jsx'
 import PlantillaFormModal from '../components/PlantillaFormModal.jsx'
@@ -562,6 +563,7 @@ function VistaEventos() {
   const [envioMasivoOpen, setEnvioMasivoOpen] = useState(false)
   const [confirmarBarridoGrupoOpen, setConfirmarBarridoGrupoOpen] = useState(false)
   const [iniciandoBarridoGrupo, setIniciandoBarridoGrupo] = useState(false)
+  const [audioAsistenciasOpen, setAudioAsistenciasOpen] = useState(false)
 
   const cargarEventos = useCallback(
     async ({ signal } = {}) => {
@@ -808,6 +810,13 @@ function VistaEventos() {
           </button>
           <button
             type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => setAudioAsistenciasOpen(true)}
+          >
+            Audio asistencias
+          </button>
+          <button
+            type="button"
             className="ag-action-btn"
             onClick={() => {
               setFormError('')
@@ -855,6 +864,18 @@ function VistaEventos() {
         onSubmit={handleGuardarEvento}
         submitting={submitting}
         error={formError}
+      />
+
+      <AsistenciasAudioModal
+        open={audioAsistenciasOpen}
+        onClose={(contenido) => {
+          setAudioAsistenciasOpen(false)
+          if (contenido?.asistencias?.audioUrl) {
+            toast.success('Audio de asistencias actualizado')
+          } else if (contenido) {
+            toast.success('Configuración de audio actualizada')
+          }
+        }}
       />
 
       <ConfirmModal

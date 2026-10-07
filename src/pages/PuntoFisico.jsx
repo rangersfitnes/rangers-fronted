@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { colors } from '../variables/colors.jsx'
 import AdminTabsHeader from '../components/AdminTabsHeader.jsx'
 import { useToast } from '../components/Toast.jsx'
+import { useAdminAuth } from '../contexts/AdminAuthContext.jsx'
 import { abrirKioscoAcceso } from '../utils/abrirKioscoAcceso.js'
+import {
+  esAdminColaborador,
+  esCreadorStaff,
+  rolesStaffActuales,
+} from '../utils/adminRoles.js'
 import VistaPagoClases from './PuntoFisicoPagoClases.jsx'
 import VistaCierreDiario from './PuntoFisicoCierreDiario.jsx'
 import VistaControlAcceso from './PuntoFisicoControlAcceso.jsx'
@@ -22,6 +29,10 @@ const tabs = [
 
 function PuntoFisico() {
   const toast = useToast()
+  const { roles } = useAdminAuth()
+  const rolesActuales = rolesStaffActuales(roles)
+  const puedePuntoFisico =
+    esCreadorStaff(rolesActuales) || esAdminColaborador(rolesActuales)
   const [activeTab, setActiveTab] = useState('control-acceso')
   const [fullscreen, setFullscreen] = useState(false)
   const pageRef = useRef(null)
@@ -90,6 +101,10 @@ function PuntoFisico() {
 
   const enControlAcceso = activeTab === 'control-acceso'
   const ocultarTabs = enControlAcceso && fullscreen
+
+  if (!puedePuntoFisico) {
+    return <Navigate to="/admin/dashboard" replace />
+  }
 
   return (
     <div

@@ -325,6 +325,12 @@ function Hero() {
               >
                 Crear cuenta
               </Link>
+              <Link
+                to="/soy-entrenador"
+                className="hero__cta-btn hero__cta-btn--secondary"
+              >
+                Soy entrenador
+              </Link>
             </div>
 
             <div className="hero__info-cards">

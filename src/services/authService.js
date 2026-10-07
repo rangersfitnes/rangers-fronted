@@ -78,25 +78,43 @@ export async function verifyAdminAccess(idToken) {
 
 export const ADMIN_TOKEN_KEY = 'adminToken'
 export const ADMIN_ROLE_KEY = 'adminRole'
+export const ADMIN_ROLES_KEY = 'adminRoles'
+export const ADMIN_PERFIL_KEY = 'adminPerfil'
+
+function storagePair(persistente) {
+  return persistente
+    ? { primary: localStorage, secondary: sessionStorage }
+    : { primary: sessionStorage, secondary: localStorage }
+}
 
 export function saveAdminToken(token, { persistente = true } = {}) {
-  if (persistente) {
-    localStorage.setItem(ADMIN_TOKEN_KEY, token)
-    sessionStorage.removeItem(ADMIN_TOKEN_KEY)
-  } else {
-    sessionStorage.setItem(ADMIN_TOKEN_KEY, token)
-    localStorage.removeItem(ADMIN_TOKEN_KEY)
-  }
+  const { primary, secondary } = storagePair(persistente)
+  primary.setItem(ADMIN_TOKEN_KEY, token)
+  secondary.removeItem(ADMIN_TOKEN_KEY)
 }
 
 export function saveAdminRole(role, { persistente = true } = {}) {
-  if (persistente) {
-    localStorage.setItem(ADMIN_ROLE_KEY, role)
-    sessionStorage.removeItem(ADMIN_ROLE_KEY)
-  } else {
-    sessionStorage.setItem(ADMIN_ROLE_KEY, role)
-    localStorage.removeItem(ADMIN_ROLE_KEY)
+  const { primary, secondary } = storagePair(persistente)
+  primary.setItem(ADMIN_ROLE_KEY, role)
+  secondary.removeItem(ADMIN_ROLE_KEY)
+}
+
+export function saveAdminRoles(roles, { persistente = true } = {}) {
+  const lista = Array.isArray(roles) ? roles.filter(Boolean) : []
+  const { primary, secondary } = storagePair(persistente)
+  primary.setItem(ADMIN_ROLES_KEY, JSON.stringify(lista))
+  secondary.removeItem(ADMIN_ROLES_KEY)
+}
+
+export function saveAdminPerfil(perfil, { persistente = true } = {}) {
+  const { primary, secondary } = storagePair(persistente)
+  if (!perfil) {
+    primary.removeItem(ADMIN_PERFIL_KEY)
+    secondary.removeItem(ADMIN_PERFIL_KEY)
+    return
   }
+  primary.setItem(ADMIN_PERFIL_KEY, JSON.stringify(perfil))
+  secondary.removeItem(ADMIN_PERFIL_KEY)
 }
 
 export function getAdminToken() {
@@ -113,6 +131,36 @@ export function getAdminRole() {
   )
 }
 
+export function getAdminRoles() {
+  const raw =
+    localStorage.getItem(ADMIN_ROLES_KEY) ||
+    sessionStorage.getItem(ADMIN_ROLES_KEY)
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed.map((r) => String(r).toLowerCase())
+      }
+    } catch {
+      // fallback abajo
+    }
+  }
+  const rol = getAdminRole()
+  return rol ? [String(rol).toLowerCase()] : []
+}
+
+export function getAdminPerfil() {
+  const raw =
+    localStorage.getItem(ADMIN_PERFIL_KEY) ||
+    sessionStorage.getItem(ADMIN_PERFIL_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
 export function esAdminTokenPersistente() {
   if (typeof window === 'undefined') return true
   return Boolean(localStorage.getItem(ADMIN_TOKEN_KEY))
@@ -121,8 +169,12 @@ export function esAdminTokenPersistente() {
 export function clearAdminSession() {
   localStorage.removeItem(ADMIN_TOKEN_KEY)
   localStorage.removeItem(ADMIN_ROLE_KEY)
+  localStorage.removeItem(ADMIN_ROLES_KEY)
+  localStorage.removeItem(ADMIN_PERFIL_KEY)
   sessionStorage.removeItem(ADMIN_TOKEN_KEY)
   sessionStorage.removeItem(ADMIN_ROLE_KEY)
+  sessionStorage.removeItem(ADMIN_ROLES_KEY)
+  sessionStorage.removeItem(ADMIN_PERFIL_KEY)
 }
 
 function guardarTokenAdminDesdeFirebase(idToken) {

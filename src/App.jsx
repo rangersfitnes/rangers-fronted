@@ -19,6 +19,8 @@ import Dashboard from './pages/Dashboard.jsx'
 import PuntoFisico from './pages/PuntoFisico.jsx'
 import PuntoFisicoKiosco from './pages/PuntoFisicoKiosco.jsx'
 import AdministracionGeneral from './pages/AdministracionGeneral.jsx'
+import Personalizados from './pages/Personalizados.jsx'
+import SoyEntrenador from './pages/SoyEntrenador.jsx'
 import CuentaPerfil from './pages/cuenta/CuentaPerfil.jsx'
 import CuentaAsistencias from './pages/cuenta/CuentaAsistencias.jsx'
 import CuentaRutinas from './pages/cuenta/CuentaRutinas.jsx'
@@ -30,8 +32,10 @@ function App() {
   const isAdminArea = pathname.startsWith('/admin')
   const isLoginArea = pathname === '/login'
   const isPaymentArea = pathname.startsWith('/payment-plan')
+  const isTrainerSignup = pathname === '/soy-entrenador'
   const isHome = pathname === '/'
-  const hideChrome = isAdminArea || isLoginArea || isPaymentArea
+  const hideChrome =
+    isAdminArea || isLoginArea || isPaymentArea || isTrainerSignup
   const showHomeAuthHeader = isHome && Boolean(usuario)
   const mostrarCompletarPerfil = Boolean(
     usuario?.perfilIncompleto && esUsuarioCliente(usuario),
@@ -61,6 +65,7 @@ function App() {
         <Route path="/clases" element={<ClasesPage />} />
         <Route path="/planes" element={<Planes />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/soy-entrenador" element={<SoyEntrenador />} />
         <Route path="/payment-plan/:planId" element={<PaymentPlan />} />
         <Route
           path="/cuenta/perfil"
@@ -124,6 +129,14 @@ function App() {
           element={
             <ProtectedAdminRoute>
               <AdministracionGeneral />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin/personalizados"
+          element={
+            <ProtectedAdminRoute>
+              <Personalizados />
             </ProtectedAdminRoute>
           }
         />

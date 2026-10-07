@@ -12,8 +12,12 @@ import { auth } from '../variables/firebase.jsx'
 import {
   clearAdminSession,
   esAdminTokenPersistente,
+  getAdminPerfil,
+  getAdminRoles,
   getAdminToken,
+  saveAdminPerfil,
   saveAdminRole,
+  saveAdminRoles,
   saveAdminToken,
   verifyAdminAccess,
   tokenAdminExpirado,
@@ -31,7 +35,27 @@ const AdminAuthContext = createContext(null)
 export function AdminAuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true)
   const [autenticado, setAutenticado] = useState(false)
+  const [roles, setRoles] = useState(() => getAdminRoles())
+  const [perfil, setPerfil] = useState(() => getAdminPerfil())
   const ultimoTokenVerificadoRef = useRef(null)
+
+  const aplicarResultadoAuth = useCallback((result, idToken, persistente) => {
+    const token = result.token || idToken
+    const rolesResultado = Array.isArray(result.roles)
+      ? result.roles
+      : result.rol
+        ? [result.rol]
+        : []
+    saveAdminToken(token, { persistente })
+    saveAdminRole(result.rol, { persistente })
+    saveAdminRoles(rolesResultado, { persistente })
+    saveAdminPerfil(result.perfil || null, { persistente })
+    setRoles(rolesResultado.map((r) => String(r).toLowerCase()))
+    setPerfil(result.perfil || null)
+    clearUserToken()
+    ultimoTokenVerificadoRef.current = token
+    setAutenticado(true)
+  }, [])
 
   const syncToken = useCallback(async (user) => {
     if (!user) {
@@ -73,16 +97,14 @@ export function AdminAuthProvider({ children }) {
         'admin',
         esAdminTokenPersistente(),
       )
-      saveAdminToken(result.token || idToken, { persistente })
-      saveAdminRole(result.rol, { persistente })
-      clearUserToken()
-      ultimoTokenVerificadoRef.current = result.token || idToken
-      setAutenticado(true)
+      aplicarResultadoAuth(result, idToken, persistente)
     } catch (err) {
       const status = err?.status
       if (status === 401 || status === 403) {
         clearAdminSession()
         ultimoTokenVerificadoRef.current = null
+        setRoles([])
+        setPerfil(null)
         setAutenticado(false)
         return
       }
@@ -92,7 +114,7 @@ export function AdminAuthProvider({ children }) {
         Boolean(getAdminToken()) && !tokenAdminExpirado(getAdminToken()),
       )
     }
-  }, [])
+  }, [aplicarResultadoAuth])
 
   useEffect(() => {
     let activo = true
@@ -130,18 +152,32 @@ export function AdminAuthProvider({ children }) {
     }
   }, [syncToken])
 
-  const establecerSesion = useCallback((token, rol, { persistente = true } = {}) => {
-    clearUserToken()
-    saveAdminToken(token, { persistente })
-    saveAdminRole(rol, { persistente })
-    ultimoTokenVerificadoRef.current = token
-    setAutenticado(true)
-    setInitializing(false)
-  }, [])
+  const establecerSesion = useCallback(
+    (token, rol, { persistente = true, roles: rolesIn = null, perfil: perfilIn = null } = {}) => {
+      const rolesResultado = Array.isArray(rolesIn)
+        ? rolesIn
+        : rol
+          ? [rol]
+          : []
+      clearUserToken()
+      saveAdminToken(token, { persistente })
+      saveAdminRole(rol, { persistente })
+      saveAdminRoles(rolesResultado, { persistente })
+      saveAdminPerfil(perfilIn, { persistente })
+      ultimoTokenVerificadoRef.current = token
+      setRoles(rolesResultado.map((r) => String(r).toLowerCase()))
+      setPerfil(perfilIn)
+      setAutenticado(true)
+      setInitializing(false)
+    },
+    [],
+  )
 
   const logout = useCallback(async () => {
     clearAdminSession()
     ultimoTokenVerificadoRef.current = null
+    setRoles([])
+    setPerfil(null)
     setAutenticado(false)
     await signOut(auth).catch(() => {})
   }, [])
@@ -150,10 +186,12 @@ export function AdminAuthProvider({ children }) {
     () => ({
       autenticado,
       initializing,
+      roles,
+      perfil,
       establecerSesion,
       logout,
     }),
-    [autenticado, initializing, establecerSesion, logout],
+    [autenticado, initializing, roles, perfil, establecerSesion, logout],
   )
 
   return (
