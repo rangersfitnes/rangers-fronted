@@ -222,12 +222,22 @@
   background-color: #f97316;
 }
 
+.hero__action-btns {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: -0.35rem;
+}
+
 .hero__training-btn {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: -0.35rem;
+  margin-top: 0;
   padding: 0.5rem 1.15rem;
   font-size: 0.8rem;
   font-weight: 700;
@@ -240,6 +250,22 @@
   border-radius: 9999px;
   box-shadow: none;
   transition: none;
+  cursor: pointer;
+}
+
+.hero__training-btn--secondary {
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.hero__training-btn--secondary:hover,
+.hero__training-btn--secondary:focus-visible {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.hero__training-btn--secondary:active {
+  background-color: rgba(255, 255, 255, 0.16);
 }
 
 .hero__training-btn:hover,

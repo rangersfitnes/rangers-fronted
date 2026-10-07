@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { colors } from '../variables/colors.jsx'
 import { useUsuario } from '../contexts/UsuarioContext.jsx'
@@ -12,7 +13,9 @@ import heroBg from '../assets/images/hero/bk_home_user.webp'
 import trainingIcon from '../assets/images/icons/training.svg'
 import ChevronRightIcon from './icons/ChevronRightIcon.jsx'
 import TiqueteraSaldoBox from './TiqueteraSaldoBox.jsx'
-import { usuarioPuedeComprarPlan } from '../utils/planTiqueteraUtils.js'
+import AsistenciasToggle from './AsistenciasToggle.jsx'
+import CalcularCaloriasModal from './CalcularCaloriasModal.jsx'
+import DatosCorporalesModal from './DatosCorporalesModal.jsx'
 import './Hero.css'
 
 function obtenerPrimerNombre(nombre) {
@@ -55,6 +58,9 @@ function calcularDiasRestantes(ms) {
 function Hero() {
   const { usuario } = useUsuario()
   const autenticado = Boolean(usuario)
+  const [caloriasAbierto, setCaloriasAbierto] = useState(false)
+  const [datosCorporalesAbierto, setDatosCorporalesAbierto] = useState(false)
+  const [reabrirCaloriasTrasDatos, setReabrirCaloriasTrasDatos] = useState(false)
   const primerNombre = obtenerPrimerNombre(usuario?.nombre)
   const fondo = heroBg
   const planActivo = usuario?.planesActivos?.[0] ?? null
@@ -109,15 +115,31 @@ function Hero() {
               </span>
             </p>
 
-            <Link to="/cuenta/rutinas" className="hero__training-btn">
-              Mi entrenamiento
-              <img
-                src={trainingIcon}
-                alt=""
-                className="hero__training-btn-icon"
-                aria-hidden="true"
-              />
-            </Link>
+            <div className="hero__action-btns">
+              <Link to="/cuenta/rutinas" className="hero__training-btn">
+                Mi entrenamiento
+                <img
+                  src={trainingIcon}
+                  alt=""
+                  className="hero__training-btn-icon"
+                  aria-hidden="true"
+                />
+              </Link>
+              <button
+                type="button"
+                className="hero__training-btn hero__training-btn--secondary"
+                onClick={() => setCaloriasAbierto(true)}
+              >
+                Calcular calorías
+              </button>
+              <button
+                type="button"
+                className="hero__training-btn hero__training-btn--secondary"
+                onClick={() => setDatosCorporalesAbierto(true)}
+              >
+                Peso, altura y edad
+              </button>
+            </div>
 
             {planActivo ? (
               <article className="hero__plan-card">
@@ -247,6 +269,31 @@ function Hero() {
                 </Link>
               </div>
             )}
+
+            <AsistenciasToggle />
+
+            <CalcularCaloriasModal
+              open={caloriasAbierto}
+              onClose={() => setCaloriasAbierto(false)}
+              onAbrirDatosCorporales={() => {
+                setCaloriasAbierto(false)
+                setReabrirCaloriasTrasDatos(true)
+                setDatosCorporalesAbierto(true)
+              }}
+            />
+            <DatosCorporalesModal
+              open={datosCorporalesAbierto}
+              onClose={() => {
+                setDatosCorporalesAbierto(false)
+                setReabrirCaloriasTrasDatos(false)
+              }}
+              onGuardado={() => {
+                if (reabrirCaloriasTrasDatos) {
+                  setReabrirCaloriasTrasDatos(false)
+                  setCaloriasAbierto(true)
+                }
+              }}
+            />
           </>
         ) : (
           <>

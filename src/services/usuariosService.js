@@ -236,6 +236,38 @@ export async function actualizarUsuario(uid, datos) {
   return data
 }
 
+export async function cambiarPasswordUsuario(uid, password) {
+  const token = await requerirAdminToken()
+  const id = String(uid || '').trim()
+  if (!id) throw new Error('El usuario es obligatorio')
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/usuarios/${encodeURIComponent(id)}/password`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      },
+    )
+  } catch {
+    throw new Error(
+      'No se pudo conectar con el servidor. Verifica que el backend esté en ejecución.',
+    )
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo actualizar la contraseña')
+  }
+
+  return data
+}
+
 export async function eliminarUsuario(uid) {
   const token = await requerirAdminToken()
 

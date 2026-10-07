@@ -22,6 +22,7 @@ import {
 import { obtenerAsistenciasUsuarioAdmin } from '../services/asistenciasService.js'
 import {
   activarPlanUsuario,
+  cambiarPasswordUsuario,
   eliminarPlanUsuario,
   obtenerHistorialMembresiasUsuario,
   obtenerUsuarios,
@@ -72,9 +73,18 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
   const [cargandoHistorial, setCargandoHistorial] = useState(false)
   const [errorHistorial, setErrorHistorial] = useState('')
   const [activacionesCount, setActivacionesCount] = useState(null)
+  const [nuevaPassword, setNuevaPassword] = useState('')
+  const [confirmarPassword, setConfirmarPassword] = useState('')
+  const [mostrarPassword, setMostrarPassword] = useState(true)
+  const [guardandoPassword, setGuardandoPassword] = useState(false)
+  const [errorPassword, setErrorPassword] = useState('')
 
   useEffect(() => {
     setUsuario(usuarioProp)
+    setNuevaPassword('')
+    setConfirmarPassword('')
+    setErrorPassword('')
+    setMostrarPassword(true)
   }, [usuarioProp])
 
   const diasReservados = entrenamientos.map((e) => e.dia)
@@ -216,6 +226,38 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
       setError(err.message || 'No se pudo eliminar el plan del usuario')
     } finally {
       setPlanActionLoading(false)
+    }
+  }
+
+  const handleCambiarPassword = async (event) => {
+    event.preventDefault()
+    if (!usuario?.uid || guardandoPassword) return
+
+    const password = String(nuevaPassword || '')
+    const confirmacion = String(confirmarPassword || '')
+
+    if (password.length < 6) {
+      setErrorPassword('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+    if (password !== confirmacion) {
+      setErrorPassword('Las contraseñas no coinciden')
+      return
+    }
+
+    setGuardandoPassword(true)
+    setErrorPassword('')
+    try {
+      await cambiarPasswordUsuario(usuario.uid, password)
+      setNuevaPassword('')
+      setConfirmarPassword('')
+      toast.success(
+        `Contraseña actualizada. Usuario de acceso: ${usuario.documento || '—'}`,
+      )
+    } catch (err) {
+      setErrorPassword(err.message || 'No se pudo actualizar la contraseña')
+    } finally {
+      setGuardandoPassword(false)
     }
   }
 
@@ -431,6 +473,90 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
             </dd>
           </div>
         </dl>
+
+        <div className="pf-usuario-acceso">
+          <h3 className="pf-entrenamientos__grupo-title">
+            Acceso página pública
+          </h3>
+          <p className="pf-usuario-acceso__hint">
+            Así inicia sesión el cliente en la web. La contraseña actual no se
+            puede consultar (seguridad de Firebase); aquí puedes definir una
+            nueva y verla mientras la escribes.
+          </p>
+
+          <dl className="pf-entrenamientos__datos pf-usuario-acceso__datos">
+            <div>
+              <dt>Tipo</dt>
+              <dd>{usuario.tipoDocumento || '—'}</dd>
+            </div>
+            <div>
+              <dt>Usuario (documento)</dt>
+              <dd className="pf-usuario-acceso__valor">
+                {usuario.documento || '—'}
+              </dd>
+            </div>
+          </dl>
+
+          <form
+            className="pf-usuario-acceso__form"
+            onSubmit={handleCambiarPassword}
+          >
+            <label className="pf-usuario-acceso__campo">
+              <span>Nueva contraseña</span>
+              <div className="pf-usuario-acceso__password-wrap">
+                <input
+                  type={mostrarPassword ? 'text' : 'password'}
+                  value={nuevaPassword}
+                  onChange={(e) => setNuevaPassword(e.target.value)}
+                  minLength={6}
+                  autoComplete="new-password"
+                  disabled={guardandoPassword || loadingVisible}
+                  placeholder="Mínimo 6 caracteres"
+                />
+                <button
+                  type="button"
+                  className="pf-usuario-acceso__toggle"
+                  onClick={() => setMostrarPassword((v) => !v)}
+                  disabled={guardandoPassword}
+                >
+                  {mostrarPassword ? 'Ocultar' : 'Ver'}
+                </button>
+              </div>
+            </label>
+
+            <label className="pf-usuario-acceso__campo">
+              <span>Confirmar contraseña</span>
+              <input
+                type={mostrarPassword ? 'text' : 'password'}
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+                minLength={6}
+                autoComplete="new-password"
+                disabled={guardandoPassword || loadingVisible}
+                placeholder="Repite la contraseña"
+              />
+            </label>
+
+            {errorPassword && (
+              <p className="pf-entrenamientos__error" role="alert">
+                {errorPassword}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="pf-action-btn"
+              disabled={
+                guardandoPassword ||
+                loadingVisible ||
+                !nuevaPassword ||
+                !confirmarPassword
+              }
+            >
+              {guardandoPassword ? 'Guardando…' : 'Cambiar contraseña'}
+            </button>
+          </form>
+        </div>
 
         {usuario.planGrupo?.miembros?.length > 0 && (
           <div className="pf-entrenamientos__grupo">

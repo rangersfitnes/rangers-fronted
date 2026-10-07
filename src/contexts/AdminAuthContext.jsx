@@ -60,6 +60,14 @@ export function AdminAuthProvider({ children }) {
         return
       }
 
+      // Solo verificar contra el backend si ya hay sesión admin (p. ej. refresh).
+      // El login de usuarios normales no debe pegarle a /verify-admin (403 en consola).
+      const almacenado = getAdminToken()
+      if (!almacenado) {
+        setAutenticado(false)
+        return
+      }
+
       const result = await verifyAdminAccess(idToken)
       const persistente = resolverPersistenciaSesion(
         'admin',

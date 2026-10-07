@@ -892,12 +892,12 @@
 
   .header.site-header-chrome__bar {
     gap: 0.5rem;
-    padding: 0.2rem 1rem;
-    padding-top: max(0.2rem, env(safe-area-inset-top, 0px));
+    padding: 0.35rem 1rem;
+    padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
   }
 
   .header__logo {
-    height: 58px;
+    height: 86px;
   }
 
   .header__user-avatar {
@@ -916,7 +916,7 @@
   }
 
   .header__logo {
-    height: 54px;
+    height: 80px;
   }
 
   .header__user-btn {

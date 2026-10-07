@@ -106,6 +106,93 @@
   gap: 0.75rem;
 }
 
+.pf-usuario-acceso {
+  margin-top: 1.35rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pf-usuario-acceso__hint {
+  margin: 0 0 1rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #a3a3a3;
+}
+
+.pf-usuario-acceso__datos {
+  margin-bottom: 1rem;
+}
+
+.pf-usuario-acceso__valor {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fb923c !important;
+}
+
+.pf-usuario-acceso__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: 26rem;
+}
+
+.pf-usuario-acceso__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #737373;
+}
+
+.pf-usuario-acceso__campo input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: #f5f5f5;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.pf-usuario-acceso__password-wrap {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.pf-usuario-acceso__password-wrap input {
+  flex: 1;
+}
+
+.pf-usuario-acceso__toggle {
+  flex-shrink: 0;
+  padding: 0 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e5e5;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pf-usuario-acceso__toggle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pf-usuario-acceso__toggle:disabled,
+.pf-usuario-acceso__campo input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .pf-usuario-detalle__volver {
   padding-left: 0.85rem;
   padding-right: 0.85rem;
