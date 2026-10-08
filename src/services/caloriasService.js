@@ -168,6 +168,43 @@ export async function decidirComidaAnalizada(comidaId, decision) {
   return data.comida
 }
 
+export async function enviarFeedbackInterpretacion(
+  comidaId,
+  { correcta, comentario, platoCorregido } = {},
+) {
+  const token = getUserToken()
+  if (!token) throw new Error('No hay sesión activa')
+  const id = String(comidaId || '').trim()
+  if (!id) throw new Error('El id de la comida es obligatorio')
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/nutricion/comidas/${encodeURIComponent(id)}/feedback`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          correcta,
+          comentario,
+          platoCorregido,
+        }),
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo guardar la corrección')
+  }
+  return data.comida
+}
+
 export async function calcularCaloriasDesdeFoto(
   file,
   { signal, pesoKg, alturaCm, edad } = {},

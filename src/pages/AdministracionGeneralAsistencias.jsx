@@ -17,6 +17,7 @@ import {
   claseFilaAsistencia,
   deduplicarRegistrosAsistencia,
   etiquetaTipoAcceso,
+  formatearValorAsistencia,
   keyRegistroAsistencia,
   mensajeEliminarRegistro,
   mensajeExitoEliminar,
@@ -223,6 +224,7 @@ function AdministracionGeneralAsistencias({ puedeEliminar = true } = {}) {
                   <th>Usuario</th>
                   <th>Plan</th>
                   <th>Tipo</th>
+                  <th>Valor</th>
                   {permitirEliminar ? <th aria-label="Acciones" /> : null}
                 </tr>
               </thead>
@@ -251,6 +253,7 @@ function AdministracionGeneralAsistencias({ puedeEliminar = true } = {}) {
                         {etiquetaTipoAcceso(item.tipoAcceso)}
                       </span>
                     </td>
+                    <td>{formatearValorAsistencia(item)}</td>
                     {permitirEliminar ? (
                       <td className="ag-finanzas__tabla-acciones">
                         <button

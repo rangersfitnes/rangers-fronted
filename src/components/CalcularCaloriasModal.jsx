@@ -5,6 +5,7 @@ import { useUsuario } from '../contexts/UsuarioContext.jsx'
 import {
   calcularCaloriasDesdeFoto,
   decidirComidaAnalizada,
+  enviarFeedbackInterpretacion,
   obtenerCupoAnalisisDiario,
   obtenerMisComidas,
 } from '../services/caloriasService.js'
@@ -27,96 +28,217 @@ function etiquetaEstadoComida(estado) {
   return 'Consumido'
 }
 
-function DetalleIngesta({ comida, mostrarRegistro = true, historialUsado }) {
+function DetalleIngesta({
+  comida,
+  mostrarFeedback = false,
+  onFeedbackGuardado,
+}) {
   if (!comida) return null
+
+  const resumen = comida.resumen || {}
+  const beneficios = Array.isArray(resumen.beneficios)
+    ? resumen.beneficios.filter(Boolean)
+    : []
+  const afectaciones = Array.isArray(resumen.afectaciones)
+    ? resumen.afectaciones.filter(Boolean)
+    : []
+  const alimentos = Array.isArray(comida.alimentosDetectados)
+    ? comida.alimentosDetectados.filter(Boolean)
+    : []
 
   return (
     <div className="calcular-calorias__resultado">
+      <p className="calcular-calorias__detectado-label">Comida detectada</p>
+      <h3 className="calcular-calorias__plato">{comida.plato || 'Comida'}</h3>
+      {alimentos.length > 0 && (
+        <p className="calcular-calorias__alimentos">{alimentos.join(', ')}</p>
+      )}
+
       <div className="calcular-calorias__kcal">
         <span className="calcular-calorias__kcal-valor">
           {comida.caloriasEstimadas}
         </span>
         <span className="calcular-calorias__kcal-unidad">kcal</span>
       </div>
-      <h3 className="calcular-calorias__plato">{comida.plato || 'Comida'}</h3>
-      {(comida.rangoCalorias || comida.confianza) && (
-        <p className="calcular-calorias__meta">
-          {comida.rangoCalorias
-            ? `Rango ${comida.rangoCalorias.min}–${comida.rangoCalorias.max} kcal`
-            : null}
-          {comida.rangoCalorias && comida.confianza ? ' · ' : null}
-          {comida.confianza ? `Confianza ${comida.confianza}` : null}
+      {(comida.porcionEstimada || comida.macros) && (
+        <p className="calcular-calorias__meta-resumen">
+          {[
+            comida.porcionEstimada
+              ? `Porción: ${comida.porcionEstimada}`
+              : null,
+            comida.macros
+              ? `P ${comida.macros.proteinasG ?? 0}g · C ${comida.macros.carbohidratosG ?? 0}g · G ${comida.macros.grasasG ?? 0}g`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </p>
       )}
-      {comida.porcionEstimada && (
-        <p className="calcular-calorias__porcion">
-          Porción: {comida.porcionEstimada}
-        </p>
-      )}
-      {comida.macros && (
-        <ul className="calcular-calorias__macros">
-          <li>Proteínas {comida.macros.proteinasG ?? 0} g</li>
-          <li>Carbohidratos {comida.macros.carbohidratosG ?? 0} g</li>
-          <li>Grasas {comida.macros.grasasG ?? 0} g</li>
-        </ul>
-      )}
-      {Array.isArray(comida.alimentosDetectados) &&
-        comida.alimentosDetectados.length > 0 && (
-          <p className="calcular-calorias__alimentos">
-            Detectado: {comida.alimentosDetectados.join(', ')}
-          </p>
-        )}
 
-      {comida.resumen && (
+      {resumen.personalizado && (
         <div className="calcular-calorias__resumen">
-          {comida.resumen.comoFunciona && (
-            <section>
-              <h4>Cómo funciona en tu cuerpo</h4>
-              <p>{comida.resumen.comoFunciona}</p>
-            </section>
-          )}
-          {comida.resumen.beneficios?.length > 0 && (
+          <section className="calcular-calorias__resumen-personalizado">
+            <h4>Para ti</h4>
+            <p>{resumen.personalizado}</p>
+          </section>
+        </div>
+      )}
+
+      {(beneficios.length > 0 || afectaciones.length > 0) && (
+        <div className="calcular-calorias__resumen">
+          {beneficios.length > 0 && (
             <section>
               <h4>Beneficios</h4>
               <ul>
-                {comida.resumen.beneficios.map((item) => (
+                {beneficios.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
             </section>
           )}
-          {comida.resumen.afectaciones?.length > 0 && (
+          {afectaciones.length > 0 && (
             <section>
-              <h4>En qué podría afectarte</h4>
+              <h4>Afectaciones</h4>
               <ul>
-                {comida.resumen.afectaciones.map((item) => (
+                {afectaciones.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </section>
-          )}
-          {comida.resumen.personalizado && (
-            <section className="calcular-calorias__resumen-personalizado">
-              <h4>Resumen para ti</h4>
-              <p>{comida.resumen.personalizado}</p>
             </section>
           )}
         </div>
       )}
 
-      {mostrarRegistro && (comida.fechaLocal || comida.horaLocal) && (
-        <p className="calcular-calorias__notas">
-          Registrado:{' '}
-          {formatearFechaComida(comida.fechaLocal, comida.horaLocal)}
-          {historialUsado > 0
-            ? ` · Contexto de ${historialUsado} comida(s) previa(s)`
-            : ''}
+      {mostrarFeedback && (
+        <FeedbackInterpretacion
+          comida={comida}
+          onGuardado={onFeedbackGuardado}
+        />
+      )}
+    </div>
+  )
+}
+
+function FeedbackInterpretacion({ comida, onGuardado }) {
+  const comidaId = comida?.registroId || comida?.id
+  const feedbackExistente = comida?.feedbackInterpretacion
+  const [correcta, setCorrecta] = useState(
+    feedbackExistente?.correcta ?? null,
+  )
+  const [texto, setTexto] = useState(
+    feedbackExistente?.platoCorregido ||
+      feedbackExistente?.comentario ||
+      '',
+  )
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
+  const [ok, setOk] = useState(Boolean(feedbackExistente))
+
+  if (!comidaId) return null
+
+  if (ok || feedbackExistente) {
+    const fb = feedbackExistente
+    return (
+      <div className="calcular-calorias__feedback calcular-calorias__feedback--ok">
+        <p>
+          {fb?.correcta === true || (ok && correcta === true)
+            ? 'Gracias: confirmaste que la interpretación era correcta.'
+            : fb?.platoCorregido
+              ? `Corrección guardada: ${fb.platoCorregido}. Se usará en próximos análisis.`
+              : 'Gracias por tu corrección. Se usará en próximos análisis.'}
+        </p>
+      </div>
+    )
+  }
+
+  const handleEnviar = async () => {
+    if (enviando || correcta === null) return
+    const limpio = String(texto || '').trim()
+    if (correcta === false && !limpio) {
+      setError('Escribe qué alimento era realmente')
+      return
+    }
+    setEnviando(true)
+    setError('')
+    try {
+      const comidaActualizada = await enviarFeedbackInterpretacion(comidaId, {
+        correcta,
+        platoCorregido: correcta === false ? limpio : '',
+        comentario: correcta === true ? limpio : '',
+      })
+      setOk(true)
+      onGuardado?.(comidaActualizada)
+    } catch (err) {
+      setError(err.message || 'No se pudo guardar la corrección')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <div className="calcular-calorias__feedback">
+      <p className="calcular-calorias__feedback-pregunta">
+        ¿La interpretación del alimento fue correcta?
+      </p>
+      <div className="calcular-calorias__feedback-ops">
+        <button
+          type="button"
+          className={`calcular-calorias__feedback-chip${
+            correcta === true ? ' is-active' : ''
+          }`}
+          onClick={() => {
+            setCorrecta(true)
+            setError('')
+          }}
+          disabled={enviando}
+        >
+          Sí, estaba bien
+        </button>
+        <button
+          type="button"
+          className={`calcular-calorias__feedback-chip${
+            correcta === false ? ' is-active' : ''
+          }`}
+          onClick={() => {
+            setCorrecta(false)
+            setError('')
+          }}
+          disabled={enviando}
+        >
+          No, era otra cosa
+        </button>
+      </div>
+      {correcta === false && (
+        <label className="calcular-calorias__feedback-label">
+          ¿Qué alimento era realmente?
+          <textarea
+            className="calcular-calorias__feedback-input"
+            rows={2}
+            maxLength={500}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder="Ej. papa guisada, no zanahoria"
+            disabled={enviando}
+          />
+        </label>
+      )}
+      {error && (
+        <p className="calcular-calorias__error" role="alert">
+          {error}
         </p>
       )}
-
-      {comida.notas && (
-        <p className="calcular-calorias__notas">{comida.notas}</p>
-      )}
+      <button
+        type="button"
+        className="calcular-calorias__btn calcular-calorias__btn--ghost calcular-calorias__feedback-enviar"
+        onClick={handleEnviar}
+        disabled={enviando || correcta === null}
+      >
+        {enviando
+          ? 'Guardando…'
+          : correcta === false
+            ? 'Enviar corrección'
+            : 'Confirmar'}
+      </button>
     </div>
   )
 }
@@ -432,7 +554,19 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
         <>
           <DetalleIngesta
             comida={resultado}
-            historialUsado={resultado.historialUsado}
+            mostrarFeedback
+            onFeedbackGuardado={(comida) => {
+              setResultado((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      ...comida,
+                      registroId: comida.id || prev.registroId,
+                    }
+                  : prev,
+              )
+              cargarHistorial()
+            }}
           />
           {pendienteDecision ? (
             <div className="calcular-calorias__decision" role="status">
@@ -506,7 +640,17 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
                   </button>
                   {expandida && (
                     <div className="calcular-calorias__historial-detalle">
-                      <DetalleIngesta comida={item} mostrarRegistro={false} />
+                      <DetalleIngesta
+                        comida={item}
+                        mostrarFeedback={!item.feedbackInterpretacion}
+                        onFeedbackGuardado={(comida) => {
+                          setHistorial((prev) =>
+                            prev.map((row) =>
+                              row.id === comida.id ? { ...row, ...comida } : row,
+                            ),
+                          )
+                        }}
+                      />
                     </div>
                   )}
                 </li>

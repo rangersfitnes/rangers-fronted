@@ -31,6 +31,7 @@ import {
   claseFilaAsistencia,
   deduplicarRegistrosAsistencia,
   etiquetaTipoAcceso,
+  formatearValorAsistencia,
   keyRegistroAsistencia,
 } from '../utils/asistenciasUtils.js'
 import trashIcon from '../assets/images/icons/trash.svg'
@@ -785,6 +786,7 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
                   <th>Sede</th>
                   <th>Plan</th>
                   <th>Tipo</th>
+                  <th>Valor</th>
                 </tr>
               </thead>
               <tbody>
@@ -814,6 +816,7 @@ function UsuarioDetalleGestion({ usuario: usuarioProp, onVolver, onEditar, onEli
                         {etiquetaTipoAcceso(item.tipoAcceso)}
                       </span>
                     </td>
+                    <td data-label="Valor">{formatearValorAsistencia(item)}</td>
                   </tr>
                 ))}
               </tbody>

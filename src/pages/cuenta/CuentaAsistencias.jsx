@@ -6,6 +6,7 @@ import {
   claseFilaAsistencia,
   deduplicarRegistrosAsistencia,
   etiquetaTipoAcceso,
+  formatearValorAsistencia,
   keyRegistroAsistencia,
 } from '../../utils/asistenciasUtils.js'
 import {
@@ -151,6 +152,7 @@ function CuentaAsistencias() {
                     <th>Sede</th>
                     <th>Plan</th>
                     <th>Tipo</th>
+                    <th>Valor</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,6 +188,7 @@ function CuentaAsistencias() {
                           {etiquetaTipoAcceso(item.tipoAcceso)}
                         </span>
                       </td>
+                      <td data-label="Valor">{formatearValorAsistencia(item)}</td>
                     </tr>
                   ))}
                 </tbody>

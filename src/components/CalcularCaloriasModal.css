@@ -119,11 +119,31 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
+.calcular-calorias__detectado-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .calcular-calorias__plato {
-  margin: 0.55rem 0 0.25rem;
-  font-size: 1.05rem;
+  margin: 0.2rem 0 0.15rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #ffffff;
+}
+
+.calcular-calorias__resultado .calcular-calorias__kcal {
+  margin-top: 0.75rem;
+}
+
+.calcular-calorias__meta-resumen {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.68);
 }
 
 .calcular-calorias__meta,
@@ -309,6 +329,88 @@
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calcular-calorias__feedback {
+  margin-top: 1.1rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.calcular-calorias__feedback--ok p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #86efac;
+}
+
+.calcular-calorias__feedback-pregunta {
+  margin: 0 0 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.calcular-calorias__feedback-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.calcular-calorias__feedback-chip {
+  padding: 0.45rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calcular-calorias__feedback-chip.is-active {
+  border-color: rgba(249, 115, 22, 0.65);
+  background: rgba(249, 115, 22, 0.18);
+  color: #fff;
+}
+
+.calcular-calorias__feedback-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.calcular-calorias__feedback-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.calcular-calorias__feedback-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 3.2rem;
+}
+
+.calcular-calorias__feedback-input:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.55);
+}
+
+.calcular-calorias__feedback-enviar {
+  margin-top: 0.65rem;
+  width: 100%;
 }
 
 .datos-corporales__grid {

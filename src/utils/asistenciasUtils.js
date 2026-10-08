@@ -5,6 +5,21 @@ export function etiquetaTipoAcceso(tipo) {
   return tipo || '—'
 }
 
+export function formatearValorAsistencia(item) {
+  const valor = item?.valorPagado
+  if (valor == null || valor === '') return '—'
+  const numero = Number(valor)
+  if (!Number.isFinite(numero)) return '—'
+  if (numero <= 0 && item?.tipoAcceso === 'clase-cortesia') return 'Cortesía'
+  if (numero <= 0) return '—'
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(numero)
+}
+
 export function claseFilaAsistencia(item) {
   if (item?.tipoAcceso === 'clase-dia') return 'asistencias-fila--clase-dia'
   if (item?.tipoAcceso === 'clase-cortesia') return 'asistencias-fila--clase-cortesia'
@@ -67,10 +82,29 @@ export function ordenarAsistenciasPorRegistro(items = []) {
  */
 export function deduplicarRegistrosAsistencia(items = []) {
   const lista = Array.isArray(items) ? items : []
+  const pagosPorId = new Map()
+
+  for (const item of lista) {
+    if (item?.origen !== 'pago-clase') continue
+    pagosPorId.set(`${item.sedeId || ''}::${item.id}`, item)
+  }
+
+  const enriquecidos = lista.map((item) => {
+    if (item?.origen === 'pago-clase' || !item?.pagoClaseId) return item
+    if (item.valorPagado != null) return item
+    const pago = pagosPorId.get(`${item.sedeId || ''}::${item.pagoClaseId}`)
+    if (!pago) return item
+    return {
+      ...item,
+      valorPagado: pago.valorPagado ?? null,
+      metodoPago: item.metodoPago || pago.metodoPago || null,
+    }
+  })
+
   const pagosCubiertos = new Set()
   const diasConAsistencia = new Set()
 
-  for (const item of lista) {
+  for (const item of enriquecidos) {
     if (item?.origen === 'pago-clase') continue
 
     if (item?.pagoClaseId) {
@@ -81,7 +115,7 @@ export function deduplicarRegistrosAsistencia(items = []) {
     if (clave) diasConAsistencia.add(clave)
   }
 
-  const filtrados = lista.filter((item) => {
+  const filtrados = enriquecidos.filter((item) => {
     if (item?.origen !== 'pago-clase') return true
 
     if (pagosCubiertos.has(`${item.sedeId || ''}::${item.id}`)) return false
