@@ -1074,6 +1074,36 @@
   color: #a3a3a3;
 }
 
+.ag-comidas-ia__consumo {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ag-comidas-ia__consumo--si {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.ag-comidas-ia__consumo--no {
+  color: #fdba74;
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.ag-comidas-ia__consumo--pendiente {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
 .ag-comidas-ia__detalle-btn {
   padding: 0.35rem 0.75rem !important;
   font-size: 0.75rem !important;

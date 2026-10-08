@@ -28,6 +28,26 @@ function inicioMesColombiaInput() {
   return `${hoy.slice(0, 8)}01`
 }
 
+function etiquetaConsumoComida(estado) {
+  const valor = String(estado || '')
+    .trim()
+    .toLowerCase()
+  if (valor === 'consumido') return 'Consumió'
+  if (valor === 'rechazado') return 'No consumió'
+  if (valor === 'consultado') return 'Pendiente'
+  // Registros antiguos sin estado se trataban como consumidos
+  return 'Consumió'
+}
+
+function claseConsumoComida(estado) {
+  const valor = String(estado || '')
+    .trim()
+    .toLowerCase()
+  if (valor === 'rechazado') return 'ag-comidas-ia__consumo--no'
+  if (valor === 'consultado') return 'ag-comidas-ia__consumo--pendiente'
+  return 'ag-comidas-ia__consumo--si'
+}
+
 function AdministracionGeneralComidasIA() {
   const toast = useToast()
   const [comidas, setComidas] = useState([])
@@ -186,6 +206,7 @@ function AdministracionGeneralComidasIA() {
                 <th>Usuario</th>
                 <th>Documento</th>
                 <th>Plato</th>
+                <th>Consumo</th>
                 <th>kcal</th>
                 <th>Macros</th>
                 <th></th>
@@ -218,6 +239,13 @@ function AdministracionGeneralComidasIA() {
                         {item.alimentosDetectados.slice(0, 4).join(', ')}
                       </span>
                     )}
+                  </td>
+                  <td data-label="Consumo">
+                    <span
+                      className={`ag-comidas-ia__consumo ${claseConsumoComida(item.estado)}`}
+                    >
+                      {etiquetaConsumoComida(item.estado)}
+                    </span>
                   </td>
                   <td data-label="kcal">
                     <strong>{item.caloriasEstimadas ?? 0}</strong>
@@ -295,6 +323,14 @@ function AdministracionGeneralComidasIA() {
             <p>
               {detalle.fechaLocal} {detalle.horaLocal} ·{' '}
               <strong>{detalle.caloriasEstimadas} kcal</strong>
+            </p>
+            <p>
+              Consumo:{' '}
+              <span
+                className={`ag-comidas-ia__consumo ${claseConsumoComida(detalle.estado)}`}
+              >
+                {etiquetaConsumoComida(detalle.estado)}
+              </span>
             </p>
             {detalle.porcionEstimada && (
               <p>Porción: {detalle.porcionEstimada}</p>
