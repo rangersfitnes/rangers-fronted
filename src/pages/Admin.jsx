@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { colors } from '../variables/colors.jsx'
 import { auth } from '../variables/firebase.jsx'
 import logo from '../assets/images/logos/logo.webp'
@@ -97,7 +97,11 @@ function Admin() {
       className="admin-page"
       style={{ backgroundColor: colors.page_background }}
     >
-      <div className="admin-card">
+      <div className="admin-page__wrap">
+        <Link to="/" className="admin-page__back">
+          ← Volver al inicio
+        </Link>
+        <div className="admin-card">
         <img src={logo} alt="Rangers Box" className="admin-card__logo" />
         <h1 className="admin-card__title">Administración</h1>
         <p className="admin-card__subtitle">
@@ -161,6 +165,7 @@ function Admin() {
             Iniciar sesión
           </button>
         </form>
+        </div>
       </div>
 
       <LoadingOverlay visible={loading} label="Verificando credenciales" />

@@ -1,0 +1,106 @@
+.solicitud-entrenador-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 660;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.solicitud-entrenador-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: min(480px, 100%);
+  padding: 2rem 1.75rem;
+  background-color: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.solicitud-entrenador-card__etiqueta {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.solicitud-entrenador-card__title {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+  line-height: 1.05;
+}
+
+.solicitud-entrenador-card__texto {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #d4d4d4;
+}
+
+.solicitud-entrenador-card__texto strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.solicitud-entrenador-card__error {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+}
+
+.solicitud-entrenador-card__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.solicitud-entrenador-card__btn {
+  flex: 1 1 8rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 9999px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.solicitud-entrenador-card__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.solicitud-entrenador-card__btn--ghost {
+  background: transparent;
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.solicitud-entrenador-card__btn--primary {
+  background: #f97316;
+  color: #ffffff;
+}
+
+.solicitud-entrenador-card__btn--primary:hover:not(:disabled) {
+  background: #ea580c;
+}

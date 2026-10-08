@@ -50,9 +50,26 @@ function SoyEntrenador() {
         correo,
       })
       const entrenador = data.entrenador
+      const cuentaExistente = Boolean(entrenador?.cuentaExistente)
+      const aviso =
+        data.mensaje ||
+        (cuentaExistente
+          ? 'Este usuario ya existe. Se agregó el rol de entrenador para que veas ambos paneles al iniciar sesión.'
+          : 'Cuenta de entrenador creada. Tu contraseña inicial es tu cédula.')
 
       clearUserToken()
       clearAdminSession()
+
+      // Cuenta ya existente (colaborador u otra staff): aviso + login manual
+      // para no forzar la cédula si ya cambió su contraseña.
+      if (cuentaExistente) {
+        await signOut(auth).catch(() => {})
+        navigate('/admin', {
+          replace: true,
+          state: { aviso },
+        })
+        return
+      }
 
       try {
         const credential = await signInWithEmailAndPassword(
@@ -74,11 +91,7 @@ function SoyEntrenador() {
         await signOut(auth).catch(() => {})
         navigate('/admin', {
           replace: true,
-          state: {
-            aviso:
-              data.mensaje ||
-              'Cuenta lista. Inicia sesión con tu correo y tu contraseña.',
-          },
+          state: { aviso },
         })
       }
     } catch (err) {

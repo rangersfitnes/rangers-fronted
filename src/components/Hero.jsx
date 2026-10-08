@@ -16,6 +16,7 @@ import TiqueteraSaldoBox from './TiqueteraSaldoBox.jsx'
 import AsistenciasToggle from './AsistenciasToggle.jsx'
 import CalcularCaloriasModal from './CalcularCaloriasModal.jsx'
 import DatosCorporalesModal from './DatosCorporalesModal.jsx'
+import CronometroEntrenamientoModal from './CronometroEntrenamientoModal.jsx'
 import './Hero.css'
 
 function obtenerPrimerNombre(nombre) {
@@ -60,6 +61,7 @@ function Hero() {
   const autenticado = Boolean(usuario)
   const [caloriasAbierto, setCaloriasAbierto] = useState(false)
   const [datosCorporalesAbierto, setDatosCorporalesAbierto] = useState(false)
+  const [cronometroAbierto, setCronometroAbierto] = useState(false)
   const [reabrirCaloriasTrasDatos, setReabrirCaloriasTrasDatos] = useState(false)
   const primerNombre = obtenerPrimerNombre(usuario?.nombre)
   const fondo = heroBg
@@ -125,6 +127,13 @@ function Hero() {
                   aria-hidden="true"
                 />
               </Link>
+              <button
+                type="button"
+                className="hero__training-btn hero__training-btn--secondary"
+                onClick={() => setCronometroAbierto(true)}
+              >
+                Cronómetro
+              </button>
               <button
                 type="button"
                 className="hero__training-btn hero__training-btn--secondary"
@@ -293,6 +302,10 @@ function Hero() {
                   setCaloriasAbierto(true)
                 }
               }}
+            />
+            <CronometroEntrenamientoModal
+              open={cronometroAbierto}
+              onClose={() => setCronometroAbierto(false)}
             />
           </>
         ) : (

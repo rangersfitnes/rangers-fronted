@@ -1,0 +1,243 @@
+.cronometro-entreno-modal .modal__dialog {
+  max-width: 28rem;
+  width: min(100%, 28rem);
+}
+
+.cronometro-entreno {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cronometro-entreno__modos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.3rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cronometro-entreno__modo {
+  padding: 0.55rem 0.35rem;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.cronometro-entreno__modo.is-active {
+  background: #f97316;
+  color: #ffffff;
+}
+
+.cronometro-entreno__modo:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cronometro-entreno__config {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.cronometro-entreno__config label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cronometro-entreno__config label span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cronometro-entreno__config input[type='number'] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cronometro-entreno__config input[type='number']:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.7);
+}
+
+.cronometro-entreno__check {
+  grid-column: 1 / -1;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.55rem !important;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cronometro-entreno__check span {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.cronometro-entreno__hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cronometro-entreno__display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 11rem;
+  padding: 1.25rem 1rem;
+  border-radius: 18px;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.cronometro-entreno__display.is-work {
+  background: rgba(249, 115, 22, 0.22);
+  border-color: rgba(249, 115, 22, 0.65);
+}
+
+.cronometro-entreno__display.is-rest {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.cronometro-entreno__display.is-prep {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.cronometro-entreno__display.is-done {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.cronometro-entreno__fase {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.cronometro-entreno__display.is-rest .cronometro-entreno__fase {
+  color: #7dd3fc;
+}
+
+.cronometro-entreno__display.is-done .cronometro-entreno__fase {
+  color: #86efac;
+}
+
+.cronometro-entreno__tiempo {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3.4rem, 16vw, 4.6rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.cronometro-entreno__ronda {
+  margin: 0.25rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.cronometro-entreno__sonido {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+}
+
+.cronometro-entreno__btn {
+  min-width: 6.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 9999px;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.cronometro-entreno__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cronometro-entreno__btn--ghost {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.cronometro-entreno__btn--primary {
+  background: #f97316;
+  color: #ffffff;
+}
+
+.cronometro-entreno__btn--primary:hover:not(:disabled) {
+  background: #ea580c;
+}
+
+@media (max-width: 480px) {
+  .cronometro-entreno__config {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cronometro-entreno__modos {
+    border-radius: 14px;
+  }
+
+  .cronometro-entreno__modo {
+    font-size: 0.68rem;
+    padding: 0.6rem 0.25rem;
+  }
+
+  .cronometro-entreno__display {
+    min-height: 10rem;
+  }
+
+  .cronometro-entreno-modal .modal__footer {
+    flex-wrap: wrap;
+  }
+
+  .cronometro-entreno__btn {
+    flex: 1 1 auto;
+  }
+}

@@ -1,14 +1,41 @@
 .admin-page {
+  position: fixed;
+  inset: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  min-height: 100vh;
-  padding: 2rem 1.5rem;
+  min-height: 100dvh;
+  padding: 2rem 1.5rem 3rem;
+  padding-top: max(2rem, env(safe-area-inset-top, 0px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.admin-page__wrap {
+  width: min(100%, 420px);
+  margin: auto 0;
+  padding-block: 0.5rem;
+}
+
+.admin-page__back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+}
+
+.admin-page__back:hover {
+  color: #fb923c;
 }
 
 .admin-card {
   width: 100%;
-  max-width: 420px;
   padding: 2.5rem 2rem;
   background-color: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(12px);

@@ -1,12 +1,18 @@
 .rutinas-page {
   position: relative;
-  min-height: 100vh;
-  padding: var(--page-padding-top) clamp(1.25rem, 4vw, 3rem) 5.5rem;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  padding: var(--page-padding-top) clamp(1rem, 4vw, 3rem)
+    max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .rutinas-page--con-cards {
-  padding-bottom: 6.5rem;
+  padding-bottom: max(6.5rem, calc(env(safe-area-inset-bottom, 0px) + 6.5rem));
 }
 
 .rutinas-page__glow {
@@ -43,6 +49,26 @@
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
+}
+
+.rutinas-page__back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0.35rem 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+}
+
+.rutinas-page__back:hover,
+.rutinas-page__back:focus-visible {
+  color: #fb923c;
+  outline: none;
 }
 
 /* —— Hero —— */
@@ -683,6 +709,61 @@
   .rutinas-week__pill {
     font-size: 0.68rem;
     padding: 0.55rem 0.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .rutinas-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .rutinas-page__inner {
+    gap: 1rem;
+  }
+
+  .rutinas-page__back {
+    font-size: 0.72rem;
+    padding-top: 0;
+  }
+
+  .rutinas-hero {
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .rutinas-hero__icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+  }
+
+  .rutinas-hero__icon-img {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .rutinas-hero__title {
+    font-size: 1.45rem;
+  }
+
+  .rutinas-hero__count {
+    font-size: 1.2rem;
+  }
+
+  .rutinas-hoy__card {
+    padding: 1rem 0.95rem;
+  }
+
+  .rutinas-empty__panel {
+    padding: 1.5rem 1.15rem;
+  }
+
+  .rutinas-fab {
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1.1rem, env(safe-area-inset-bottom));
+    width: 3.4rem;
+    height: 3.4rem;
   }
 }
 

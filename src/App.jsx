@@ -4,6 +4,7 @@ import { colors } from './variables/colors.jsx'
 import Header from './components/Header.jsx'
 import LoadingOverlay from './components/LoadingOverlay.jsx'
 import CompletarPerfilModal from './components/CompletarPerfilModal.jsx'
+import SolicitudEntrenadorModal from './components/SolicitudEntrenadorModal.jsx'
 import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx'
 import ProtectedCuentaRoute from './components/ProtectedCuentaRoute.jsx'
 import { useUsuario } from './contexts/UsuarioContext.jsx'
@@ -40,6 +41,13 @@ function App() {
   const mostrarCompletarPerfil = Boolean(
     usuario?.perfilIncompleto && esUsuarioCliente(usuario),
   )
+  const solicitudEntrenadorPendiente =
+    esUsuarioCliente(usuario) &&
+    !mostrarCompletarPerfil &&
+    Array.isArray(usuario?.solicitudesEntrenadorPendientes) &&
+    usuario.solicitudesEntrenadorPendientes.length > 0
+      ? usuario.solicitudesEntrenadorPendientes[0]
+      : null
 
   if (usuarioLoading) {
     return (
@@ -145,6 +153,19 @@ function App() {
         open={mostrarCompletarPerfil}
         usuario={usuario}
         onCompletado={(datos) => actualizarUsuario(datos)}
+      />
+      <SolicitudEntrenadorModal
+        open={Boolean(solicitudEntrenadorPendiente)}
+        solicitud={solicitudEntrenadorPendiente}
+        onRespondida={(solicitudRespondida) => {
+          const restantes = (
+            usuario?.solicitudesEntrenadorPendientes || []
+          ).filter((item) => item.id !== solicitudRespondida?.id)
+          actualizarUsuario({
+            ...usuario,
+            solicitudesEntrenadorPendientes: restantes,
+          })
+        }}
       />
     </div>
   )

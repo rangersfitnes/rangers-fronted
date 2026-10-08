@@ -51,16 +51,18 @@ body::-webkit-scrollbar,
 
 @media (max-width: 1100px) {
   :root {
-    --header-logo-height: 58px;
-    --header-padding-y: 0.2rem;
+    /* Debe coincidir con Header.css (.header__logo / padding del bar) */
+    --header-logo-height: 86px;
+    --header-padding-y: 0.35rem;
     --header-quick-nav-height: 0px;
   }
 }
 
 @media (max-width: 640px) {
   :root {
-    --header-logo-height: 54px;
-    --header-below-gap: 1.75rem;
+    --header-logo-height: 80px;
+    --header-padding-y: 0.35rem;
+    --header-below-gap: 1.35rem;
     --header-quick-nav-height: 0px;
   }
 }

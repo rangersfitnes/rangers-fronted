@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import addIcon from '../../assets/images/icons/add.svg'
 import trainingIcon from '../../assets/images/icons/training.svg'
 import AnadirCronogramaModal from '../../components/AnadirCronogramaModal.jsx'
@@ -129,6 +130,10 @@ function CuentaRutinas() {
       <div className="rutinas-page__glow" aria-hidden="true" />
 
       <div className="rutinas-page__inner">
+        <Link to="/" className="rutinas-page__back">
+          ← Volver al inicio
+        </Link>
+
         <header className="rutinas-hero">
           <div className="rutinas-hero__icon" aria-hidden="true">
             <img src={trainingIcon} alt="" className="rutinas-hero__icon-img" />
