@@ -319,8 +319,8 @@ function ChatAtletaWidget({ nombreUsuario }) {
     ? String(nombreUsuario).split(/\s+/)[0]
     : ''
   const saludo = primerNombre
-    ? `¡Hey ${primerNombre}! Soy ${nombreBot}. Pregúntame por tu entreno, comidas, asistencias o membresía.`
-    : `¡Hey! Soy ${nombreBot}. Pregúntame por tu entreno, comidas, asistencias o membresía.`
+    ? `Hola atleta ${primerNombre}, soy ${nombreBot}. Reporta: entreno, comidas, asistencias o tu plan. ¿Cuál es la misión?`
+    : `Hola atleta, soy ${nombreBot}. Reporta: entreno, comidas, asistencias o tu plan. ¿Cuál es la misión?`
 
   const estiloRoot = panelAncladoMovil
     ? undefined
