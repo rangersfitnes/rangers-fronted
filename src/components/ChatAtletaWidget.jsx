@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import logo from '../assets/images/logos/logo.webp'
-import { enviarMensajeChatAtleta } from '../services/chatAtletaService.js'
+import {
+  enviarMensajeChatAtleta,
+  obtenerHistorialChatAtleta,
+} from '../services/chatAtletaService.js'
 import { obtenerContenidoWebPublico } from '../services/contenidoWebService.js'
 import './ChatAtletaWidget.css'
 
@@ -78,10 +81,26 @@ function formatearHoraMensaje(date = new Date()) {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
-    }).format(date)
+    }).format(date instanceof Date ? date : new Date(date))
   } catch {
     return ''
   }
+}
+
+function mapearMensajesHistorial(lista = []) {
+  return (Array.isArray(lista) ? lista : [])
+    .filter(
+      (m) =>
+        m &&
+        (m.role === 'user' || m.role === 'assistant') &&
+        String(m.content || '').trim(),
+    )
+    .map((m) => ({
+      id: m.id || null,
+      role: m.role,
+      content: String(m.content).trim(),
+      hora: m.creadoEn ? formatearHoraMensaje(m.creadoEn) : '',
+    }))
 }
 
 function AvatarBot({ src, className, alt = BOT_NOMBRE_DEFAULT }) {
@@ -114,6 +133,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
   const [esMovil, setEsMovil] = useState(() => esViewportMovil())
   const [mensaje, setMensaje] = useState('')
   const [mensajes, setMensajes] = useState([])
+  const [cargandoHistorial, setCargandoHistorial] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -139,20 +159,34 @@ function ChatAtletaWidget({ nombreUsuario }) {
   }, [])
 
   useEffect(() => {
+    if (!abierto) return undefined
+
     const controller = new AbortController()
-    obtenerContenidoWebPublico({ signal: controller.signal })
-      .then((contenido) => {
+    setCargandoHistorial(true)
+    setError('')
+
+    Promise.all([
+      obtenerContenidoWebPublico({ signal: controller.signal }),
+      obtenerHistorialChatAtleta({ signal: controller.signal, limite: 60 }),
+    ])
+      .then(([contenido, historial]) => {
+        const nombreGuardado = String(contenido?.rangerBot?.nombre || '')
+          .trim()
+          .replace(/\s+/g, ' ')
         setAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
-        setBotNombre(
-          String(contenido?.rangerBot?.nombre || '').trim() ||
-            BOT_NOMBRE_DEFAULT,
-        )
+        setBotNombre(nombreGuardado || BOT_NOMBRE_DEFAULT)
+        setMensajes(mapearMensajesHistorial(historial))
       })
       .catch((err) => {
         if (err?.name === 'AbortError') return
+        setError(err.message || 'No se pudo cargar el historial')
       })
+      .finally(() => {
+        if (!controller.signal.aborted) setCargandoHistorial(false)
+      })
+
     return () => controller.abort()
-  }, [])
+  }, [abierto])
 
   useEffect(() => {
     const reclamar = () => {
@@ -262,18 +296,21 @@ function ChatAtletaWidget({ nombreUsuario }) {
 
   const enviar = async (textoOverride) => {
     const texto = String(textoOverride ?? mensaje).trim()
-    if (!texto || enviando) return
+    if (!texto || enviando || cargandoHistorial) return
 
     setError('')
     setMensaje('')
-    const historialApi = mensajes
-      .filter((m) => m.role === 'user' || m.role === 'assistant')
-      .map((m) => ({ role: m.role, content: m.content }))
 
     const ahora = new Date()
+    const tempUserId = `tmp-user-${Date.now()}`
     setMensajes((prev) => [
       ...prev,
-      { role: 'user', content: texto, hora: formatearHoraMensaje(ahora) },
+      {
+        id: tempUserId,
+        role: 'user',
+        content: texto,
+        hora: formatearHoraMensaje(ahora),
+      },
     ])
     setEnviando(true)
 
@@ -282,21 +319,30 @@ function ChatAtletaWidget({ nombreUsuario }) {
     abortRef.current = controller
 
     try {
-      const { respuesta } = await enviarMensajeChatAtleta({
+      const { respuesta, mensajesGuardados } = await enviarMensajeChatAtleta({
         mensaje: texto,
-        historial: historialApi,
         signal: controller.signal,
       })
-      setMensajes((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: respuesta || 'Sin respuesta.',
-          hora: formatearHoraMensaje(new Date()),
-        },
-      ])
+
+      const guardados = mapearMensajesHistorial(mensajesGuardados)
+      if (guardados.length >= 2) {
+        setMensajes((prev) => {
+          const sinTemp = prev.filter((m) => m.id !== tempUserId)
+          return [...sinTemp, ...guardados]
+        })
+      } else {
+        setMensajes((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: respuesta || 'Sin respuesta.',
+            hora: formatearHoraMensaje(new Date()),
+          },
+        ])
+      }
     } catch (err) {
       if (err?.name === 'AbortError') return
+      setMensajes((prev) => prev.filter((m) => m.id !== tempUserId))
       setError(err.message || 'No se pudo enviar el mensaje')
     } finally {
       if (!controller.signal.aborted) setEnviando(false)
@@ -378,7 +424,13 @@ function ChatAtletaWidget({ nombreUsuario }) {
           </div>
 
           <div className="chat-atleta__mensajes" ref={listaRef}>
-            {mensajes.length === 0 && !enviando && (
+            {cargandoHistorial && (
+              <div className="chat-atleta__typing" aria-live="polite">
+                Cargando conversación…
+              </div>
+            )}
+
+            {!cargandoHistorial && mensajes.length === 0 && !enviando && (
               <div className="chat-atleta__msg chat-atleta__msg--assistant">
                 <AvatarBot
                   src={avatarUrl}
@@ -411,7 +463,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
             {mensajes.map((m, index) =>
               m.role === 'user' ? (
                 <div
-                  key={`user-${index}`}
+                  key={m.id || `user-${index}`}
                   className="chat-atleta__msg chat-atleta__msg--user"
                 >
                   <div className="chat-atleta__msg-col chat-atleta__msg-col--user">
@@ -427,7 +479,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
                 </div>
               ) : (
                 <div
-                  key={`bot-${index}`}
+                  key={m.id || `bot-${index}`}
                   className="chat-atleta__msg chat-atleta__msg--assistant"
                 >
                   <AvatarBot
@@ -482,7 +534,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
               data-no-drag="true"
               rows={1}
               value={mensaje}
-              disabled={enviando}
+              disabled={enviando || cargandoHistorial}
               placeholder="Escribe un mensaje…"
               aria-label={`Mensaje para ${nombreBot}`}
               onChange={(e) => setMensaje(e.target.value)}
@@ -492,9 +544,13 @@ function ChatAtletaWidget({ nombreUsuario }) {
               type="submit"
               className="chat-atleta__enviar"
               data-no-drag="true"
-              disabled={enviando || !mensaje.trim()}
+              disabled={enviando || cargandoHistorial || !mensaje.trim()}
+              aria-label="Enviar mensaje"
             >
-              Enviar
+              <span className="chat-atleta__enviar-texto">Enviar</span>
+              <span className="chat-atleta__enviar-icono" aria-hidden="true">
+                ↑
+              </span>
             </button>
           </form>
         </div>

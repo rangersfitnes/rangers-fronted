@@ -136,6 +136,7 @@
 }
 
 .chat-atleta__panel {
+  box-sizing: border-box;
   width: min(380px, calc(100vw - 1.25rem));
   height: min(560px, calc(100dvh - 6.5rem));
   max-height: calc(100dvh - 6.5rem);
@@ -149,6 +150,7 @@
   backdrop-filter: blur(10px);
   touch-action: auto;
   user-select: text;
+  min-width: 0;
 }
 
 .chat-atleta__cabecera {
@@ -220,6 +222,10 @@
   letter-spacing: 0.01em;
   color: #ffffff;
   line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .chat-atleta__subtitulo {
@@ -400,6 +406,13 @@
   font-size: 0.78rem;
 }
 
+.chat-atleta__typing {
+  align-self: center;
+  color: #a3a3a3;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.25rem;
+}
+
 .chat-atleta__sugerencias {
   display: flex;
   flex-wrap: wrap;
@@ -424,18 +437,23 @@
 }
 
 .chat-atleta__form {
+  box-sizing: border-box;
   display: flex;
-  gap: 0.45rem;
-  padding: 0.65rem 0.7rem
-    calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  align-items: flex-end;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.6rem 0.65rem;
   border-top: 1px solid #2a2a2a;
   background: #0f0f0f;
   flex-shrink: 0;
 }
 
 .chat-atleta__input {
-  flex: 1;
+  box-sizing: border-box;
+  flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
   min-height: 2.45rem;
   max-height: 5.5rem;
   resize: none;
@@ -459,8 +477,13 @@
 }
 
 .chat-atleta__enviar {
-  flex-shrink: 0;
-  min-width: 2.6rem;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  height: 2.45rem;
   padding: 0 0.85rem;
   border: none;
   border-radius: 9999px;
@@ -470,6 +493,13 @@
   font-size: 0.78rem;
   letter-spacing: 0.02em;
   cursor: pointer;
+}
+
+.chat-atleta__enviar-icono {
+  display: none;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .chat-atleta__enviar:hover:not(:disabled) {
@@ -482,6 +512,10 @@
 }
 
 @media (max-width: 640px) {
+  .chat-atleta {
+    max-width: none;
+  }
+
   .chat-atleta--movil-anclado {
     left: max(0.5rem, env(safe-area-inset-left, 0px));
     right: max(0.5rem, env(safe-area-inset-right, 0px));
@@ -489,10 +523,15 @@
     width: auto;
     max-width: none;
     align-items: stretch;
+    box-sizing: border-box;
   }
 
   .chat-atleta--movil-anclado .chat-atleta__fab-wrap {
     align-self: flex-end;
+  }
+
+  .chat-atleta__fab-aviso {
+    max-width: min(190px, calc(100vw - 5.25rem));
   }
 
   .chat-atleta__fab-aviso-texto {
@@ -501,16 +540,55 @@
 
   .chat-atleta--movil-anclado .chat-atleta__panel {
     width: 100%;
-    height: auto;
+    max-width: 100%;
+    height: min(
+      70dvh,
+      calc(
+        100dvh - 5.25rem - env(safe-area-inset-top, 0px) -
+          env(safe-area-inset-bottom, 0px)
+      )
+    );
     max-height: calc(
-      100dvh - 4.75rem - env(safe-area-inset-top, 0px) -
+      100dvh - 5.25rem - env(safe-area-inset-top, 0px) -
         env(safe-area-inset-bottom, 0px)
     );
-    min-height: min(52dvh, 360px);
+    min-height: 0;
   }
 
   .chat-atleta--movil-anclado .chat-atleta__cabecera {
     cursor: default;
+    padding: 0.6rem 0.65rem;
+  }
+
+  .chat-atleta--movil-anclado .chat-atleta__persona {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .chat-atleta--movil-anclado .chat-atleta__form {
+    gap: 0.35rem;
+    padding: 0.5rem 0.55rem 0.55rem;
+  }
+
+  .chat-atleta--movil-anclado .chat-atleta__input {
+    min-height: 2.35rem;
+    padding: 0.5rem 0.7rem;
+    font-size: 16px; /* evita zoom automático en iOS */
+  }
+
+  .chat-atleta--movil-anclado .chat-atleta__enviar {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+  }
+
+  .chat-atleta--movil-anclado .chat-atleta__enviar-texto {
+    display: none;
+  }
+
+  .chat-atleta--movil-anclado .chat-atleta__enviar-icono {
+    display: block;
   }
 }
 
@@ -522,11 +600,18 @@
 
   @media (max-width: 640px) {
     .chat-atleta--movil-anclado .chat-atleta__panel {
+      height: min(
+        70vh,
+        calc(
+          100vh - 5.25rem - env(safe-area-inset-top, 0px) -
+            env(safe-area-inset-bottom, 0px)
+        )
+      );
       max-height: calc(
-        100vh - 4.75rem - env(safe-area-inset-top, 0px) -
+        100vh - 5.25rem - env(safe-area-inset-top, 0px) -
           env(safe-area-inset-bottom, 0px)
       );
-      min-height: min(52vh, 360px);
+      min-height: 0;
     }
   }
 }
