@@ -11,9 +11,52 @@ import './ChatAtletaWidget.css'
 
 const STORAGE_POS = 'rb_chat_atleta_pos'
 const STORAGE_PUBLICO = 'rb_chat_publico_msgs'
+const STORAGE_BOT = 'rb_chat_bot_branding'
 const MARGEN = 12
 const MOBILE_MQ = '(max-width: 640px)'
 const BOT_NOMBRE_DEFAULT = 'Ranger Bot'
+
+function leerBrandingBotCache() {
+  try {
+    const raw = localStorage.getItem(STORAGE_BOT)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    const avatarUrl =
+      typeof parsed?.avatarUrl === 'string' ? parsed.avatarUrl.trim() : ''
+    const nombre = String(parsed?.nombre || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+    if (!avatarUrl && !nombre) return null
+    return {
+      avatarUrl,
+      nombre: nombre || BOT_NOMBRE_DEFAULT,
+    }
+  } catch {
+    return null
+  }
+}
+
+function guardarBrandingBotCache({ avatarUrl, nombre }) {
+  try {
+    localStorage.setItem(
+      STORAGE_BOT,
+      JSON.stringify({
+        avatarUrl: String(avatarUrl || '').trim(),
+        nombre: String(nombre || BOT_NOMBRE_DEFAULT).trim() || BOT_NOMBRE_DEFAULT,
+      }),
+    )
+  } catch {
+    // ignore
+  }
+}
+
+function precargarImagen(url) {
+  const src = String(url || '').trim()
+  if (!src || typeof Image === 'undefined') return
+  const img = new Image()
+  img.decoding = 'async'
+  img.src = src
+}
 
 const SUGERENCIAS_ATLETA = [
   '¿Qué entreno hoy?',
@@ -147,6 +190,11 @@ function mapearMensajesHistorial(lista = []) {
 
 function AvatarBot({ src, className, alt = BOT_NOMBRE_DEFAULT }) {
   const [fallo, setFallo] = useState(false)
+
+  useEffect(() => {
+    setFallo(false)
+  }, [src])
+
   const url = !fallo && src ? src : logo
   return (
     <img
@@ -157,6 +205,8 @@ function AvatarBot({ src, className, alt = BOT_NOMBRE_DEFAULT }) {
       }`}
       onError={() => setFallo(true)}
       draggable={false}
+      loading="eager"
+      decoding="async"
     />
   )
 }
@@ -178,12 +228,28 @@ function ChatAtletaWidget({ nombreUsuario, modoPublico = false }) {
   const [cargandoHistorial, setCargandoHistorial] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
-  const [botNombre, setBotNombre] = useState(BOT_NOMBRE_DEFAULT)
+  const [avatarUrl, setAvatarUrl] = useState(
+    () => leerBrandingBotCache()?.avatarUrl || '',
+  )
+  const [botNombre, setBotNombre] = useState(
+    () => leerBrandingBotCache()?.nombre || BOT_NOMBRE_DEFAULT,
+  )
 
   const panelAncladoMovil = abierto && esMovil
   const nombreBot = botNombre || BOT_NOMBRE_DEFAULT
   const sugerencias = modoPublico ? SUGERENCIAS_PUBLICO : SUGERENCIAS_ATLETA
+
+  const aplicarBrandingBot = (contenido) => {
+    const url = String(contenido?.rangerBot?.avatarUrl || '').trim()
+    const nombreGuardado = String(contenido?.rangerBot?.nombre || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+    const nombre = nombreGuardado || BOT_NOMBRE_DEFAULT
+    setAvatarUrl(url)
+    setBotNombre(nombre)
+    guardarBrandingBotCache({ avatarUrl: url, nombre })
+    if (url) precargarImagen(url)
+  }
 
   useEffect(() => {
     try {
@@ -201,6 +267,25 @@ function ChatAtletaWidget({ nombreUsuario, modoPublico = false }) {
     return () => mq.removeEventListener?.('change', syncMovil)
   }, [])
 
+  // Carga avatar/nombre al montar (FAB) sin esperar a abrir el chat.
+  useEffect(() => {
+    if (avatarUrl) precargarImagen(avatarUrl)
+
+    const controller = new AbortController()
+    obtenerContenidoWebPublico({ signal: controller.signal })
+      .then((contenido) => {
+        if (controller.signal.aborted) return
+        aplicarBrandingBot(contenido)
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') return
+      })
+
+    return () => controller.abort()
+    // Solo al montar el widget.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (!abierto) return undefined
 
@@ -209,14 +294,15 @@ function ChatAtletaWidget({ nombreUsuario, modoPublico = false }) {
     setError('')
 
     const cargar = async () => {
-      const contenido = await obtenerContenidoWebPublico({
-        signal: controller.signal,
-      })
-      const nombreGuardado = String(contenido?.rangerBot?.nombre || '')
-        .trim()
-        .replace(/\s+/g, ' ')
-      setAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
-      setBotNombre(nombreGuardado || BOT_NOMBRE_DEFAULT)
+      // Refresco liviano de branding al abrir (por si cambió en admin).
+      try {
+        const contenido = await obtenerContenidoWebPublico({
+          signal: controller.signal,
+        })
+        if (!controller.signal.aborted) aplicarBrandingBot(contenido)
+      } catch (err) {
+        if (err?.name === 'AbortError') throw err
+      }
 
       if (modoPublico) {
         setMensajes(mapearMensajesHistorial(leerHistorialPublico()))
@@ -285,68 +371,78 @@ function ChatAtletaWidget({ nombreUsuario, modoPublico = false }) {
     }
   }, [])
 
+  const limpiarListenersArrastre = () => {
+    const drag = dragRef.current
+    if (!drag) return
+    if (drag.onMove) {
+      window.removeEventListener('pointermove', drag.onMove)
+    }
+    if (drag.onUp) {
+      window.removeEventListener('pointerup', drag.onUp)
+      window.removeEventListener('pointercancel', drag.onUp)
+    }
+  }
+
   const iniciarArrastre = (event) => {
     if (event.button != null && event.button !== 0) return
     if (event.target?.closest?.('[data-no-drag="true"]')) return
     if (panelAncladoMovil) return
-    dragRef.current = {
-      pointerId: event.pointerId,
+
+    event.preventDefault()
+
+    const pointerId = event.pointerId
+    const drag = {
+      pointerId,
       startRight: posicion.right,
       startBottom: posicion.bottom,
       startX: event.clientX,
       startY: event.clientY,
       moved: false,
+      onMove: null,
+      onUp: null,
     }
+
+    drag.onMove = (moveEvent) => {
+      if (moveEvent.pointerId !== pointerId) return
+      const el = rootRef.current
+      if (!el) return
+      const deltaX = moveEvent.clientX - drag.startX
+      const deltaY = moveEvent.clientY - drag.startY
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) drag.moved = true
+      const rect = el.getBoundingClientRect()
+      setPosicion(
+        clampearPosicion(
+          drag.startRight - deltaX,
+          drag.startBottom - deltaY,
+          rect.width,
+          rect.height,
+        ),
+      )
+    }
+
+    drag.onUp = (upEvent) => {
+      if (upEvent.pointerId !== pointerId) return
+      const moved = Boolean(drag.moved)
+      limpiarListenersArrastre()
+      dragRef.current = null
+      setArrastrando(false)
+      if (!moved) {
+        setAbierto((prev) => !prev)
+        setError('')
+      }
+    }
+
+    dragRef.current = drag
     setArrastrando(true)
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId)
-    } catch {
-      // ignore
-    }
+    window.addEventListener('pointermove', drag.onMove, { passive: true })
+    window.addEventListener('pointerup', drag.onUp)
+    window.addEventListener('pointercancel', drag.onUp)
   }
 
-  const moverArrastre = (event) => {
-    const drag = dragRef.current
-    if (!drag || drag.pointerId !== event.pointerId) return
-    if (panelAncladoMovil) return
-    const el = rootRef.current
-    if (!el) return
-
-    const deltaX = event.clientX - drag.startX
-    const deltaY = event.clientY - drag.startY
-    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) drag.moved = true
-
-    const rect = el.getBoundingClientRect()
-    setPosicion(
-      clampearPosicion(
-        drag.startRight - deltaX,
-        drag.startBottom - deltaY,
-        rect.width,
-        rect.height,
-      ),
-    )
-  }
-
-  const terminarArrastre = (event) => {
-    const drag = dragRef.current
-    if (!drag || drag.pointerId !== event.pointerId) return
-    const moved = drag.moved
-    dragRef.current = null
-    setArrastrando(false)
-    try {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    } catch {
-      // ignore
-    }
-    return moved
-  }
-
-  const toggleFab = (event) => {
-    const moved = terminarArrastre(event)
-    if (moved) return
-    setAbierto((prev) => !prev)
-    setError('')
-  }
+  useEffect(() => {
+    return () => limpiarListenersArrastre()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const enviar = async (textoOverride) => {
     const texto = String(textoOverride ?? mensaje).trim()
@@ -486,9 +582,6 @@ function ChatAtletaWidget({ nombreUsuario, modoPublico = false }) {
           <div
             className="chat-atleta__cabecera"
             onPointerDown={iniciarArrastre}
-            onPointerMove={moverArrastre}
-            onPointerUp={terminarArrastre}
-            onPointerCancel={terminarArrastre}
           >
             <div className="chat-atleta__persona">
               <div className="chat-atleta__avatar-wrap">
@@ -661,13 +754,13 @@ function ChatAtletaWidget({ nombreUsuario, modoPublico = false }) {
           type="button"
           className="chat-atleta__fab"
           aria-label={
-            abierto ? `Cerrar chat con ${nombreBot}` : `Chatea con ${nombreBot}`
+            abierto
+              ? `Cerrar chat con ${nombreBot}`
+              : `Chatea con ${nombreBot}. Mantén pulsado y arrastra para mover.`
           }
+          title="Mantén pulsado y arrastra para mover"
           aria-expanded={abierto}
           onPointerDown={iniciarArrastre}
-          onPointerMove={moverArrastre}
-          onPointerUp={toggleFab}
-          onPointerCancel={terminarArrastre}
         >
           <AvatarBot
             src={avatarUrl}

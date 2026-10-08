@@ -793,6 +793,19 @@ function CronometroEntrenamientoModal({ open, onClose }) {
   const mostrarPip = Boolean(pipActivo && pipRoot && corriendo)
   const etiquetaActual = etiquetaFase(fase, pausado)
 
+  // Oculta el FAB del chat para no tapar Detener / mini del cronómetro.
+  useEffect(() => {
+    const activo = Boolean(mostrarFullscreen || mostrarMini)
+    if (activo) {
+      document.body.dataset.cronometroUi = '1'
+    } else {
+      delete document.body.dataset.cronometroUi
+    }
+    return () => {
+      delete document.body.dataset.cronometroUi
+    }
+  }, [mostrarFullscreen, mostrarMini])
+
   if (!mostrarFullscreen && !mostrarMini && !mostrarPip) return null
 
   const pipWidget = (
