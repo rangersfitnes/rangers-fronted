@@ -2,22 +2,62 @@ import { useEffect, useRef, useState } from 'react'
 import logo from '../assets/images/logos/logo.webp'
 import {
   enviarMensajeChatAtleta,
+  enviarMensajeChatPublico,
   obtenerHistorialChatAtleta,
+  ordenarMensajesPorLlegada,
 } from '../services/chatAtletaService.js'
 import { obtenerContenidoWebPublico } from '../services/contenidoWebService.js'
 import './ChatAtletaWidget.css'
 
 const STORAGE_POS = 'rb_chat_atleta_pos'
+const STORAGE_PUBLICO = 'rb_chat_publico_msgs'
 const MARGEN = 12
 const MOBILE_MQ = '(max-width: 640px)'
 const BOT_NOMBRE_DEFAULT = 'Ranger Bot'
 
-const SUGERENCIAS = [
+const SUGERENCIAS_ATLETA = [
   '¿Qué entreno hoy?',
   '¿Cuántas asistencias llevo este mes?',
   'Revisa mis comidas recientes',
   '¿Cómo va mi plan / membresía?',
 ]
+
+const SUGERENCIAS_PUBLICO = [
+  '¿Qué horarios tienen?',
+  '¿Qué clases hay hoy?',
+  '¿Cuáles son los planes?',
+  '¿Dónde quedan?',
+]
+
+function leerHistorialPublico() {
+  try {
+    const raw = localStorage.getItem(STORAGE_PUBLICO)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return ordenarMensajesPorLlegada(
+      parsed.filter(
+        (m) =>
+          m &&
+          (m.role === 'user' || m.role === 'assistant') &&
+          String(m.content || '').trim(),
+      ),
+    ).slice(-40)
+  } catch {
+    return []
+  }
+}
+
+function guardarHistorialPublico(lista) {
+  try {
+    localStorage.setItem(
+      STORAGE_PUBLICO,
+      JSON.stringify(ordenarMensajesPorLlegada(lista).slice(-40)),
+    )
+  } catch {
+    // ignore
+  }
+}
 
 function leerPosicionGuardada() {
   try {
@@ -88,19 +128,21 @@ function formatearHoraMensaje(date = new Date()) {
 }
 
 function mapearMensajesHistorial(lista = []) {
-  return (Array.isArray(lista) ? lista : [])
-    .filter(
+  return ordenarMensajesPorLlegada(
+    (Array.isArray(lista) ? lista : []).filter(
       (m) =>
         m &&
         (m.role === 'user' || m.role === 'assistant') &&
         String(m.content || '').trim(),
-    )
-    .map((m) => ({
-      id: m.id || null,
-      role: m.role,
-      content: String(m.content).trim(),
-      hora: m.creadoEn ? formatearHoraMensaje(m.creadoEn) : '',
-    }))
+    ),
+  ).map((m, index) => ({
+    id: m.id || `msg-${m.creadoEn || 0}-${m.secuencia ?? index}-${m.role}`,
+    role: m.role,
+    content: String(m.content).trim(),
+    creadoEn: m.creadoEn || null,
+    secuencia: m.secuencia ?? (m.role === 'user' ? 0 : 1),
+    hora: m.creadoEn ? formatearHoraMensaje(m.creadoEn) : '',
+  }))
 }
 
 function AvatarBot({ src, className, alt = BOT_NOMBRE_DEFAULT }) {
@@ -119,7 +161,7 @@ function AvatarBot({ src, className, alt = BOT_NOMBRE_DEFAULT }) {
   )
 }
 
-function ChatAtletaWidget({ nombreUsuario }) {
+function ChatAtletaWidget({ nombreUsuario, modoPublico = false }) {
   const rootRef = useRef(null)
   const dragRef = useRef(null)
   const listaRef = useRef(null)
@@ -141,6 +183,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
 
   const panelAncladoMovil = abierto && esMovil
   const nombreBot = botNombre || BOT_NOMBRE_DEFAULT
+  const sugerencias = modoPublico ? SUGERENCIAS_PUBLICO : SUGERENCIAS_ATLETA
 
   useEffect(() => {
     try {
@@ -165,18 +208,29 @@ function ChatAtletaWidget({ nombreUsuario }) {
     setCargandoHistorial(true)
     setError('')
 
-    Promise.all([
-      obtenerContenidoWebPublico({ signal: controller.signal }),
-      obtenerHistorialChatAtleta({ signal: controller.signal, limite: 60 }),
-    ])
-      .then(([contenido, historial]) => {
-        const nombreGuardado = String(contenido?.rangerBot?.nombre || '')
-          .trim()
-          .replace(/\s+/g, ' ')
-        setAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
-        setBotNombre(nombreGuardado || BOT_NOMBRE_DEFAULT)
-        setMensajes(mapearMensajesHistorial(historial))
+    const cargar = async () => {
+      const contenido = await obtenerContenidoWebPublico({
+        signal: controller.signal,
       })
+      const nombreGuardado = String(contenido?.rangerBot?.nombre || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+      setAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
+      setBotNombre(nombreGuardado || BOT_NOMBRE_DEFAULT)
+
+      if (modoPublico) {
+        setMensajes(mapearMensajesHistorial(leerHistorialPublico()))
+        return
+      }
+
+      const historial = await obtenerHistorialChatAtleta({
+        signal: controller.signal,
+        limite: 60,
+      })
+      setMensajes(mapearMensajesHistorial(historial))
+    }
+
+    cargar()
       .catch((err) => {
         if (err?.name === 'AbortError') return
         setError(err.message || 'No se pudo cargar el historial')
@@ -186,7 +240,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
       })
 
     return () => controller.abort()
-  }, [abierto])
+  }, [abierto, modoPublico])
 
   useEffect(() => {
     const reclamar = () => {
@@ -301,17 +355,19 @@ function ChatAtletaWidget({ nombreUsuario }) {
     setError('')
     setMensaje('')
 
-    const ahora = new Date()
-    const tempUserId = `tmp-user-${Date.now()}`
-    setMensajes((prev) => [
-      ...prev,
-      {
-        id: tempUserId,
-        role: 'user',
-        content: texto,
-        hora: formatearHoraMensaje(ahora),
-      },
-    ])
+    const ahoraMs = Date.now()
+    const tempUserId = `tmp-user-${ahoraMs}`
+    const tempBotId = `tmp-bot-${ahoraMs}`
+    const msgUsuario = {
+      id: tempUserId,
+      role: 'user',
+      content: texto,
+      creadoEn: ahoraMs,
+      secuencia: 0,
+      hora: formatearHoraMensaje(ahoraMs),
+    }
+
+    setMensajes((prev) => ordenarMensajesPorLlegada([...prev, msgUsuario]))
     setEnviando(true)
 
     abortRef.current?.abort()
@@ -319,27 +375,61 @@ function ChatAtletaWidget({ nombreUsuario }) {
     abortRef.current = controller
 
     try {
-      const { respuesta, mensajesGuardados } = await enviarMensajeChatAtleta({
-        mensaje: texto,
-        signal: controller.signal,
-      })
+      let respuesta = ''
+      let guardados = []
 
-      const guardados = mapearMensajesHistorial(mensajesGuardados)
-      if (guardados.length >= 2) {
-        setMensajes((prev) => {
-          const sinTemp = prev.filter((m) => m.id !== tempUserId)
-          return [...sinTemp, ...guardados]
-        })
-      } else {
-        setMensajes((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: respuesta || 'Sin respuesta.',
-            hora: formatearHoraMensaje(new Date()),
-          },
+      if (modoPublico) {
+        const historialEnvio = ordenarMensajesPorLlegada([
+          ...mensajes.filter((m) => m.id !== tempUserId),
+          msgUsuario,
         ])
+        const resultado = await enviarMensajeChatPublico({
+          mensaje: texto,
+          historial: historialEnvio,
+          signal: controller.signal,
+        })
+        respuesta = resultado.respuesta
+        if (resultado.nombreBot) setBotNombre(resultado.nombreBot)
+      } else {
+        const resultado = await enviarMensajeChatAtleta({
+          mensaje: texto,
+          signal: controller.signal,
+        })
+        respuesta = resultado.respuesta
+        guardados = mapearMensajesHistorial(resultado.mensajesGuardados)
       }
+
+      const msgBot = {
+        id: guardados.find((m) => m.role === 'assistant')?.id || tempBotId,
+        role: 'assistant',
+        content: respuesta || 'Sin respuesta.',
+        creadoEn: ahoraMs + 1,
+        secuencia: 1,
+        hora: formatearHoraMensaje(ahoraMs + 1),
+      }
+      const msgUserFinal =
+        guardados.find((m) => m.role === 'user') || {
+          ...msgUsuario,
+          id: guardados.find((m) => m.role === 'user')?.id || tempUserId,
+        }
+
+      setMensajes((prev) => {
+        const sinTemp = prev.filter(
+          (m) => m.id !== tempUserId && m.id !== tempBotId,
+        )
+        const siguiente = ordenarMensajesPorLlegada([
+          ...sinTemp,
+          {
+            ...msgUserFinal,
+            hora:
+              msgUserFinal.hora ||
+              formatearHoraMensaje(msgUserFinal.creadoEn || ahoraMs),
+          },
+          msgBot,
+        ])
+        if (modoPublico) guardarHistorialPublico(siguiente)
+        return siguiente
+      })
     } catch (err) {
       if (err?.name === 'AbortError') return
       setMensajes((prev) => prev.filter((m) => m.id !== tempUserId))
@@ -364,9 +454,11 @@ function ChatAtletaWidget({ nombreUsuario }) {
   const primerNombre = nombreUsuario
     ? String(nombreUsuario).split(/\s+/)[0]
     : ''
-  const saludo = primerNombre
-    ? `Hola atleta ${primerNombre}, soy ${nombreBot}. Reporta: entreno, comidas, asistencias o tu plan. ¿Cuál es la misión?`
-    : `Hola atleta, soy ${nombreBot}. Reporta: entreno, comidas, asistencias o tu plan. ¿Cuál es la misión?`
+  const saludo = modoPublico
+    ? `Qué más, soy ${nombreBot} de Rangers Box. Pregúntame por horarios, clases, planes o ubicación. Si quieres ver tu plan o rutina, inicia sesión.`
+    : primerNombre
+      ? `Hola atleta ${primerNombre}, soy ${nombreBot}. Reporta: entreno, comidas, asistencias o tu plan. ¿Cuál es la misión?`
+      : `Hola atleta, soy ${nombreBot}. Reporta: entreno, comidas, asistencias o tu plan. ¿Cuál es la misión?`
 
   const estiloRoot = panelAncladoMovil
     ? undefined
@@ -443,7 +535,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
                     {saludo}
                   </div>
                   <div className="chat-atleta__sugerencias">
-                    {SUGERENCIAS.map((s) => (
+                    {sugerencias.map((s) => (
                       <button
                         key={s}
                         type="button"

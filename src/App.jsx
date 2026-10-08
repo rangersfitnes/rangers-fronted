@@ -67,8 +67,11 @@ function App() {
     Boolean(usuario?.requiereActualizacionPeso) &&
     !pesoPospuestoLocal &&
     !pesoPospuestoEstaSesion(usuario)
+  // Atletas logueados: chat en el sitio. Invitados: solo en la home (misma lógica).
   const mostrarChatAtleta =
-    esUsuarioCliente(usuario) && !isAdminArea && !isLoginArea
+    !isAdminArea &&
+    !isLoginArea &&
+    (esUsuarioCliente(usuario) || (!usuario && isHome))
 
   if (usuarioLoading) {
     return (
@@ -198,7 +201,10 @@ function App() {
         onPosponer={() => setPesoPospuestoLocal(true)}
       />
       {mostrarChatAtleta && (
-        <ChatAtletaWidget nombreUsuario={usuario?.nombre} />
+        <ChatAtletaWidget
+          nombreUsuario={usuario?.nombre}
+          modoPublico={!usuario}
+        />
       )}
     </div>
   )
