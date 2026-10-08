@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
 import { colors } from './variables/colors.jsx'
@@ -5,6 +6,9 @@ import Header from './components/Header.jsx'
 import LoadingOverlay from './components/LoadingOverlay.jsx'
 import CompletarPerfilModal from './components/CompletarPerfilModal.jsx'
 import SolicitudEntrenadorModal from './components/SolicitudEntrenadorModal.jsx'
+import ActualizarPesoMensualModal, {
+  pesoPospuestoEstaSesion,
+} from './components/ActualizarPesoMensualModal.jsx'
 import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx'
 import ProtectedCuentaRoute from './components/ProtectedCuentaRoute.jsx'
 import { useUsuario } from './contexts/UsuarioContext.jsx'
@@ -30,6 +34,13 @@ import CuentaActividad from './pages/cuenta/CuentaActividad.jsx'
 function App() {
   const { pathname } = useLocation()
   const { loading: usuarioLoading, usuario, actualizarUsuario } = useUsuario()
+  const [pesoPospuestoLocal, setPesoPospuestoLocal] = useState(false)
+
+  useEffect(() => {
+    // Nueva sesión de usuario: reevalúa el posponer de esta pestaña
+    setPesoPospuestoLocal(pesoPospuestoEstaSesion(usuario))
+  }, [usuario?.id, usuario?.mesPesoActual, usuario?.requiereActualizacionPeso])
+
   const isAdminArea = pathname.startsWith('/admin')
   const isLoginArea = pathname === '/login'
   const isPaymentArea = pathname.startsWith('/payment-plan')
@@ -48,6 +59,13 @@ function App() {
     usuario.solicitudesEntrenadorPendientes.length > 0
       ? usuario.solicitudesEntrenadorPendientes[0]
       : null
+  const mostrarActualizarPeso =
+    esUsuarioCliente(usuario) &&
+    !mostrarCompletarPerfil &&
+    !solicitudEntrenadorPendiente &&
+    Boolean(usuario?.requiereActualizacionPeso) &&
+    !pesoPospuestoLocal &&
+    !pesoPospuestoEstaSesion(usuario)
 
   if (usuarioLoading) {
     return (
@@ -166,6 +184,15 @@ function App() {
             solicitudesEntrenadorPendientes: restantes,
           })
         }}
+      />
+      <ActualizarPesoMensualModal
+        open={mostrarActualizarPeso}
+        usuario={usuario}
+        onActualizado={(datos) => {
+          actualizarUsuario(datos)
+          setPesoPospuestoLocal(false)
+        }}
+        onPosponer={() => setPesoPospuestoLocal(true)}
       />
     </div>
   )

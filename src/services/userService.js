@@ -318,6 +318,62 @@ export async function completarPerfilUsuario(datos, { signal } = {}) {
   return actualizarMiPerfil(datos, { signal })
 }
 
+export async function registrarPesoMensual(pesoKg, { origen = 'mensual', signal } = {}) {
+  const token = getUserToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/usuarios/me/perfil/peso`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ pesoKg, origen }),
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo registrar el peso')
+  }
+  return data.usuario
+}
+
+export async function obtenerHistorialPeso({ limite = 12, signal } = {}) {
+  const token = getUserToken()
+  if (!token) throw new Error('No hay sesión activa')
+
+  const params = new URLSearchParams()
+  if (limite) params.set('limite', String(limite))
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/usuarios/me/perfil/peso/historial?${params}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo cargar el historial de peso')
+  }
+  return data.historial ?? []
+}
+
 export async function actualizarMiPerfil(datos, { signal } = {}) {
   const token = getUserToken()
   if (!token) {

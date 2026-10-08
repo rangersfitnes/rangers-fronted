@@ -14,28 +14,41 @@ const SOURCES = {
   warning: warningUrl,
 }
 
-const cache = new Map()
+/** Ganancia por encima de 1 = más fuerte que el volumen nativo del <audio>. */
+const GAIN_BOOST = 3.2
+
+const bufferCache = new Map()
+let audioCtx = null
 let unlocked = false
 
-function obtenerAudio(nombre) {
+function obtenerContexto() {
+  if (audioCtx) return audioCtx
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  if (!Ctx) return null
+  audioCtx = new Ctx()
+  return audioCtx
+}
+
+async function cargarBuffer(nombre) {
+  if (bufferCache.has(nombre)) return bufferCache.get(nombre)
   const src = SOURCES[nombre]
   if (!src) return null
-  let audio = cache.get(nombre)
-  if (!audio) {
-    audio = new Audio(src)
-    audio.preload = 'auto'
-    cache.set(nombre, audio)
-  }
-  return audio
+  const ctx = obtenerContexto()
+  if (!ctx) return null
+
+  const response = await fetch(src, { cache: 'force-cache' })
+  const arrayBuffer = await response.arrayBuffer()
+  const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0))
+  bufferCache.set(nombre, audioBuffer)
+  return audioBuffer
 }
 
 /** Precarga sonidos (llamar al abrir el modal). */
 export function precargarSonidosCronometro() {
+  const ctx = obtenerContexto()
+  if (!ctx) return
   Object.keys(SOURCES).forEach((nombre) => {
-    const audio = obtenerAudio(nombre)
-    if (audio) {
-      audio.load()
-    }
+    cargarBuffer(nombre).catch(() => {})
   })
 }
 
@@ -44,15 +57,23 @@ export function precargarSonidosCronometro() {
  * Llamar desde el botón Iniciar.
  */
 export async function desbloquearAudioCronometro() {
-  if (unlocked) return
+  const ctx = obtenerContexto()
+  if (!ctx) return
   try {
-    const audio = obtenerAudio('tick')
-    if (!audio) return
-    audio.volume = 0.01
-    await audio.play()
-    audio.pause()
-    audio.currentTime = 0
-    audio.volume = 1
+    if (ctx.state === 'suspended') {
+      await ctx.resume()
+    }
+    // Click silencioso para desbloquear la ruta de audio
+    const buffer = ctx.createBuffer(1, 1, ctx.sampleRate)
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start(0)
+    await Promise.all(
+      Object.keys(SOURCES).map((nombre) =>
+        cargarBuffer(nombre).catch(() => null),
+      ),
+    )
     unlocked = true
   } catch {
     /* ignore */
@@ -60,16 +81,44 @@ export async function desbloquearAudioCronometro() {
 }
 
 export function reproducirSonidoCronometro(nombre) {
-  const base = obtenerAudio(nombre)
-  if (!base) return
-  try {
-    const nodo = base.cloneNode(true)
-    nodo.volume = 1
-    const playPromise = nodo.play()
-    if (playPromise?.catch) {
-      playPromise.catch(() => {})
-    }
-  } catch {
-    /* ignore */
+  const ctx = obtenerContexto()
+  if (!ctx) {
+    // Fallback HTMLAudio a volumen máximo
+    const audio = new Audio(SOURCES[nombre])
+    audio.volume = 1
+    audio.play().catch(() => {})
+    return
   }
+
+  const play = async () => {
+    try {
+      if (ctx.state === 'suspended') {
+        await ctx.resume()
+      }
+      const buffer = await cargarBuffer(nombre)
+      if (!buffer) return
+
+      const source = ctx.createBufferSource()
+      source.buffer = buffer
+
+      const gain = ctx.createGain()
+      // Boost fuerte; el soft-clip del navegador evita distorsión extrema
+      gain.gain.value = GAIN_BOOST
+
+      source.connect(gain)
+      gain.connect(ctx.destination)
+      source.start(0)
+      unlocked = true
+    } catch {
+      const audio = new Audio(SOURCES[nombre])
+      audio.volume = 1
+      audio.play().catch(() => {})
+    }
+  }
+
+  play()
+}
+
+export function sonidosCronometroDesbloqueados() {
+  return unlocked
 }
