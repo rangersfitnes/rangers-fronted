@@ -15,6 +15,7 @@ import ChevronRightIcon from './icons/ChevronRightIcon.jsx'
 import TiqueteraSaldoBox from './TiqueteraSaldoBox.jsx'
 import AsistenciasToggle from './AsistenciasToggle.jsx'
 import CalcularCaloriasModal from './CalcularCaloriasModal.jsx'
+import MisIngestasModal from './MisIngestasModal.jsx'
 import DatosCorporalesModal from './DatosCorporalesModal.jsx'
 import CronometroEntrenamientoModal from './CronometroEntrenamientoModal.jsx'
 import './Hero.css'
@@ -60,6 +61,7 @@ function Hero() {
   const { usuario } = useUsuario()
   const autenticado = Boolean(usuario)
   const [caloriasAbierto, setCaloriasAbierto] = useState(false)
+  const [ingestasAbierto, setIngestasAbierto] = useState(false)
   const [datosCorporalesAbierto, setDatosCorporalesAbierto] = useState(false)
   const [cronometroAbierto, setCronometroAbierto] = useState(false)
   const [reabrirCaloriasTrasDatos, setReabrirCaloriasTrasDatos] = useState(false)
@@ -140,6 +142,13 @@ function Hero() {
                 onClick={() => setCaloriasAbierto(true)}
               >
                 Calcular calorías
+              </button>
+              <button
+                type="button"
+                className="hero__training-btn hero__training-btn--secondary"
+                onClick={() => setIngestasAbierto(true)}
+              >
+                Mis ingestas
               </button>
               <button
                 type="button"
@@ -288,6 +297,18 @@ function Hero() {
                 setCaloriasAbierto(false)
                 setReabrirCaloriasTrasDatos(true)
                 setDatosCorporalesAbierto(true)
+              }}
+              onAbrirIngestas={() => {
+                setCaloriasAbierto(false)
+                setIngestasAbierto(true)
+              }}
+            />
+            <MisIngestasModal
+              open={ingestasAbierto}
+              onClose={() => setIngestasAbierto(false)}
+              onAbrirCalculadora={() => {
+                setIngestasAbierto(false)
+                setCaloriasAbierto(true)
               }}
             />
             <DatosCorporalesModal

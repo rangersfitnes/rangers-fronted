@@ -131,3 +131,56 @@ export async function eliminarAudioAsistenciasAdmin() {
 
   return data.contenido ?? {}
 }
+
+export async function subirAvatarRangerBotAdmin(archivo) {
+  const token = await requerirAdminToken()
+  if (!archivo) throw new Error('Selecciona una imagen')
+
+  const form = new FormData()
+  form.append('avatar', archivo)
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/contenido-web/ranger-bot-avatar`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo subir la imagen de Ranger Bot')
+  }
+
+  return data.contenido ?? {}
+}
+
+export async function eliminarAvatarRangerBotAdmin() {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/contenido-web/ranger-bot-avatar`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo eliminar la imagen de Ranger Bot')
+  }
+
+  return data.contenido ?? {}
+}

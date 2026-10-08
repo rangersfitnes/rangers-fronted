@@ -504,10 +504,56 @@
   color: #fb923c;
 }
 
+.calcular-calorias__link-ingestas {
+  display: inline-flex;
+  align-items: center;
+  margin: 0.15rem 0 0.85rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #fb923c;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.calcular-calorias__link-ingestas:hover:not(:disabled) {
+  color: #fdba74;
+  text-decoration: underline;
+}
+
+.calcular-calorias__link-ingestas:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.calcular-calorias__link-inline {
+  display: inline;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #fb923c;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .calcular-calorias__historial {
   margin-top: 1.15rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calcular-calorias__historial--solo {
+  margin-top: 0.5rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+.calcular-calorias__historial--solo .calcular-calorias__historial-list {
+  max-height: min(58vh, 520px);
 }
 
 .calcular-calorias__historial-title {

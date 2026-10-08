@@ -9,7 +9,9 @@ import LoadingOverlay from '../components/LoadingOverlay.jsx'
 import { useToast } from '../components/Toast.jsx'
 import {
   actualizarContenidoWebAdmin,
+  eliminarAvatarRangerBotAdmin,
   obtenerContenidoWebAdmin,
+  subirAvatarRangerBotAdmin,
   urlEmbedYoutube,
 } from '../services/contenidoWebService.js'
 import './AdministracionGeneral.css'
@@ -187,11 +189,14 @@ function AdministracionGeneralContenidoWeb() {
   const toast = useToast()
   const [loading, setLoading] = useState(true)
   const [guardando, setGuardando] = useState(false)
+  const [subiendoAvatar, setSubiendoAvatar] = useState(false)
   const [error, setError] = useState('')
   const [videoYoutubeUrl, setVideoYoutubeUrl] = useState('')
   const [temaAsistencia, setTemaAsistencia] = useState('predeterminado')
   const [temaPublicado, setTemaPublicado] = useState('predeterminado')
   const [temasDisponibles, setTemasDisponibles] = useState(TEMAS_FALLBACK)
+  const [rangerBotAvatarUrl, setRangerBotAvatarUrl] = useState('')
+  const [rangerBotAvatarNombre, setRangerBotAvatarNombre] = useState('')
 
   const cargar = useCallback(
     async ({ signal } = {}) => {
@@ -202,6 +207,8 @@ function AdministracionGeneralContenidoWeb() {
         setVideoYoutubeUrl(contenido?.inicio?.videoYoutubeUrl ?? '')
         setTemaAsistencia(tema)
         setTemaPublicado(tema)
+        setRangerBotAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
+        setRangerBotAvatarNombre(contenido?.rangerBot?.avatarNombre || '')
         if (
           Array.isArray(contenido?.temasAsistenciaDisponibles) &&
           contenido.temasAsistenciaDisponibles.length
@@ -260,7 +267,42 @@ function AdministracionGeneralContenidoWeb() {
     }
   }
 
-  const loadingVisible = loading || guardando
+  const handleSubirAvatar = async (event) => {
+    const archivo = event.target.files?.[0]
+    event.target.value = ''
+    if (!archivo) return
+    setError('')
+    setSubiendoAvatar(true)
+    try {
+      const contenido = await subirAvatarRangerBotAdmin(archivo)
+      setRangerBotAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
+      setRangerBotAvatarNombre(contenido?.rangerBot?.avatarNombre || '')
+      toast.success('Imagen de Ranger Bot actualizada')
+    } catch (err) {
+      setError(err.message || 'No se pudo subir la imagen')
+      toast.error(err.message || 'No se pudo subir la imagen')
+    } finally {
+      setSubiendoAvatar(false)
+    }
+  }
+
+  const handleEliminarAvatar = async () => {
+    setError('')
+    setSubiendoAvatar(true)
+    try {
+      const contenido = await eliminarAvatarRangerBotAdmin()
+      setRangerBotAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
+      setRangerBotAvatarNombre(contenido?.rangerBot?.avatarNombre || '')
+      toast.success('Imagen de Ranger Bot eliminada')
+    } catch (err) {
+      setError(err.message || 'No se pudo eliminar la imagen')
+      toast.error(err.message || 'No se pudo eliminar la imagen')
+    } finally {
+      setSubiendoAvatar(false)
+    }
+  }
+
+  const loadingVisible = loading || guardando || subiendoAvatar
 
   return (
     <section className="ag-page__view">
@@ -364,6 +406,57 @@ function AdministracionGeneralContenidoWeb() {
             </div>
           </div>
         ) : null}
+
+        <h2 className="ag-contenido-web__section-title">Ranger Bot</h2>
+        <p className="ag-contenido-web__section-desc">
+          Foto del chat flotante con atletas. Si no configuras una imagen, se
+          usa el logo de Rangers Box.
+        </p>
+
+        <div className="ag-contenido-web__ranger-bot">
+          <div className="ag-contenido-web__ranger-bot-avatar">
+            <img
+              src={rangerBotAvatarUrl || logo}
+              alt="Ranger Bot"
+              className={
+                rangerBotAvatarUrl
+                  ? 'ag-contenido-web__ranger-bot-foto'
+                  : 'ag-contenido-web__ranger-bot-foto ag-contenido-web__ranger-bot-foto--logo'
+              }
+            />
+            <div>
+              <p className="ag-contenido-web__ranger-bot-nombre">Ranger Bot</p>
+              <p className="ag-contenido-web__tema-hint">
+                {rangerBotAvatarNombre
+                  ? `Archivo: ${rangerBotAvatarNombre}`
+                  : 'Sin imagen personalizada'}
+              </p>
+            </div>
+          </div>
+
+          <div className="ag-contenido-web__ranger-bot-acciones">
+            <label className="ag-action-btn ag-action-btn--ghost ag-contenido-web__ranger-bot-upload">
+              {subiendoAvatar ? 'Subiendo…' : 'Subir imagen'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                hidden
+                disabled={loadingVisible}
+                onChange={handleSubirAvatar}
+              />
+            </label>
+            {rangerBotAvatarUrl ? (
+              <button
+                type="button"
+                className="ag-action-btn ag-action-btn--ghost"
+                onClick={handleEliminarAvatar}
+                disabled={loadingVisible}
+              >
+                Quitar imagen
+              </button>
+            ) : null}
+          </div>
+        </div>
 
         {error ? (
           <p className="pf-entrenamientos__error" role="alert">

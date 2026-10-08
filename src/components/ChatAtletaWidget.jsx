@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import logo from '../assets/images/logos/logo.webp'
 import { enviarMensajeChatAtleta } from '../services/chatAtletaService.js'
+import { obtenerContenidoWebPublico } from '../services/contenidoWebService.js'
 import './ChatAtletaWidget.css'
 
 const STORAGE_POS = 'rb_chat_atleta_pos'
 const MARGEN = 12
+const MOBILE_MQ = '(max-width: 640px)'
+const BOT_NOMBRE = 'Ranger Bot'
 
 const SUGERENCIAS = [
   '¿Qué entreno hoy?',
@@ -25,7 +29,6 @@ function leerPosicionGuardada() {
     ) {
       return { right: parsed.right, bottom: parsed.bottom }
     }
-    // Migración de formato anterior { x, y }
     if (
       typeof parsed?.x === 'number' &&
       typeof parsed?.y === 'number' &&
@@ -46,36 +49,54 @@ function posicionPorDefecto() {
   return { right: MARGEN, bottom: MARGEN }
 }
 
+function esViewportMovil() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia(MOBILE_MQ).matches
+}
+
+function medidasViewport() {
+  const vv = window.visualViewport
+  return {
+    width: vv?.width || window.innerWidth,
+    height: vv?.height || window.innerHeight,
+  }
+}
+
 function clampearPosicion(right, bottom, ancho, alto) {
-  const maxRight = Math.max(MARGEN, window.innerWidth - ancho - MARGEN)
-  const maxBottom = Math.max(MARGEN, window.innerHeight - alto - MARGEN)
+  const { width, height } = medidasViewport()
+  const maxRight = Math.max(MARGEN, width - ancho - MARGEN)
+  const maxBottom = Math.max(MARGEN, height - alto - MARGEN)
   return {
     right: Math.min(Math.max(MARGEN, right), maxRight),
     bottom: Math.min(Math.max(MARGEN, bottom), maxBottom),
   }
 }
 
-function IconoChat({ className }) {
+function formatearHoraMensaje(date = new Date()) {
+  try {
+    return new Intl.DateTimeFormat('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(date)
+  } catch {
+    return ''
+  }
+}
+
+function AvatarBot({ src, className, alt = BOT_NOMBRE }) {
+  const [fallo, setFallo] = useState(false)
+  const url = !fallo && src ? src : logo
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M5 18.5 3.5 21l3.2-1.1c.9.4 1.9.6 3 .6 4.7 0 8.5-3.4 8.5-7.5S14.4 5.5 9.7 5.5 1.2 8.9 1.2 13c0 1.6.5 3.1 1.5 4.3L5 18.5Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10.2 9.6h7.6M10.2 12.4h5.2"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
+    <img
+      src={url}
+      alt={alt}
+      className={`${className}${
+        !src || fallo ? ` ${className}--fallback` : ''
+      }`}
+      onError={() => setFallo(true)}
+      draggable={false}
+    />
   )
 }
 
@@ -90,10 +111,14 @@ function ChatAtletaWidget({ nombreUsuario }) {
   )
   const [arrastrando, setArrastrando] = useState(false)
   const [abierto, setAbierto] = useState(false)
+  const [esMovil, setEsMovil] = useState(() => esViewportMovil())
   const [mensaje, setMensaje] = useState('')
   const [mensajes, setMensajes] = useState([])
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
+
+  const panelAncladoMovil = abierto && esMovil
 
   useEffect(() => {
     try {
@@ -104,7 +129,29 @@ function ChatAtletaWidget({ nombreUsuario }) {
   }, [posicion])
 
   useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MQ)
+    const syncMovil = () => setEsMovil(mq.matches)
+    syncMovil()
+    mq.addEventListener?.('change', syncMovil)
+    return () => mq.removeEventListener?.('change', syncMovil)
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    obtenerContenidoWebPublico({ signal: controller.signal })
+      .then((contenido) => {
+        setAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') return
+      })
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
     const reclamar = () => {
+      setEsMovil(esViewportMovil())
+      if (abierto && esViewportMovil()) return
       const el = rootRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
@@ -123,7 +170,13 @@ function ChatAtletaWidget({ nombreUsuario }) {
     }
     reclamar()
     window.addEventListener('resize', reclamar)
-    return () => window.removeEventListener('resize', reclamar)
+    window.visualViewport?.addEventListener('resize', reclamar)
+    window.visualViewport?.addEventListener('scroll', reclamar)
+    return () => {
+      window.removeEventListener('resize', reclamar)
+      window.visualViewport?.removeEventListener('resize', reclamar)
+      window.visualViewport?.removeEventListener('scroll', reclamar)
+    }
   }, [abierto])
 
   useEffect(() => {
@@ -141,6 +194,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
   const iniciarArrastre = (event) => {
     if (event.button != null && event.button !== 0) return
     if (event.target?.closest?.('[data-no-drag="true"]')) return
+    if (panelAncladoMovil) return
     dragRef.current = {
       pointerId: event.pointerId,
       startRight: posicion.right,
@@ -160,6 +214,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
   const moverArrastre = (event) => {
     const drag = dragRef.current
     if (!drag || drag.pointerId !== event.pointerId) return
+    if (panelAncladoMovil) return
     const el = rootRef.current
     if (!el) return
 
@@ -209,7 +264,11 @@ function ChatAtletaWidget({ nombreUsuario }) {
       .filter((m) => m.role === 'user' || m.role === 'assistant')
       .map((m) => ({ role: m.role, content: m.content }))
 
-    setMensajes((prev) => [...prev, { role: 'user', content: texto }])
+    const ahora = new Date()
+    setMensajes((prev) => [
+      ...prev,
+      { role: 'user', content: texto, hora: formatearHoraMensaje(ahora) },
+    ])
     setEnviando(true)
 
     abortRef.current?.abort()
@@ -224,7 +283,11 @@ function ChatAtletaWidget({ nombreUsuario }) {
       })
       setMensajes((prev) => [
         ...prev,
-        { role: 'assistant', content: respuesta || 'Sin respuesta.' },
+        {
+          role: 'assistant',
+          content: respuesta || 'Sin respuesta.',
+          hora: formatearHoraMensaje(new Date()),
+        },
       ])
     } catch (err) {
       if (err?.name === 'AbortError') return
@@ -246,18 +309,36 @@ function ChatAtletaWidget({ nombreUsuario }) {
     }
   }
 
-  const saludo = nombreUsuario
-    ? `Hola ${String(nombreUsuario).split(' ')[0]}, pregunta por tu entrenamiento, comidas, asistencias o membresía.`
-    : 'Pregunta por tu entrenamiento, comidas, asistencias o membresía.'
+  const primerNombre = nombreUsuario
+    ? String(nombreUsuario).split(/\s+/)[0]
+    : ''
+  const saludo = primerNombre
+    ? `¡Hey ${primerNombre}! Soy Ranger Bot. Pregúntame por tu entreno, comidas, asistencias o membresía.`
+    : '¡Hey! Soy Ranger Bot. Pregúntame por tu entreno, comidas, asistencias o membresía.'
+
+  const estiloRoot = panelAncladoMovil
+    ? undefined
+    : { right: posicion.right, bottom: posicion.bottom }
 
   return (
     <div
       ref={rootRef}
-      className={`chat-atleta${arrastrando ? ' chat-atleta--arrastrando' : ''}`}
-      style={{ right: posicion.right, bottom: posicion.bottom }}
+      className={[
+        'chat-atleta',
+        arrastrando ? 'chat-atleta--arrastrando' : '',
+        abierto ? 'chat-atleta--abierto' : '',
+        panelAncladoMovil ? 'chat-atleta--movil-anclado' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={estiloRoot}
     >
       {abierto && (
-        <div className="chat-atleta__panel" role="dialog" aria-label="Asistente Rangers">
+        <div
+          className="chat-atleta__panel"
+          role="dialog"
+          aria-label="Chat con Ranger Bot"
+        >
           <div
             className="chat-atleta__cabecera"
             onPointerDown={iniciarArrastre}
@@ -265,9 +346,18 @@ function ChatAtletaWidget({ nombreUsuario }) {
             onPointerUp={terminarArrastre}
             onPointerCancel={terminarArrastre}
           >
-            <div className="chat-atleta__titulo-wrap">
-              <h2 className="chat-atleta__titulo">Coach IA</h2>
-              <p className="chat-atleta__subtitulo">Basado en tus datos del box</p>
+            <div className="chat-atleta__persona">
+              <div className="chat-atleta__avatar-wrap">
+                <AvatarBot
+                  src={avatarUrl}
+                  className="chat-atleta__avatar"
+                />
+                <span className="chat-atleta__online" aria-hidden="true" />
+              </div>
+              <div className="chat-atleta__titulo-wrap">
+                <h2 className="chat-atleta__titulo">{BOT_NOMBRE}</h2>
+                <p className="chat-atleta__subtitulo">en línea · Rangers Box</p>
+              </div>
             </div>
             <button
               type="button"
@@ -282,37 +372,90 @@ function ChatAtletaWidget({ nombreUsuario }) {
 
           <div className="chat-atleta__mensajes" ref={listaRef}>
             {mensajes.length === 0 && !enviando && (
-              <div className="chat-atleta__vacio">
-                {saludo}
-                <div className="chat-atleta__sugerencias">
-                  {SUGERENCIAS.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      className="chat-atleta__sugerencia"
-                      data-no-drag="true"
-                      disabled={enviando}
-                      onClick={() => enviar(s)}
-                    >
-                      {s}
-                    </button>
-                  ))}
+              <div className="chat-atleta__msg chat-atleta__msg--assistant">
+                <AvatarBot
+                  src={avatarUrl}
+                  className="chat-atleta__msg-avatar"
+                />
+                <div className="chat-atleta__msg-col">
+                  <span className="chat-atleta__msg-nombre">{BOT_NOMBRE}</span>
+                  <div className="chat-atleta__burbuja chat-atleta__burbuja--assistant">
+                    {saludo}
+                  </div>
+                  <div className="chat-atleta__sugerencias">
+                    {SUGERENCIAS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className="chat-atleta__sugerencia"
+                        data-no-drag="true"
+                        disabled={enviando}
+                        onClick={() => enviar(s)}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {mensajes.map((m, index) => (
-              <div
-                key={`${m.role}-${index}`}
-                className={`chat-atleta__burbuja chat-atleta__burbuja--${m.role}`}
-              >
-                {m.content}
-              </div>
-            ))}
+            {mensajes.map((m, index) =>
+              m.role === 'user' ? (
+                <div
+                  key={`user-${index}`}
+                  className="chat-atleta__msg chat-atleta__msg--user"
+                >
+                  <div className="chat-atleta__msg-col chat-atleta__msg-col--user">
+                    <div className="chat-atleta__burbuja chat-atleta__burbuja--user">
+                      {m.content}
+                    </div>
+                    {m.hora ? (
+                      <span className="chat-atleta__hora chat-atleta__hora--user">
+                        {m.hora}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  key={`bot-${index}`}
+                  className="chat-atleta__msg chat-atleta__msg--assistant"
+                >
+                  <AvatarBot
+                    src={avatarUrl}
+                    className="chat-atleta__msg-avatar"
+                  />
+                  <div className="chat-atleta__msg-col">
+                    <span className="chat-atleta__msg-nombre">{BOT_NOMBRE}</span>
+                    <div className="chat-atleta__burbuja chat-atleta__burbuja--assistant">
+                      {m.content}
+                    </div>
+                    {m.hora ? (
+                      <span className="chat-atleta__hora">{m.hora}</span>
+                    ) : null}
+                  </div>
+                </div>
+              ),
+            )}
 
             {enviando && (
-              <div className="chat-atleta__typing" aria-live="polite">
-                Pensando…
+              <div className="chat-atleta__msg chat-atleta__msg--assistant">
+                <AvatarBot
+                  src={avatarUrl}
+                  className="chat-atleta__msg-avatar"
+                />
+                <div className="chat-atleta__msg-col">
+                  <span className="chat-atleta__msg-nombre">{BOT_NOMBRE}</span>
+                  <div
+                    className="chat-atleta__burbuja chat-atleta__burbuja--assistant chat-atleta__burbuja--typing"
+                    aria-live="polite"
+                  >
+                    <span className="chat-atleta__dot" />
+                    <span className="chat-atleta__dot" />
+                    <span className="chat-atleta__dot" />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -330,8 +473,8 @@ function ChatAtletaWidget({ nombreUsuario }) {
               rows={1}
               value={mensaje}
               disabled={enviando}
-              placeholder="Escribe tu pregunta…"
-              aria-label="Mensaje para el coach IA"
+              placeholder="Escribe un mensaje…"
+              aria-label="Mensaje para Ranger Bot"
               onChange={(e) => setMensaje(e.target.value)}
               onKeyDown={onKeyDown}
             />
@@ -350,14 +493,15 @@ function ChatAtletaWidget({ nombreUsuario }) {
       <button
         type="button"
         className="chat-atleta__fab"
-        aria-label={abierto ? 'Cerrar coach IA' : 'Abrir coach IA'}
+        aria-label={abierto ? 'Cerrar Ranger Bot' : 'Abrir Ranger Bot'}
         aria-expanded={abierto}
         onPointerDown={iniciarArrastre}
         onPointerMove={moverArrastre}
         onPointerUp={toggleFab}
         onPointerCancel={terminarArrastre}
       >
-        <IconoChat className="chat-atleta__fab-icon" />
+        <AvatarBot src={avatarUrl} className="chat-atleta__fab-avatar" />
+        <span className="chat-atleta__fab-online" aria-hidden="true" />
       </button>
     </div>
   )

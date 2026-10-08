@@ -1338,6 +1338,55 @@
   border: 0;
 }
 
+.ag-contenido-web__ranger-bot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0.35rem 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.ag-contenido-web__ranger-bot-avatar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.ag-contenido-web__ranger-bot-foto {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2px solid rgba(249, 115, 22, 0.55);
+  background: #1a1a1a;
+  flex-shrink: 0;
+}
+
+.ag-contenido-web__ranger-bot-foto--logo {
+  object-fit: contain;
+  padding: 0.45rem;
+}
+
+.ag-contenido-web__ranger-bot-nombre {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ag-contenido-web__ranger-bot-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.ag-contenido-web__ranger-bot-upload {
+  cursor: pointer;
+}
+
 .ag-contenido-web__guardar {
   align-self: flex-start;
   margin-top: 0.25rem;
