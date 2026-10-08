@@ -195,6 +195,7 @@ function AdministracionGeneralContenidoWeb() {
   const [temaAsistencia, setTemaAsistencia] = useState('predeterminado')
   const [temaPublicado, setTemaPublicado] = useState('predeterminado')
   const [temasDisponibles, setTemasDisponibles] = useState(TEMAS_FALLBACK)
+  const [rangerBotNombre, setRangerBotNombre] = useState('Ranger Bot')
   const [rangerBotAvatarUrl, setRangerBotAvatarUrl] = useState('')
   const [rangerBotAvatarNombre, setRangerBotAvatarNombre] = useState('')
 
@@ -207,6 +208,7 @@ function AdministracionGeneralContenidoWeb() {
         setVideoYoutubeUrl(contenido?.inicio?.videoYoutubeUrl ?? '')
         setTemaAsistencia(tema)
         setTemaPublicado(tema)
+        setRangerBotNombre(contenido?.rangerBot?.nombre || 'Ranger Bot')
         setRangerBotAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
         setRangerBotAvatarNombre(contenido?.rangerBot?.avatarNombre || '')
         if (
@@ -257,6 +259,7 @@ function AdministracionGeneralContenidoWeb() {
       await actualizarContenidoWebAdmin({
         inicio: { videoYoutubeUrl: videoYoutubeUrl.trim() },
         asistencias: { tema: temaAsistencia },
+        rangerBot: { nombre: rangerBotNombre.trim() || 'Ranger Bot' },
       })
       toast.success('Contenido web publicado')
       await cargar()
@@ -407,17 +410,34 @@ function AdministracionGeneralContenidoWeb() {
           </div>
         ) : null}
 
-        <h2 className="ag-contenido-web__section-title">Ranger Bot</h2>
+        <h2 className="ag-contenido-web__section-title">Chat del bot</h2>
         <p className="ag-contenido-web__section-desc">
-          Foto del chat flotante con atletas. Si no configuras una imagen, se
-          usa el logo de Rangers Box.
+          Nombre e imagen del chat flotante con atletas. Si no configuras una
+          imagen, se usa el logo de Rangers Box.
         </p>
+
+        <label className="pf-usuarios-busqueda__field ag-contenido-web__field">
+          <span className="pf-usuarios-busqueda__label">Nombre del bot</span>
+          <input
+            type="text"
+            className="pf-usuarios-busqueda__input"
+            value={rangerBotNombre}
+            onChange={(e) => {
+              setRangerBotNombre(e.target.value)
+              setError('')
+            }}
+            placeholder="Ranger Bot"
+            maxLength={40}
+            disabled={loadingVisible}
+            autoComplete="off"
+          />
+        </label>
 
         <div className="ag-contenido-web__ranger-bot">
           <div className="ag-contenido-web__ranger-bot-avatar">
             <img
               src={rangerBotAvatarUrl || logo}
-              alt="Ranger Bot"
+              alt={rangerBotNombre || 'Ranger Bot'}
               className={
                 rangerBotAvatarUrl
                   ? 'ag-contenido-web__ranger-bot-foto'
@@ -425,7 +445,9 @@ function AdministracionGeneralContenidoWeb() {
               }
             />
             <div>
-              <p className="ag-contenido-web__ranger-bot-nombre">Ranger Bot</p>
+              <p className="ag-contenido-web__ranger-bot-nombre">
+                {rangerBotNombre.trim() || 'Ranger Bot'}
+              </p>
               <p className="ag-contenido-web__tema-hint">
                 {rangerBotAvatarNombre
                   ? `Archivo: ${rangerBotAvatarNombre}`

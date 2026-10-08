@@ -7,7 +7,7 @@ import './ChatAtletaWidget.css'
 const STORAGE_POS = 'rb_chat_atleta_pos'
 const MARGEN = 12
 const MOBILE_MQ = '(max-width: 640px)'
-const BOT_NOMBRE = 'Ranger Bot'
+const BOT_NOMBRE_DEFAULT = 'Ranger Bot'
 
 const SUGERENCIAS = [
   '¿Qué entreno hoy?',
@@ -84,7 +84,7 @@ function formatearHoraMensaje(date = new Date()) {
   }
 }
 
-function AvatarBot({ src, className, alt = BOT_NOMBRE }) {
+function AvatarBot({ src, className, alt = BOT_NOMBRE_DEFAULT }) {
   const [fallo, setFallo] = useState(false)
   const url = !fallo && src ? src : logo
   return (
@@ -117,8 +117,10 @@ function ChatAtletaWidget({ nombreUsuario }) {
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [botNombre, setBotNombre] = useState(BOT_NOMBRE_DEFAULT)
 
   const panelAncladoMovil = abierto && esMovil
+  const nombreBot = botNombre || BOT_NOMBRE_DEFAULT
 
   useEffect(() => {
     try {
@@ -141,6 +143,10 @@ function ChatAtletaWidget({ nombreUsuario }) {
     obtenerContenidoWebPublico({ signal: controller.signal })
       .then((contenido) => {
         setAvatarUrl(contenido?.rangerBot?.avatarUrl || '')
+        setBotNombre(
+          String(contenido?.rangerBot?.nombre || '').trim() ||
+            BOT_NOMBRE_DEFAULT,
+        )
       })
       .catch((err) => {
         if (err?.name === 'AbortError') return
@@ -313,8 +319,8 @@ function ChatAtletaWidget({ nombreUsuario }) {
     ? String(nombreUsuario).split(/\s+/)[0]
     : ''
   const saludo = primerNombre
-    ? `¡Hey ${primerNombre}! Soy Ranger Bot. Pregúntame por tu entreno, comidas, asistencias o membresía.`
-    : '¡Hey! Soy Ranger Bot. Pregúntame por tu entreno, comidas, asistencias o membresía.'
+    ? `¡Hey ${primerNombre}! Soy ${nombreBot}. Pregúntame por tu entreno, comidas, asistencias o membresía.`
+    : `¡Hey! Soy ${nombreBot}. Pregúntame por tu entreno, comidas, asistencias o membresía.`
 
   const estiloRoot = panelAncladoMovil
     ? undefined
@@ -337,7 +343,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
         <div
           className="chat-atleta__panel"
           role="dialog"
-          aria-label="Chat con Ranger Bot"
+          aria-label={`Chat con ${nombreBot}`}
         >
           <div
             className="chat-atleta__cabecera"
@@ -351,11 +357,12 @@ function ChatAtletaWidget({ nombreUsuario }) {
                 <AvatarBot
                   src={avatarUrl}
                   className="chat-atleta__avatar"
+                  alt={nombreBot}
                 />
                 <span className="chat-atleta__online" aria-hidden="true" />
               </div>
               <div className="chat-atleta__titulo-wrap">
-                <h2 className="chat-atleta__titulo">{BOT_NOMBRE}</h2>
+                <h2 className="chat-atleta__titulo">{nombreBot}</h2>
                 <p className="chat-atleta__subtitulo">en línea · Rangers Box</p>
               </div>
             </div>
@@ -376,9 +383,10 @@ function ChatAtletaWidget({ nombreUsuario }) {
                 <AvatarBot
                   src={avatarUrl}
                   className="chat-atleta__msg-avatar"
+                  alt={nombreBot}
                 />
                 <div className="chat-atleta__msg-col">
-                  <span className="chat-atleta__msg-nombre">{BOT_NOMBRE}</span>
+                  <span className="chat-atleta__msg-nombre">{nombreBot}</span>
                   <div className="chat-atleta__burbuja chat-atleta__burbuja--assistant">
                     {saludo}
                   </div>
@@ -425,9 +433,10 @@ function ChatAtletaWidget({ nombreUsuario }) {
                   <AvatarBot
                     src={avatarUrl}
                     className="chat-atleta__msg-avatar"
+                    alt={nombreBot}
                   />
                   <div className="chat-atleta__msg-col">
-                    <span className="chat-atleta__msg-nombre">{BOT_NOMBRE}</span>
+                    <span className="chat-atleta__msg-nombre">{nombreBot}</span>
                     <div className="chat-atleta__burbuja chat-atleta__burbuja--assistant">
                       {m.content}
                     </div>
@@ -444,9 +453,10 @@ function ChatAtletaWidget({ nombreUsuario }) {
                 <AvatarBot
                   src={avatarUrl}
                   className="chat-atleta__msg-avatar"
+                  alt={nombreBot}
                 />
                 <div className="chat-atleta__msg-col">
-                  <span className="chat-atleta__msg-nombre">{BOT_NOMBRE}</span>
+                  <span className="chat-atleta__msg-nombre">{nombreBot}</span>
                   <div
                     className="chat-atleta__burbuja chat-atleta__burbuja--assistant chat-atleta__burbuja--typing"
                     aria-live="polite"
@@ -474,7 +484,7 @@ function ChatAtletaWidget({ nombreUsuario }) {
               value={mensaje}
               disabled={enviando}
               placeholder="Escribe un mensaje…"
-              aria-label="Mensaje para Ranger Bot"
+              aria-label={`Mensaje para ${nombreBot}`}
               onChange={(e) => setMensaje(e.target.value)}
               onKeyDown={onKeyDown}
             />
@@ -490,19 +500,35 @@ function ChatAtletaWidget({ nombreUsuario }) {
         </div>
       )}
 
-      <button
-        type="button"
-        className="chat-atleta__fab"
-        aria-label={abierto ? 'Cerrar Ranger Bot' : 'Abrir Ranger Bot'}
-        aria-expanded={abierto}
-        onPointerDown={iniciarArrastre}
-        onPointerMove={moverArrastre}
-        onPointerUp={toggleFab}
-        onPointerCancel={terminarArrastre}
-      >
-        <AvatarBot src={avatarUrl} className="chat-atleta__fab-avatar" />
-        <span className="chat-atleta__fab-online" aria-hidden="true" />
-      </button>
+      <div className="chat-atleta__fab-wrap">
+        {!abierto && (
+          <div className="chat-atleta__fab-aviso" aria-hidden="true">
+            <span className="chat-atleta__fab-aviso-texto">
+              Chatea con <strong>{nombreBot}</strong>
+            </span>
+            <span className="chat-atleta__fab-aviso-punto" />
+          </div>
+        )}
+        <button
+          type="button"
+          className="chat-atleta__fab"
+          aria-label={
+            abierto ? `Cerrar chat con ${nombreBot}` : `Chatea con ${nombreBot}`
+          }
+          aria-expanded={abierto}
+          onPointerDown={iniciarArrastre}
+          onPointerMove={moverArrastre}
+          onPointerUp={toggleFab}
+          onPointerCancel={terminarArrastre}
+        >
+          <AvatarBot
+            src={avatarUrl}
+            className="chat-atleta__fab-avatar"
+            alt={nombreBot}
+          />
+          <span className="chat-atleta__fab-online" aria-hidden="true" />
+        </button>
+      </div>
     </div>
   )
 }
