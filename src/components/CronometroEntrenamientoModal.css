@@ -184,6 +184,50 @@
   gap: 0.65rem;
 }
 
+.cronometro-entreno__config--prep {
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cronometro-entreno__prep-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cronometro-entreno__prep-ops {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.cronometro-entreno__prep-chip {
+  flex: 1;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.cronometro-entreno__prep-chip.is-active {
+  border-color: rgba(249, 115, 22, 0.7);
+  background: rgba(249, 115, 22, 0.2);
+  color: #fff;
+}
+
+.cronometro-entreno__prep-chip:hover:not(.is-active) {
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
 .cronometro-entreno__config label {
   display: flex;
   flex-direction: column;

@@ -13,13 +13,21 @@ const MODOS = [
   { id: 'normal', label: 'Cronómetro' },
 ]
 
+const PREP_OPCIONES = [3, 5, 10]
+
 const DEFAULTS = {
+  prepSegundos: 3,
   tabata: { trabajo: 20, descanso: 10, rondas: 8 },
   emom: { intervalo: 60, rondas: 10 },
   normal: { minutos: 0, segundos: 0, cuentaAtras: false },
 }
 
 const STORAGE_KEY = 'rb_cronometro_entreno_bg'
+
+function normalizarPrepSegundos(valor) {
+  const n = Number(valor)
+  return PREP_OPCIONES.includes(n) ? n : 3
+}
 
 function soportaDocumentPiP() {
   return typeof window !== 'undefined' && 'documentPictureInPicture' in window
@@ -107,7 +115,15 @@ function formatearSegundos(seg) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-function etiquetaFase(fase) {
+function etiquetaFase(fase, pausado = false) {
+  if (pausado) {
+    if (fase === 'prep') return 'Pausado · Prep'
+    if (fase === 'trabajo') return 'Pausado · Trabajo'
+    if (fase === 'descanso') return 'Pausado · Descanso'
+    if (fase === 'ronda') return 'Pausado · Ronda'
+    if (fase === 'marcha') return 'Pausado'
+    return 'Pausado'
+  }
   if (fase === 'prep') return 'Preparación'
   if (fase === 'trabajo') return 'Trabajo'
   if (fase === 'descanso') return 'Descanso'
@@ -119,7 +135,8 @@ function etiquetaFase(fase) {
 
 function construirPlan(modo, config) {
   const plan = []
-  plan.push({ fase: 'prep', ronda: 0, duracionMs: 3000 })
+  const prepMs = normalizarPrepSegundos(config.prepSegundos) * 1000
+  plan.push({ fase: 'prep', ronda: 0, duracionMs: prepMs })
 
   if (modo === 'tabata') {
     const trabajo = clampInt(config.tabata.trabajo, 5, 300) * 1000
@@ -179,6 +196,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
   const [config, setConfig] = useState(DEFAULTS)
   const [sonidoOn, setSonidoOn] = useState(true)
   const [corriendo, setCorriendo] = useState(false)
+  const [pausado, setPausado] = useState(false)
   const [minimizado, setMinimizado] = useState(false)
   const [pipActivo, setPipActivo] = useState(false)
   const [pipRoot, setPipRoot] = useState(null)
@@ -313,6 +331,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
       setRestanteMs(0)
       setTranscurridoMs(0)
       setCorriendo(false)
+      setPausado(false)
       return
     }
 
@@ -358,6 +377,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
         setFase('fin')
         setRestanteMs(0)
         setCorriendo(false)
+        setPausado(false)
         setMinimizado(false)
         beep('complete')
         liberarWakeLock()
@@ -429,6 +449,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
 
     setTotalRondasUi(rondasTotales)
     setCorriendo(true)
+    setPausado(false)
     setFase(plan[0].fase)
     setRondaActual(0)
     setRestanteMs(plan[0].duracionMs)
@@ -604,6 +625,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
     detenerMotor()
     liberarWakeLock()
     setCorriendo(false)
+    setPausado(false)
     setMinimizado(false)
     setFase('idle')
     setRondaActual(0)
@@ -613,8 +635,65 @@ function CronometroEntrenamientoModal({ open, onClose }) {
     warnedRef.current = new Set()
   }
 
+  /** Congela el tiempo actual sin volver a cero. */
+  const pausarMotor = () => {
+    const engine = engineRef.current
+    if (!engine?.activo) return
+
+    sincronizarMotor()
+    if (engine.intervalId) {
+      clearInterval(engine.intervalId)
+      engine.intervalId = null
+    }
+    engine.activo = false
+    engine.pausado = true
+    engine.pausedAt = Date.now()
+    if (engine.silentCtx) {
+      engine.silentCtx.close?.().catch(() => {})
+      engine.silentCtx = null
+    }
+    detenerKeepAlive()
+    liberarWakeLock()
+    try {
+      sessionStorage.removeItem(STORAGE_KEY)
+    } catch {
+      /* ignore */
+    }
+    cerrarPip()
+    setCorriendo(false)
+    setPausado(true)
+    setMinimizado(false)
+  }
+
+  const reanudarMotor = async () => {
+    const engine = engineRef.current
+    if (!engine?.pausado || !engine.plan?.length) return
+
+    await desbloquearAudioCronometro()
+    await pedirWakeLock()
+
+    const pausedAt = Number(engine.pausedAt) || Date.now()
+    const pausaMs = Math.max(0, Date.now() - pausedAt)
+    engine.segmentStartedAt =
+      (Number(engine.segmentStartedAt) || Date.now()) + pausaMs
+    if (engine.sessionStartedAt) {
+      engine.sessionStartedAt =
+        Number(engine.sessionStartedAt) + pausaMs
+    }
+    engine.activo = true
+    engine.pausado = false
+    engine.pausedAt = null
+
+    setPausado(false)
+    setCorriendo(true)
+    setMinimizado(false)
+    iniciarKeepAliveAudio()
+    persistirEstado(engine)
+    arrancarIntervalo()
+  }
+
   const cambiarModo = (nuevo) => {
-    if (corriendo) return
+    if (corriendo || pausado) return
     setModo(nuevo)
     resetSesion()
   }
@@ -626,12 +705,26 @@ function CronometroEntrenamientoModal({ open, onClose }) {
     }))
   }
 
+  const actualizarPrep = (segundos) => {
+    if (corriendo || pausado) return
+    setConfig((prev) => ({
+      ...prev,
+      prepSegundos: normalizarPrepSegundos(segundos),
+    }))
+  }
+
   const handleStartStop = async () => {
     if (corriendo) {
-      resetSesion()
+      pausarMotor()
       return
     }
-    resetSesion()
+    if (pausado) {
+      await reanudarMotor()
+      return
+    }
+    if (fase === 'fin') {
+      resetSesion()
+    }
     await iniciarMotor(modo, config)
   }
 
@@ -695,14 +788,16 @@ function CronometroEntrenamientoModal({ open, onClose }) {
 
   const rondasMostrar = totalRondasUi || totalRondas
   const mostrarFullscreen = open && !minimizado
+  const puedeEditarConfig = !corriendo && !pausado
   const mostrarMini = corriendo && minimizado && !pipActivo
   const mostrarPip = Boolean(pipActivo && pipRoot && corriendo)
+  const etiquetaActual = etiquetaFase(fase, pausado)
 
   if (!mostrarFullscreen && !mostrarMini && !mostrarPip) return null
 
   const pipWidget = (
     <div className={`cronometro-pip ${faseClass}`}>
-      <p className="cronometro-pip__fase">{etiquetaFase(fase)}</p>
+      <p className="cronometro-pip__fase">{etiquetaActual}</p>
       <p className="cronometro-pip__tiempo">{displayPrincipal}</p>
       {rondasMostrar > 0 && (
         <p className="cronometro-pip__ronda">
@@ -757,14 +852,42 @@ function CronometroEntrenamientoModal({ open, onClose }) {
                     modo === item.id ? ' is-active' : ''
                   }`}
                   onClick={() => cambiarModo(item.id)}
-                  disabled={corriendo}
+                  disabled={!puedeEditarConfig}
                 >
                   {item.label}
                 </button>
               ))}
             </div>
 
-            {!corriendo && modo === 'tabata' && (
+            {puedeEditarConfig && (
+              <div className="cronometro-entreno__config cronometro-entreno__config--prep">
+                <span className="cronometro-entreno__prep-label">
+                  Preparación
+                </span>
+                <div
+                  className="cronometro-entreno__prep-ops"
+                  role="group"
+                  aria-label="Segundos de preparación"
+                >
+                  {PREP_OPCIONES.map((seg) => (
+                    <button
+                      key={seg}
+                      type="button"
+                      className={`cronometro-entreno__prep-chip${
+                        normalizarPrepSegundos(config.prepSegundos) === seg
+                          ? ' is-active'
+                          : ''
+                      }`}
+                      onClick={() => actualizarPrep(seg)}
+                    >
+                      {seg}s
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {puedeEditarConfig && modo === 'tabata' && (
               <div className="cronometro-entreno__config">
                 <label>
                   <span>Trabajo (s)</span>
@@ -805,7 +928,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
               </div>
             )}
 
-            {!corriendo && modo === 'emom' && (
+            {puedeEditarConfig && modo === 'emom' && (
               <div className="cronometro-entreno__config">
                 <label>
                   <span>Intervalo (s)</span>
@@ -837,7 +960,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
               </div>
             )}
 
-            {!corriendo && modo === 'normal' && (
+            {puedeEditarConfig && modo === 'normal' && (
               <div className="cronometro-entreno__config">
                 <label>
                   <span>Minutos</span>
@@ -881,7 +1004,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
             )}
 
             <div className={`cronometro-fs__display ${faseClass}`}>
-              <p className="cronometro-entreno__fase">{etiquetaFase(fase)}</p>
+              <p className="cronometro-entreno__fase">{etiquetaActual}</p>
               <p className="cronometro-fs__tiempo" aria-live="polite">
                 {displayPrincipal}
               </p>
@@ -915,7 +1038,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
               type="button"
               className="cronometro-entreno__btn cronometro-entreno__btn--ghost"
               onClick={resetSesion}
-              disabled={fase === 'idle' && !corriendo}
+              disabled={fase === 'idle' && !corriendo && !pausado}
             >
               Reiniciar
             </button>
@@ -924,7 +1047,13 @@ function CronometroEntrenamientoModal({ open, onClose }) {
               className="cronometro-entreno__btn cronometro-entreno__btn--primary"
               onClick={handleStartStop}
             >
-              {corriendo ? 'Detener' : fase === 'fin' ? 'Otra vez' : 'Iniciar'}
+              {corriendo
+                ? 'Detener'
+                : pausado
+                  ? 'Continuar'
+                  : fase === 'fin'
+                    ? 'Otra vez'
+                    : 'Iniciar'}
             </button>
           </footer>
         </div>
@@ -937,7 +1066,7 @@ function CronometroEntrenamientoModal({ open, onClose }) {
           onClick={handleExpandir}
           aria-label="Abrir cronómetro"
         >
-          <span className="cronometro-mini__fase">{etiquetaFase(fase)}</span>
+          <span className="cronometro-mini__fase">{etiquetaActual}</span>
           <span className="cronometro-mini__tiempo">{displayPrincipal}</span>
           {rondasMostrar > 0 && (
             <span className="cronometro-mini__ronda">
