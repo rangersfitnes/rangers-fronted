@@ -28,10 +28,28 @@ function etiquetaEstadoComida(estado) {
   return 'Consumido'
 }
 
+function huellaArchivo(file) {
+  if (!file) return ''
+  return `${file.name}|${file.size}|${file.lastModified}|${file.type}`
+}
+
+function reconocimientoDudoso(comida) {
+  if (!comida) return false
+  const confianza = String(comida.confianza || '').toLowerCase()
+  if (confianza === 'baja') return true
+  const plato = String(comida.plato || '').toLowerCase()
+  return (
+    plato.includes('no identificado') ||
+    plato.includes('no reconoc') ||
+    plato.includes('desconocido')
+  )
+}
+
 function DetalleIngesta({
   comida,
   mostrarFeedback = false,
   onFeedbackGuardado,
+  onCorreccionIncorrecta,
 }) {
   if (!comida) return null
 
@@ -45,13 +63,26 @@ function DetalleIngesta({
   const alimentos = Array.isArray(comida.alimentosDetectados)
     ? comida.alimentosDetectados.filter(Boolean)
     : []
+  const dudoso = reconocimientoDudoso(comida)
 
   return (
-    <div className="calcular-calorias__resultado">
+    <div
+      className={`calcular-calorias__resultado${
+        dudoso ? ' calcular-calorias__resultado--dudoso' : ''
+      }`}
+    >
       <p className="calcular-calorias__detectado-label">Comida detectada</p>
       <h3 className="calcular-calorias__plato">{comida.plato || 'Comida'}</h3>
       {alimentos.length > 0 && (
         <p className="calcular-calorias__alimentos">{alimentos.join(', ')}</p>
+      )}
+
+      {dudoso && (
+        <p className="calcular-calorias__aviso-dudoso" role="status">
+          No estamos seguros de este alimento. Revisa el resultado: si no
+          coincide, indícalo abajo y toma una foto nueva (más cerca y con
+          mejor luz). La misma imagen no se puede analizar otra vez.
+        </p>
       )}
 
       <div className="calcular-calorias__kcal">
@@ -112,14 +143,21 @@ function DetalleIngesta({
       {mostrarFeedback && (
         <FeedbackInterpretacion
           comida={comida}
+          dudoso={dudoso}
           onGuardado={onFeedbackGuardado}
+          onCorreccionIncorrecta={onCorreccionIncorrecta}
         />
       )}
     </div>
   )
 }
 
-function FeedbackInterpretacion({ comida, onGuardado }) {
+function FeedbackInterpretacion({
+  comida,
+  onGuardado,
+  onCorreccionIncorrecta,
+  dudoso = false,
+}) {
   const comidaId = comida?.registroId || comida?.id
   const feedbackExistente = comida?.feedbackInterpretacion
   const [correcta, setCorrecta] = useState(
@@ -138,15 +176,31 @@ function FeedbackInterpretacion({ comida, onGuardado }) {
 
   if (ok || feedbackExistente) {
     const fb = feedbackExistente
+    const fueIncorrecta =
+      fb?.correcta === false || (ok && correcta === false)
     return (
-      <div className="calcular-calorias__feedback calcular-calorias__feedback--ok">
+      <div
+        className={`calcular-calorias__feedback${
+          fueIncorrecta
+            ? ' calcular-calorias__feedback--correccion'
+            : ' calcular-calorias__feedback--ok'
+        }`}
+      >
         <p>
           {fb?.correcta === true || (ok && correcta === true)
             ? 'Gracias: confirmaste que la interpretación era correcta.'
-            : fb?.platoCorregido
-              ? `Corrección guardada: ${fb.platoCorregido}. Se usará en próximos análisis.`
+            : fb?.platoCorregido || (ok && correcta === false && texto)
+              ? `Corrección guardada: ${
+                  fb?.platoCorregido || texto
+                }. Se usará en próximos análisis.`
               : 'Gracias por tu corrección. Se usará en próximos análisis.'}
         </p>
+        {fueIncorrecta && (
+          <p className="calcular-calorias__feedback-hint">
+            Esta foto ya no se puede reanalizar. Toma o sube una foto nueva
+            si quieres otro cálculo.
+          </p>
+        )}
       </div>
     )
   }
@@ -168,6 +222,9 @@ function FeedbackInterpretacion({ comida, onGuardado }) {
       })
       setOk(true)
       onGuardado?.(comidaActualizada)
+      if (correcta === false) {
+        onCorreccionIncorrecta?.(comidaActualizada)
+      }
     } catch (err) {
       setError(err.message || 'No se pudo guardar la corrección')
     } finally {
@@ -176,10 +233,23 @@ function FeedbackInterpretacion({ comida, onGuardado }) {
   }
 
   return (
-    <div className="calcular-calorias__feedback">
+    <div
+      className={`calcular-calorias__feedback${
+        dudoso ? ' calcular-calorias__feedback--dudoso' : ''
+      }`}
+    >
       <p className="calcular-calorias__feedback-pregunta">
-        ¿La interpretación del alimento fue correcta?
+        {dudoso
+          ? 'La detección parece incierta. ¿El alimento es correcto?'
+          : '¿La interpretación del alimento fue correcta?'}
       </p>
+      {dudoso && (
+        <p className="calcular-calorias__feedback-hint">
+          Si no coincide, corrige el nombre y luego toma una foto nueva y más
+          clara (cerca, buena luz, plato completo). No se puede volver a
+          analizar la misma imagen.
+        </p>
+      )}
       <div className="calcular-calorias__feedback-ops">
         <button
           type="button"
@@ -248,9 +318,11 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
   const camaraRef = useRef(null)
   const galeriaRef = useRef(null)
   const previewUrlRef = useRef(null)
+  const fotosAnalizadasRef = useRef(new Set())
 
   const [archivo, setArchivo] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
+  const [fotoListaParaAnalisis, setFotoListaParaAnalisis] = useState(false)
   const [resultado, setResultado] = useState(null)
   const [historial, setHistorial] = useState([])
   const [comidaExpandidaId, setComidaExpandidaId] = useState(null)
@@ -270,6 +342,18 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
       previewUrlRef.current = null
     }
     setPreviewUrl('')
+  }
+
+  const resetInputsArchivo = () => {
+    if (camaraRef.current) camaraRef.current.value = ''
+    if (galeriaRef.current) galeriaRef.current.value = ''
+  }
+
+  const liberarFotoPendiente = () => {
+    limpiarPreview()
+    setArchivo(null)
+    setFotoListaParaAnalisis(false)
+    resetInputsArchivo()
   }
 
   const cargarHistorial = async (signal) => {
@@ -294,16 +378,14 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
 
   useEffect(() => {
     if (!open) {
-      limpiarPreview()
-      setArchivo(null)
+      liberarFotoPendiente()
       setResultado(null)
       setError('')
       setLoading(false)
       setDecidiendo(false)
       setCupo(null)
       setComidaExpandidaId(null)
-      if (camaraRef.current) camaraRef.current.value = ''
-      if (galeriaRef.current) galeriaRef.current.value = ''
+      fotosAnalizadasRef.current = new Set()
       return undefined
     }
 
@@ -321,13 +403,25 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
     if (!file) return
     if (!file.type.startsWith('image/')) {
       setError('El archivo debe ser una imagen')
+      resetInputsArchivo()
       return
     }
+
+    const huella = huellaArchivo(file)
+    if (fotosAnalizadasRef.current.has(huella)) {
+      setError(
+        'Esta foto ya fue analizada. Toma o sube una foto nueva para otro cálculo.',
+      )
+      resetInputsArchivo()
+      return
+    }
+
     limpiarPreview()
     const url = URL.createObjectURL(file)
     previewUrlRef.current = url
     setPreviewUrl(url)
     setArchivo(file)
+    setFotoListaParaAnalisis(true)
     setResultado(null)
     setError('')
   }
@@ -338,9 +432,12 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
   }
 
   const sinCupo = Boolean(cupo && cupo.restantes <= 0)
+  const puedeAnalizar =
+    Boolean(archivo) && fotoListaParaAnalisis && !loading && !sinCupo
 
   const handleAnalizar = async () => {
-    if (!archivo || loading || sinCupo) return
+    if (!puedeAnalizar) return
+    const huella = huellaArchivo(archivo)
     setLoading(true)
     setError('')
     setResultado(null)
@@ -350,6 +447,9 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
         alturaCm: perfil.alturaCm,
         edad: perfil.edad,
       })
+      if (huella) fotosAnalizadasRef.current.add(huella)
+      // La misma foto no queda pendiente para reanalizar.
+      liberarFotoPendiente()
       setResultado({
         ...data,
         estado: data.estado || 'consultado',
@@ -383,6 +483,7 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
             }
           : prev,
       )
+      liberarFotoPendiente()
       await cargarHistorial()
     } catch (err) {
       setError(err.message || 'No se pudo guardar la decisión')
@@ -436,18 +537,27 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
               type="button"
               className="calcular-calorias__btn calcular-calorias__btn--primary"
               onClick={handleAnalizar}
-              disabled={!archivo || loading || sinCupo}
+              disabled={!puedeAnalizar}
+              title={
+                resultado && !fotoListaParaAnalisis
+                  ? 'Toma o sube una foto nueva para analizar'
+                  : undefined
+              }
             >
-              {loading ? 'Analizando…' : 'Analizar plato'}
+              {loading
+                ? 'Analizando…'
+                : fotoListaParaAnalisis
+                  ? 'Analizar plato'
+                  : 'Elige una foto nueva'}
             </button>
           )}
         </>
       }
     >
       <p className="calcular-calorias__intro">
-        Toma o sube una foto de tu comida. Tras el análisis elige si la
-        consumiste o solo la consultaste; así el historial separa consultas y
-        ingestas reales.
+        Toma o sube una foto de tu comida. Cada foto solo se analiza una vez:
+        si el resultado no cuadra, corrige el alimento y toma una foto nueva.
+        Luego indica si la consumiste o solo la consultaste.
       </p>
 
       {cupo && (
@@ -530,13 +640,17 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
         onChange={handleFileChange}
       />
 
-      {previewUrl ? (
+      {previewUrl && fotoListaParaAnalisis ? (
         <div className="calcular-calorias__preview-wrap">
           <img
             src={previewUrl}
             alt="Vista previa del alimento"
             className="calcular-calorias__preview"
           />
+        </div>
+      ) : resultado ? (
+        <div className="calcular-calorias__placeholder calcular-calorias__placeholder--usada">
+          Foto ya analizada. Para otro cálculo toma o sube una foto nueva.
         </div>
       ) : (
         <div className="calcular-calorias__placeholder">
@@ -567,21 +681,30 @@ function CalcularCaloriasModal({ open, onClose, onAbrirDatosCorporales }) {
               )
               cargarHistorial()
             }}
+            onCorreccionIncorrecta={() => {
+              liberarFotoPendiente()
+              setError(
+                'Corrección guardada. Toma o sube una foto nueva para analizar de nuevo.',
+              )
+            }}
           />
           {pendienteDecision ? (
             <div className="calcular-calorias__decision" role="status">
               <p>
                 ¿Consumiste este plato? Confirma para registrarlo en tu
-                historial de ingestas, o márcalo como solo consulta.
+                historial de ingestas, o márcalo como solo consulta. Esta foto
+                ya no se puede volver a analizar.
               </p>
             </div>
           ) : resultado.estado === 'consumido' ? (
             <p className="calcular-calorias__decision-ok">
-              Registrado como consumido.
+              Registrado como consumido. Usa una foto nueva para el próximo
+              análisis.
             </p>
           ) : resultado.estado === 'rechazado' ? (
             <p className="calcular-calorias__decision-ok">
-              Guardado como consulta (no consumido).
+              Guardado como consulta (no consumido). Usa una foto nueva para
+              otro análisis.
             </p>
           ) : null}
         </>

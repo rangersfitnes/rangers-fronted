@@ -1,12 +1,148 @@
-.cronometro-entreno-modal .modal__dialog {
-  max-width: 28rem;
-  width: min(100%, 28rem);
+.cronometro-fs {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  background: #0a0a0a;
+  color: #ffffff;
+  overscroll-behavior: none;
 }
 
-.cronometro-entreno {
+.cronometro-fs.is-work {
+  background: radial-gradient(
+      ellipse 120% 80% at 50% 20%,
+      rgba(249, 115, 22, 0.28),
+      transparent 55%
+    ),
+    #0a0a0a;
+}
+
+.cronometro-fs.is-rest {
+  background: radial-gradient(
+      ellipse 120% 80% at 50% 20%,
+      rgba(56, 189, 248, 0.22),
+      transparent 55%
+    ),
+    #0a0a0a;
+}
+
+.cronometro-fs.is-prep {
+  background: radial-gradient(
+      ellipse 120% 80% at 50% 20%,
+      rgba(251, 191, 36, 0.2),
+      transparent 55%
+    ),
+    #0a0a0a;
+}
+
+.cronometro-fs.is-done {
+  background: radial-gradient(
+      ellipse 120% 80% at 50% 20%,
+      rgba(34, 197, 94, 0.22),
+      transparent 55%
+    ),
+    #0a0a0a;
+}
+
+.cronometro-fs__top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cronometro-fs__title {
+  margin: 0;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cronometro-fs__icon-btn {
+  justify-self: start;
+  padding: 0.45rem 0.7rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.cronometro-fs__top > .cronometro-fs__icon-btn:last-of-type {
+  justify-self: end;
+}
+
+.cronometro-fs__top-spacer {
+  width: 1px;
+  height: 1px;
+}
+
+.cronometro-fs__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: 1rem 1.15rem 1.25rem;
+}
+
+.cronometro-fs__display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 14rem;
+  padding: 1.5rem 1rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cronometro-fs__tiempo {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(4.5rem, 22vw, 7rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.cronometro-fs__bg-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.cronometro-fs__footer {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.85rem 1.15rem max(1rem, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.cronometro-fs__footer .cronometro-entreno__btn {
+  flex: 1;
 }
 
 .cronometro-entreno__modos {
@@ -20,7 +156,7 @@
 }
 
 .cronometro-entreno__modo {
-  padding: 0.55rem 0.35rem;
+  padding: 0.6rem 0.35rem;
   border: none;
   border-radius: 9999px;
   background: transparent;
@@ -65,7 +201,7 @@
 .cronometro-entreno__config input[type='number'] {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.65rem 0.7rem;
+  padding: 0.7rem 0.75rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(0, 0, 0, 0.35);
@@ -105,71 +241,28 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.cronometro-entreno__display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  min-height: 11rem;
-  padding: 1.25rem 1rem;
-  border-radius: 18px;
-  background: rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  transition: background 0.25s, border-color 0.25s;
-}
-
-.cronometro-entreno__display.is-work {
-  background: rgba(249, 115, 22, 0.22);
-  border-color: rgba(249, 115, 22, 0.65);
-}
-
-.cronometro-entreno__display.is-rest {
-  background: rgba(56, 189, 248, 0.14);
-  border-color: rgba(56, 189, 248, 0.45);
-}
-
-.cronometro-entreno__display.is-prep {
-  background: rgba(251, 191, 36, 0.12);
-  border-color: rgba(251, 191, 36, 0.4);
-}
-
-.cronometro-entreno__display.is-done {
-  background: rgba(34, 197, 94, 0.14);
-  border-color: rgba(34, 197, 94, 0.45);
-}
-
 .cronometro-entreno__fase {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #fb923c;
 }
 
-.cronometro-entreno__display.is-rest .cronometro-entreno__fase {
+.cronometro-fs.is-rest .cronometro-entreno__fase,
+.cronometro-mini.is-rest .cronometro-mini__fase {
   color: #7dd3fc;
 }
 
-.cronometro-entreno__display.is-done .cronometro-entreno__fase {
+.cronometro-fs.is-done .cronometro-entreno__fase,
+.cronometro-mini.is-done .cronometro-mini__fase {
   color: #86efac;
 }
 
-.cronometro-entreno__tiempo {
-  margin: 0;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(3.4rem, 16vw, 4.6rem);
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  color: #ffffff;
-  font-variant-numeric: tabular-nums;
-}
-
 .cronometro-entreno__ronda {
-  margin: 0.25rem 0 0;
-  font-size: 0.92rem;
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.75);
 }
@@ -177,6 +270,7 @@
 .cronometro-entreno__sonido {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
   font-size: 0.86rem;
   color: rgba(255, 255, 255, 0.75);
@@ -185,10 +279,10 @@
 
 .cronometro-entreno__btn {
   min-width: 6.5rem;
-  padding: 0.7rem 1rem;
+  padding: 0.85rem 1rem;
   border-radius: 9999px;
   border: none;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -215,29 +309,65 @@
   background: #ea580c;
 }
 
+/* Widget flotante en segundo plano dentro de la web */
+.cronometro-mini {
+  position: fixed;
+  right: max(0.85rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 880;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-width: 7.5rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(249, 115, 22, 0.55);
+  border-radius: 16px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cronometro-mini.is-work {
+  border-color: rgba(249, 115, 22, 0.75);
+}
+
+.cronometro-mini.is-rest {
+  border-color: rgba(56, 189, 248, 0.65);
+}
+
+.cronometro-mini__fase {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.cronometro-mini__tiempo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.7rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cronometro-mini__ronda {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 @media (max-width: 480px) {
   .cronometro-entreno__config {
     grid-template-columns: 1fr 1fr;
   }
 
-  .cronometro-entreno__modos {
-    border-radius: 14px;
-  }
-
-  .cronometro-entreno__modo {
-    font-size: 0.68rem;
-    padding: 0.6rem 0.25rem;
-  }
-
-  .cronometro-entreno__display {
-    min-height: 10rem;
-  }
-
-  .cronometro-entreno-modal .modal__footer {
-    flex-wrap: wrap;
-  }
-
-  .cronometro-entreno__btn {
-    flex: 1 1 auto;
+  .cronometro-fs__tiempo {
+    font-size: clamp(4rem, 24vw, 5.5rem);
   }
 }

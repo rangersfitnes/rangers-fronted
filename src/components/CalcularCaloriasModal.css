@@ -84,6 +84,29 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
+.calcular-calorias__placeholder--usada {
+  border-style: solid;
+  border-color: rgba(249, 115, 22, 0.35);
+  color: rgba(253, 186, 116, 0.95);
+  background: rgba(249, 115, 22, 0.08);
+}
+
+.calcular-calorias__resultado--dudoso {
+  border-color: rgba(250, 204, 21, 0.45);
+  background: rgba(250, 204, 21, 0.08);
+}
+
+.calcular-calorias__aviso-dudoso {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #fde68a;
+}
+
 .calcular-calorias__error {
   margin: 0.85rem 0 0;
   font-size: 0.88rem;
@@ -342,6 +365,29 @@
   font-size: 0.84rem;
   line-height: 1.45;
   color: #86efac;
+}
+
+.calcular-calorias__feedback--correccion p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #fdba74;
+}
+
+.calcular-calorias__feedback--dudoso {
+  border-top-color: rgba(250, 204, 21, 0.28);
+}
+
+.calcular-calorias__feedback-hint {
+  margin: 0.45rem 0 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(253, 230, 138, 0.9);
+  font-weight: 500;
+}
+
+.calcular-calorias__feedback--correccion .calcular-calorias__feedback-hint {
+  color: rgba(253, 186, 116, 0.95);
 }
 
 .calcular-calorias__feedback-pregunta {

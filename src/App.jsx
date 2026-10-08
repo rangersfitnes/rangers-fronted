@@ -9,6 +9,7 @@ import SolicitudEntrenadorModal from './components/SolicitudEntrenadorModal.jsx'
 import ActualizarPesoMensualModal, {
   pesoPospuestoEstaSesion,
 } from './components/ActualizarPesoMensualModal.jsx'
+import ChatAtletaWidget from './components/ChatAtletaWidget.jsx'
 import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx'
 import ProtectedCuentaRoute from './components/ProtectedCuentaRoute.jsx'
 import { useUsuario } from './contexts/UsuarioContext.jsx'
@@ -66,6 +67,8 @@ function App() {
     Boolean(usuario?.requiereActualizacionPeso) &&
     !pesoPospuestoLocal &&
     !pesoPospuestoEstaSesion(usuario)
+  const mostrarChatAtleta =
+    esUsuarioCliente(usuario) && !isAdminArea && !isLoginArea
 
   if (usuarioLoading) {
     return (
@@ -194,6 +197,9 @@ function App() {
         }}
         onPosponer={() => setPesoPospuestoLocal(true)}
       />
+      {mostrarChatAtleta && (
+        <ChatAtletaWidget nombreUsuario={usuario?.nombre} />
+      )}
     </div>
   )
 }
