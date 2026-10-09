@@ -271,7 +271,7 @@ export function DetalleIngesta({
           )}
           {afectaciones.length > 0 && (
             <section>
-              <h4>Afectaciones</h4>
+              <h4>Para equilibrar el día</h4>
               <ul>
                 {afectaciones.map((item) => (
                   <li key={item}>{item}</li>
