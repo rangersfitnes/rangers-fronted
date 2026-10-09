@@ -30,6 +30,9 @@ function CalcularCaloriasModal({
   const galeriaRef = useRef(null)
   const previewUrlRef = useRef(null)
   const fotosAnalizadasRef = useRef(new Set())
+  /** Candado síncrono: setLoading no alcanza a bloquear doble clic. */
+  const analizandoRef = useRef(false)
+  const decidiendoRef = useRef(false)
 
   const [archivo, setArchivo] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
@@ -82,6 +85,8 @@ function CalcularCaloriasModal({
       setError('')
       setLoading(false)
       setDecidiendo(false)
+      analizandoRef.current = false
+      decidiendoRef.current = false
       setCupo(null)
       fotosAnalizadasRef.current = new Set()
       return undefined
@@ -132,8 +137,20 @@ function CalcularCaloriasModal({
     Boolean(archivo) && fotoListaParaAnalisis && !loading && !sinCupo
 
   const handleAnalizar = async () => {
-    if (!puedeAnalizar) return
+    if (!puedeAnalizar || analizandoRef.current || decidiendoRef.current) return
     const huella = huellaArchivo(archivo)
+    // Marca la huella al iniciar para bloquear re-análisis concurrente.
+    if (huella) {
+      if (fotosAnalizadasRef.current.has(huella)) {
+        setError(
+          'Esta foto ya fue analizada. Toma o sube una foto nueva para otro cálculo.',
+        )
+        return
+      }
+      fotosAnalizadasRef.current.add(huella)
+    }
+
+    analizandoRef.current = true
     setLoading(true)
     setError('')
     setResultado(null)
@@ -143,7 +160,6 @@ function CalcularCaloriasModal({
         alturaCm: perfil.alturaCm,
         edad: perfil.edad,
       })
-      if (huella) fotosAnalizadasRef.current.add(huella)
       liberarFotoPendiente()
       setResultado({
         ...data,
@@ -153,16 +169,20 @@ function CalcularCaloriasModal({
       if (data.cupo) setCupo(data.cupo)
       else await cargarCupo()
     } catch (err) {
+      // Si falló, permite reintentar la misma foto.
+      if (huella) fotosAnalizadasRef.current.delete(huella)
       setError(err.message || 'No se pudieron estimar las calorías')
       await cargarCupo()
     } finally {
+      analizandoRef.current = false
       setLoading(false)
     }
   }
 
   const handleDecision = async (decision) => {
     const comidaId = resultado?.registroId || resultado?.id
-    if (!comidaId || decidiendo || loading) return
+    if (!comidaId || decidiendo || loading || decidiendoRef.current) return
+    decidiendoRef.current = true
     setDecidiendo(true)
     setError('')
     try {
@@ -181,6 +201,7 @@ function CalcularCaloriasModal({
     } catch (err) {
       setError(err.message || 'No se pudo guardar la decisión')
     } finally {
+      decidiendoRef.current = false
       setDecidiendo(false)
     }
   }
