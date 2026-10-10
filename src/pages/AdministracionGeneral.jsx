@@ -50,6 +50,7 @@ import VistaFinanzas from './AdministracionGeneralFinanzas.jsx'
 import VistaGestionHumana from './AdministracionGeneralGestionHumana.jsx'
 import VistaAsistencias from './AdministracionGeneralAsistencias.jsx'
 import VistaComidasIA from './AdministracionGeneralComidasIA.jsx'
+import VistaInventario from './AdministracionGeneralInventario.jsx'
 import VistaContenidoWeb from './AdministracionGeneralContenidoWeb.jsx'
 import VistaUsuariosAdmin from './VistaUsuariosAdmin.jsx'
 import { getAdminRole } from '../services/authService.js'
@@ -63,6 +64,7 @@ const TABS_BASE = [
   { id: 'clases-grupales', label: 'Clases grupales' },
   { id: 'eventos', label: 'Eventos' },
   { id: 'asistencias', label: 'Asistencias' },
+  { id: 'inventario', label: 'Inventario' },
   { id: 'contenido-web', label: 'Contenido web' },
   { id: 'finanzas', label: 'Finanzas' },
   { id: 'gestion-humana', label: 'Gestión humana' },
@@ -1014,6 +1016,7 @@ function AdministracionGeneral() {
         {activeTab === 'clases-grupales' && <ConfiguracionClasesGrupales />}
         {activeTab === 'eventos' && <VistaEventos />}
         {activeTab === 'asistencias' && <VistaAsistencias />}
+        {activeTab === 'inventario' && <VistaInventario />}
         {activeTab === 'comidas-ia' && <VistaComidasIA />}
         {activeTab === 'contenido-web' && <VistaContenidoWeb />}
         {activeTab === 'finanzas' && <VistaFinanzas />}

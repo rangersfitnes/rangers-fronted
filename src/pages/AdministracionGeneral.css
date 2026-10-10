@@ -1061,6 +1061,25 @@
   color: #a3a3a3;
 }
 
+.ag-inventario__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.ag-inventario__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.ag-inventario__row-actions .ag-action-btn {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+}
+
 .ag-comidas-ia__plato {
   display: block;
   font-weight: 600;
