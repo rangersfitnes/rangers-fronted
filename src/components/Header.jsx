@@ -33,6 +33,7 @@ const accountActions = [
   { label: 'Perfil', to: '/cuenta/perfil' },
   { label: 'Actividad', to: '/cuenta/actividad' },
   { label: 'Asistencias', to: '/cuenta/asistencias' },
+  { label: 'Recordatorios Rex', to: '/cuenta/recordatorios' },
 ]
 
 function IconoSalir() {

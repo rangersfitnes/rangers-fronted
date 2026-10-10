@@ -31,6 +31,7 @@ import CuentaPerfil from './pages/cuenta/CuentaPerfil.jsx'
 import CuentaAsistencias from './pages/cuenta/CuentaAsistencias.jsx'
 import CuentaRutinas from './pages/cuenta/CuentaRutinas.jsx'
 import CuentaActividad from './pages/cuenta/CuentaActividad.jsx'
+import CuentaRecordatorios from './pages/cuenta/CuentaRecordatorios.jsx'
 
 function App() {
   const { pathname } = useLocation()
@@ -128,6 +129,14 @@ function App() {
           element={
             <ProtectedCuentaRoute>
               <CuentaRutinas />
+            </ProtectedCuentaRoute>
+          }
+        />
+        <Route
+          path="/cuenta/recordatorios"
+          element={
+            <ProtectedCuentaRoute>
+              <CuentaRecordatorios />
             </ProtectedCuentaRoute>
           }
         />

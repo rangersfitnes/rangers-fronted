@@ -1,0 +1,390 @@
+.recordatorios-page {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  padding: var(--page-padding-top) clamp(1rem, 4vw, 3rem)
+    max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.recordatorios-page__glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--header-bottom) + var(--header-below-gap) + 14rem);
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(
+      ellipse 140% 90% at 50% var(--header-bottom),
+      rgba(249, 115, 22, 0.4) 0%,
+      rgba(249, 115, 22, 0.14) 40%,
+      transparent 68%
+    ),
+    linear-gradient(
+      180deg,
+      var(--header-bg) 0,
+      var(--header-bg) var(--header-bottom),
+      rgba(249, 115, 22, 0.1) calc(var(--header-bottom) + 0.5rem),
+      transparent calc(var(--header-bottom) + 9rem)
+    );
+}
+
+.recordatorios-page__inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.recordatorios-page__back {
+  align-self: flex-start;
+  padding: 0.35rem 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+}
+
+.recordatorios-page__back:hover {
+  color: #fff;
+}
+
+.recordatorios-hero__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fb923c;
+}
+
+.recordatorios-hero__title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.recordatorios-hero__sub {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.recordatorios-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.15rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.recordatorios-form__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.recordatorios-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.recordatorios-field input,
+.recordatorios-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.65rem;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.recordatorios-field input:focus,
+.recordatorios-field textarea:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.7);
+}
+
+.recordatorios-field__hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.recordatorios-form--confirm {
+  border-color: rgba(249, 115, 22, 0.35);
+  background: rgba(249, 115, 22, 0.06);
+}
+
+.recordatorios-resumen {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.recordatorios-card__peticion {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.recordatorios-preview {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.55rem;
+  background: rgba(249, 115, 22, 0.1);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.recordatorios-preview em {
+  font-style: normal;
+  color: #fdba74;
+}
+
+.recordatorios-dias {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.recordatorios-dias legend {
+  margin-bottom: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.recordatorios-dias__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.recordatorios-dias__chip {
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recordatorios-dias__chip.is-on {
+  border-color: rgba(249, 115, 22, 0.8);
+  background: rgba(249, 115, 22, 0.25);
+  color: #fff;
+}
+
+.recordatorios-dias__todos {
+  margin-left: 0.25rem;
+  padding: 0.4rem 0.7rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #fb923c;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.recordatorios-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+
+.recordatorios-switch input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: #f97316;
+}
+
+.recordatorios-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
+.recordatorios-btn {
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-radius: 0.65rem;
+  background: #f97316;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recordatorios-btn:hover:not(:disabled) {
+  background: #ea580c;
+}
+
+.recordatorios-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.recordatorios-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.recordatorios-btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.recordatorios-btn--danger {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+}
+
+.recordatorios-btn--danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.recordatorios-page__error {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.55rem;
+  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+  font-size: 0.88rem;
+}
+
+.recordatorios-lista__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.recordatorios-lista__vacio {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.recordatorios-lista__ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recordatorios-card {
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.recordatorios-card.is-off {
+  opacity: 0.65;
+}
+
+.recordatorios-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.recordatorios-card__top h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.recordatorios-card__badge {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.recordatorios-card__badge.is-on {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+.recordatorios-card__msg {
+  margin: 0.45rem 0 0.25rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.recordatorios-card__meta {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.recordatorios-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.recordatorios-card__actions .recordatorios-btn {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.78rem;
+}

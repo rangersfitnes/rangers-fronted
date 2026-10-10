@@ -157,6 +157,12 @@ function Hero() {
               >
                 Peso, altura y edad
               </button>
+              <Link
+                to="/cuenta/recordatorios"
+                className="hero__training-btn hero__training-btn--secondary"
+              >
+                Recordatorios Rex
+              </Link>
             </div>
 
             {planActivo ? (

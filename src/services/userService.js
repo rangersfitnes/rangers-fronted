@@ -405,3 +405,149 @@ export async function actualizarMiPerfil(datos, { signal } = {}) {
 
   return data.usuario
 }
+
+export async function interpretarRecordatorio(peticion, { signal } = {}) {
+  const token = getUserToken()
+  if (!token) {
+    throw new Error('No hay sesión activa')
+  }
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/usuarios/me/recordatorios/interpretar`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ peticion }),
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'Rex no pudo interpretar la petición')
+  }
+  return data.interpretado
+}
+
+export async function obtenerMisRecordatorios({ signal } = {}) {
+  const token = getUserToken()
+  if (!token) {
+    throw new Error('No hay sesión activa')
+  }
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/usuarios/me/recordatorios`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudieron cargar los recordatorios')
+  }
+  return data.recordatorios || []
+}
+
+export async function crearRecordatorio(datos, { signal } = {}) {
+  const token = getUserToken()
+  if (!token) {
+    throw new Error('No hay sesión activa')
+  }
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/usuarios/me/recordatorios`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(datos),
+      signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo crear el recordatorio')
+  }
+  return data.recordatorio
+}
+
+export async function actualizarRecordatorio(id, datos, { signal } = {}) {
+  const token = getUserToken()
+  if (!token) {
+    throw new Error('No hay sesión activa')
+  }
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/usuarios/me/recordatorios/${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datos),
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo actualizar el recordatorio')
+  }
+  return data.recordatorio
+}
+
+export async function eliminarRecordatorio(id, { signal } = {}) {
+  const token = getUserToken()
+  if (!token) {
+    throw new Error('No hay sesión activa')
+  }
+
+  let response
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/usuarios/me/recordatorios/${encodeURIComponent(id)}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      },
+    )
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo eliminar el recordatorio')
+  }
+  return data
+}
