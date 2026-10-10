@@ -74,14 +74,24 @@ function CuentaRecordatorios() {
     setInterpretando(true)
     try {
       const interpretado = await interpretarRecordatorio(peticion.trim())
+      const esFugaz = interpretado.tipo === 'fugaz'
       setBorrador({
+        tipo: esFugaz ? 'fugaz' : 'recurrente',
         titulo: interpretado.titulo,
         mensaje: interpretado.mensaje || interpretado.mensajeRex,
         hora: interpretado.hora,
-        dias: interpretado.dias?.length ? interpretado.dias : [...DIAS_TODOS],
+        dias: interpretado.dias?.length
+          ? interpretado.dias
+          : esFugaz
+            ? []
+            : [...DIAS_TODOS],
+        fechaDisparo: interpretado.fechaDisparo || null,
+        disparoEnMs: interpretado.disparoEnMs || null,
+        minutosRelativos: interpretado.minutosRelativos || null,
         activo: true,
         peticionOriginal: interpretado.peticionOriginal || peticion.trim(),
         resumen: interpretado.resumen || '',
+        resumenTiempo: interpretado.resumenTiempo || '',
       })
       setEditandoId(null)
     } catch (err) {
@@ -107,16 +117,23 @@ function CuentaRecordatorios() {
     setEditandoId(item.id)
     setPeticion(item.peticionOriginal || '')
     setBorrador({
+      tipo: item.tipo === 'fugaz' ? 'fugaz' : 'recurrente',
       titulo: item.titulo || '',
       mensaje: item.mensaje || '',
       hora: item.hora || '07:00',
       dias:
         Array.isArray(item.dias) && item.dias.length
           ? [...item.dias]
-          : [...DIAS_TODOS],
+          : item.tipo === 'fugaz'
+            ? []
+            : [...DIAS_TODOS],
+      fechaDisparo: item.fechaDisparo || null,
+      disparoEnMs: item.disparoEnMs || null,
+      minutosRelativos: item.minutosRelativos || null,
       activo: item.activo !== false,
       peticionOriginal: item.peticionOriginal || '',
       resumen: '',
+      resumenTiempo: '',
     })
     setErrorForm('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -129,10 +146,14 @@ function CuentaRecordatorios() {
     setGuardando(true)
     try {
       const payload = {
+        tipo: borrador.tipo === 'fugaz' ? 'fugaz' : 'recurrente',
         titulo: borrador.titulo.trim(),
         mensaje: borrador.mensaje.trim(),
         hora: borrador.hora,
         dias: borrador.dias,
+        fechaDisparo: borrador.fechaDisparo || null,
+        disparoEnMs: borrador.disparoEnMs || null,
+        minutosRelativos: borrador.minutosRelativos || null,
         activo: borrador.activo,
         peticionOriginal: borrador.peticionOriginal || peticion.trim() || undefined,
       }
@@ -157,10 +178,14 @@ function CuentaRecordatorios() {
     setAccionId(item.id)
     try {
       const actualizado = await actualizarRecordatorio(item.id, {
+        tipo: item.tipo,
         titulo: item.titulo,
         mensaje: item.mensaje,
         hora: item.hora,
         dias: item.dias,
+        fechaDisparo: item.fechaDisparo,
+        disparoEnMs: item.disparoEnMs,
+        minutosRelativos: item.minutosRelativos,
         activo: !item.activo,
         peticionOriginal: item.peticionOriginal || undefined,
       })
@@ -209,8 +234,8 @@ function CuentaRecordatorios() {
           <p className="recordatorios-hero__eyebrow">Rex · WhatsApp</p>
           <h1 className="recordatorios-hero__title">Recordatorios</h1>
           <p className="recordatorios-hero__sub">
-            Dile a Rex qué quieres que te recuerde, en tus palabras. Él lo
-            interpreta y te escribe por WhatsApp con su tono de coach.
+            Recurrentes (“todos los días a las 7”) o fugaces (“en 5 minutos hacer
+            30 flexiones”). Rex calcula la hora y te escribe por WhatsApp.
           </p>
         </header>
 
@@ -226,7 +251,7 @@ function CuentaRecordatorios() {
               maxLength={500}
               value={peticion}
               onChange={(e) => setPeticion(e.target.value)}
-              placeholder="Ej. Tomarme la creatina todos los días a las 7 am"
+              placeholder="Ej. Recuérdame en 5 minutos hacer 30 flexiones"
               required={!borrador || !editandoId}
             />
           </label>
@@ -245,8 +270,16 @@ function CuentaRecordatorios() {
         {borrador && (
           <form className="recordatorios-form recordatorios-form--confirm" onSubmit={handleGuardar}>
             <h2 className="recordatorios-form__title">Así lo enviará Rex</h2>
+            <p className="recordatorios-tipo">
+              {borrador.tipo === 'fugaz'
+                ? `Fugaz · una sola vez${borrador.minutosRelativos ? ` · en ~${borrador.minutosRelativos} min` : ''}`
+                : 'Recurrente · se repite'}
+            </p>
             {borrador.resumen && (
               <p className="recordatorios-resumen">{borrador.resumen}</p>
+            )}
+            {borrador.resumenTiempo && (
+              <p className="recordatorios-resumen">{borrador.resumenTiempo}</p>
             )}
 
             <p className="recordatorios-preview" aria-live="polite">
@@ -282,47 +315,60 @@ function CuentaRecordatorios() {
               </span>
             </label>
 
-            <label className="recordatorios-field">
-              <span>Hora (Colombia)</span>
-              <input
-                type="time"
-                value={borrador.hora}
-                onChange={(e) =>
-                  setBorrador((prev) => ({ ...prev, hora: e.target.value }))
-                }
-                required
-              />
-            </label>
+            {borrador.tipo === 'fugaz' ? (
+              <p className="recordatorios-resumen">
+                Disparo calculado: <strong>{borrador.hora}</strong>
+                {borrador.fechaDisparo ? ` · ${borrador.fechaDisparo}` : ''}{' '}
+                (Colombia). Una sola vez.
+              </p>
+            ) : (
+              <>
+                <label className="recordatorios-field">
+                  <span>Hora (Colombia)</span>
+                  <input
+                    type="time"
+                    value={borrador.hora}
+                    onChange={(e) =>
+                      setBorrador((prev) => ({ ...prev, hora: e.target.value }))
+                    }
+                    required
+                  />
+                </label>
 
-            <fieldset className="recordatorios-dias">
-              <legend>Días</legend>
-              <div className="recordatorios-dias__row">
-                {DIAS_SEMANA.map((d) => {
-                  const on = borrador.dias.includes(d.value)
-                  return (
+                <fieldset className="recordatorios-dias">
+                  <legend>Días</legend>
+                  <div className="recordatorios-dias__row">
+                    {DIAS_SEMANA.map((d) => {
+                      const on = borrador.dias.includes(d.value)
+                      return (
+                        <button
+                          key={d.value}
+                          type="button"
+                          className={`recordatorios-dias__chip${on ? ' is-on' : ''}`}
+                          aria-pressed={on}
+                          onClick={() => toggleDia(d.value)}
+                          title={d.label}
+                        >
+                          {ABREV_DIA[d.value] || d.label[0]}
+                        </button>
+                      )
+                    })}
                     <button
-                      key={d.value}
                       type="button"
-                      className={`recordatorios-dias__chip${on ? ' is-on' : ''}`}
-                      aria-pressed={on}
-                      onClick={() => toggleDia(d.value)}
-                      title={d.label}
+                      className="recordatorios-dias__todos"
+                      onClick={() =>
+                        setBorrador((prev) => ({
+                          ...prev,
+                          dias: [...DIAS_TODOS],
+                        }))
+                      }
                     >
-                      {ABREV_DIA[d.value] || d.label[0]}
+                      Todos
                     </button>
-                  )
-                })}
-                <button
-                  type="button"
-                  className="recordatorios-dias__todos"
-                  onClick={() =>
-                    setBorrador((prev) => ({ ...prev, dias: [...DIAS_TODOS] }))
-                  }
-                >
-                  Todos
-                </button>
-              </div>
-            </fieldset>
+                  </div>
+                </fieldset>
+              </>
+            )}
 
             <label className="recordatorios-switch">
               <input
@@ -384,8 +430,8 @@ function CuentaRecordatorios() {
 
             {lista.length === 0 ? (
               <p className="recordatorios-lista__vacio">
-                Aún no tienes recordatorios. Prueba con: “Tomarme la creatina
-                todos los días a las 7 am”.
+                Aún no tienes recordatorios. Prueba con: “Recuérdame en 5 minutos
+                hacer 30 flexiones” o creatina todos los días a las 7:00.
               </p>
             ) : (
               <ul className="recordatorios-lista__ul">
@@ -397,9 +443,17 @@ function CuentaRecordatorios() {
                     <div className="recordatorios-card__top">
                       <h3>{item.titulo}</h3>
                       <span
-                        className={`recordatorios-card__badge${item.activo ? ' is-on' : ''}`}
+                        className={`recordatorios-card__badge${item.activo ? ' is-on' : ''}${item.tipo === 'fugaz' ? ' is-fugaz' : ''}`}
                       >
-                        {item.activo ? 'Activo' : 'Pausado'}
+                        {item.tipo === 'fugaz'
+                          ? item.enviado
+                            ? 'Fugaz · enviado'
+                            : item.activo
+                              ? 'Fugaz'
+                              : 'Fugaz · off'
+                          : item.activo
+                            ? 'Activo'
+                            : 'Pausado'}
                       </span>
                     </div>
                     {item.peticionOriginal && (
@@ -411,12 +465,15 @@ function CuentaRecordatorios() {
                       {previewConNombre(item.mensaje)}
                     </p>
                     <p className="recordatorios-card__meta">
-                      {item.hora} ·{' '}
-                      {item.dias?.length === 7
-                        ? 'Todos los días'
-                        : (item.dias || [])
-                            .map((d) => etiquetaDiaSemana(d))
-                            .join(', ')}
+                      {item.tipo === 'fugaz'
+                        ? `${item.hora}${item.fechaDisparo ? ` · ${item.fechaDisparo}` : ''}${item.minutosRelativos ? ` · ~${item.minutosRelativos} min` : ''} · una vez`
+                        : `${item.hora} · ${
+                            item.dias?.length === 7
+                              ? 'Todos los días'
+                              : (item.dias || [])
+                                  .map((d) => etiquetaDiaSemana(d))
+                                  .join(', ')
+                          }`}
                     </p>
                     <div className="recordatorios-card__actions">
                       <button
