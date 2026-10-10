@@ -3,6 +3,17 @@ node_modules/
 dist/
 dist-ssr/
 
+# Android / Capacitor (artefactos locales)
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
+
 # Backend (repositorio independiente)
 backend/
 backend/baileys/auth_info/

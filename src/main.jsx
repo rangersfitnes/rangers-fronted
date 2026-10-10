@@ -9,9 +9,11 @@ import { UsuarioProvider } from './contexts/UsuarioContext.jsx'
 import { inicializarPersistenciaActiva } from './utils/recordarSesion.js'
 import { iniciarRenovacionAutomaticaToken } from './utils/firebaseTokenRefresh.js'
 import { iniciarRefreshAutomaticoActualizaciones } from './utils/appUpdateRefresh.js'
+import { iniciarCapacitorApp } from './utils/capacitorApp.js'
 
 iniciarRenovacionAutomaticaToken()
 iniciarRefreshAutomaticoActualizaciones()
+void iniciarCapacitorApp()
 
 const root = createRoot(document.getElementById('root'))
 

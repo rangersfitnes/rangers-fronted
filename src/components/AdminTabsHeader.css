@@ -25,22 +25,43 @@
 
 .admin-tabs-header__nav {
   flex: 1;
+  min-width: 0;
   display: flex;
   justify-content: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.admin-tabs-header__nav::-webkit-scrollbar {
+  height: 4px;
+}
+
+.admin-tabs-header__nav::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
 }
 
 .admin-tabs-header__nav-list {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 1.75rem;
   margin: 0;
-  padding: 0;
+  padding: 0 0.25rem 0.2rem;
   list-style: none;
+  width: max-content;
+  max-width: none;
 }
 
 .admin-tabs-header__nav-link {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 0.5rem 0.25rem;
   font-size: 0.8rem;
   font-weight: 600;
@@ -113,12 +134,8 @@
   .admin-tabs-header__nav {
     order: 0;
     flex: 1;
-    min-width: 0;
     width: auto;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    overscroll-behavior-x: contain;
   }
 
   .admin-tabs-header__nav::-webkit-scrollbar {
@@ -127,14 +144,11 @@
 
   .admin-tabs-header__nav-list {
     justify-content: flex-start;
-    flex-wrap: nowrap;
     gap: 0.35rem;
     padding: 0.15rem 0.25rem 0.35rem;
   }
 
   .admin-tabs-header__nav-link {
-    flex-shrink: 0;
-    white-space: nowrap;
     min-height: 2.75rem;
     padding: 0.55rem 0.85rem;
     font-size: 0.72rem;

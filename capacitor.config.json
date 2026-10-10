@@ -1,0 +1,30 @@
+{
+  "appId": "com.rangersbox.app",
+  "appName": "Rangers Box",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "https://api.rangersbox.com",
+      "https://rangersbox.com",
+      "https://*.rangersbox.com",
+      "https://*.wompi.co",
+      "https://checkout.wompi.co"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#0a0a0a",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0a0a0a"
+    }
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0a0a0a"
+  }
+}

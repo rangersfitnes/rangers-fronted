@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rangers Box</string>
+    <string name="title_activity_main">Rangers Box</string>
+    <string name="package_name">com.rangersbox.app</string>
+    <string name="custom_url_scheme">com.rangersbox.app</string>
+</resources>
