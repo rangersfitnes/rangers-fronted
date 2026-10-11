@@ -215,9 +215,13 @@ export function DetalleIngesta({
     >
       <p className="calcular-calorias__detectado-label">Comida detectada</p>
       <h3 className="calcular-calorias__plato">{comida.plato || 'Comida'}</h3>
-      {alimentos.length > 0 && (
-        <p className="calcular-calorias__alimentos">{alimentos.join(', ')}</p>
-      )}
+      {alimentos.length > 0 &&
+        !(
+          comida.feedbackInterpretacion?.correcta === false &&
+          comida.feedbackInterpretacion?.platoCorregido
+        ) && (
+          <p className="calcular-calorias__alimentos">{alimentos.join(', ')}</p>
+        )}
 
       {dudoso && (
         <p className="calcular-calorias__aviso-dudoso" role="status">

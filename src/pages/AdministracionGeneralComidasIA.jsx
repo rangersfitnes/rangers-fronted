@@ -345,12 +345,17 @@ function AdministracionGeneralComidasIA() {
             {detalle.alimentosDetectados?.length > 0 && (
               <p>Detectado: {detalle.alimentosDetectados.join(', ')}</p>
             )}
-            {detalle.resumen?.comoFunciona && (
-              <section>
-                <h3>Cómo funciona</h3>
-                <p>{detalle.resumen.comoFunciona}</p>
-              </section>
-            )}
+            {detalle.feedbackInterpretacion?.correcta === false &&
+              detalle.feedbackInterpretacion?.platoCorregido && (
+                <section>
+                  <h3>Corrección del atleta</h3>
+                  <p>
+                    IA:{' '}
+                    {detalle.feedbackInterpretacion.platoDetectado || '—'} →{' '}
+                    {detalle.feedbackInterpretacion.platoCorregido}
+                  </p>
+                </section>
+              )}
             {detalle.resumen?.beneficios?.length > 0 && (
               <section>
                 <h3>Beneficios</h3>
