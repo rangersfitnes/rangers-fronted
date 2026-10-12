@@ -181,9 +181,10 @@ function ConocimientoBotModal({ open, onClose }) {
     >
       <div className="conocimiento-bot">
         <p className="conocimiento-bot__intro">
-          Registra alianzas, promociones o servicios (ej. fisio aliado). El
-          Ranger Bot usará esta info cuando un cliente pregunte algo
-          relacionado, además de sus recomendaciones generales.
+          Registra alianzas, promociones, servicios o reglas del box (ej. fisio
+          aliado, qué pasa en festivos). Rex usará esta info cuando alguien
+          pregunte algo relacionado; en festivos prioriza estas reglas junto al
+          calendario oficial.
         </p>
 
         {error ? <p className="crear-plan__error">{error}</p> : null}
