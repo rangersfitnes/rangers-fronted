@@ -81,17 +81,21 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
       return
     }
 
+    const documento = form.documento.trim()
+    const documentoReferidor = form.documentoReferidor.trim()
+    // Referidor opcional: solo se envía si hay valor distinto al documento propio.
+    const referidorValido =
+      documentoReferidor.length > 0 && documentoReferidor !== documento
+
     onSubmit?.({
       nombre: form.nombre.trim(),
       tipoDocumento: form.tipoDocumento,
-      documento: form.documento.trim(),
+      documento,
       celular: `+57${form.celular}`,
       fechaNacimiento: form.fechaNacimiento,
       password: form.password,
       autorizacionDatos: true,
-      ...(form.documentoReferidor.trim()
-        ? { documentoReferidor: form.documentoReferidor.trim() }
-        : {}),
+      ...(referidorValido ? { documentoReferidor } : {}),
     })
   }
 
@@ -256,13 +260,14 @@ function CrearCuentaModal({ open, onClose, onSubmit, submitting, error }) {
             <input
               type="text"
               className="crear-usuario__input"
-              placeholder="Documento del referidor"
+              placeholder="Déjalo vacío si nadie te refirió"
               value={form.documentoReferidor}
               onChange={(event) => {
                 const valor = event.target.value.replace(/\s/g, '')
                 setForm((prev) => ({ ...prev, documentoReferidor: valor }))
               }}
               inputMode="numeric"
+              autoComplete="off"
               disabled={submitting}
             />
           </label>
