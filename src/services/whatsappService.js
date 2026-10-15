@@ -34,6 +34,23 @@ export async function obtenerEstadoWhatsApp({ signal } = {}) {
     conectado: Boolean(data.conectado),
     haySesionGuardada: Boolean(data.haySesionGuardada),
     qrImagen: data.qrImagen || null,
+    qrGeneradoEn: data.qrGeneradoEn ?? null,
+    esperandoEscaneo: Boolean(data.esperandoEscaneo),
+  }
+}
+
+export async function reiniciarWhatsApp({ borrarSesion = false } = {}) {
+  const data = await whatsappFetch('/api/whatsapp/reiniciar', {
+    method: 'POST',
+    body: { borrarSesion: Boolean(borrarSesion) },
+  })
+
+  return {
+    conectado: Boolean(data.conectado),
+    haySesionGuardada: Boolean(data.haySesionGuardada),
+    qrImagen: data.qrImagen || null,
+    qrGeneradoEn: data.qrGeneradoEn ?? null,
+    esperandoEscaneo: Boolean(data.esperandoEscaneo),
   }
 }
 

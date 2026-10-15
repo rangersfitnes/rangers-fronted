@@ -7,7 +7,8 @@
 .whatsapp-conexion__hint,
 .whatsapp-conexion__pasos,
 .whatsapp-conexion__loading,
-.whatsapp-conexion__success {
+.whatsapp-conexion__success,
+.whatsapp-conexion__meta {
   margin: 0;
   font-size: 0.92rem;
   line-height: 1.5;
@@ -23,6 +24,12 @@
   color: #bbf7d0;
 }
 
+.whatsapp-conexion__meta {
+  font-size: 0.78rem;
+  color: #a3a3a3;
+  text-align: center;
+}
+
 .whatsapp-conexion__error {
   margin: 0;
   padding: 0.75rem 1rem;
@@ -36,16 +43,30 @@
 
 .whatsapp-conexion__qr-wrap {
   display: flex;
-  justify-content: center;
-  padding: 1rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
   background-color: #ffffff;
   border-radius: 12px;
 }
 
 .whatsapp-conexion__qr {
   display: block;
-  width: min(100%, 280px);
-  height: auto;
+  /* Mismo tamaño que el PNG generado: sin escalar ni pixelated (rompe el escaneo). */
+  width: 280px;
+  height: 280px;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+  background: #ffffff;
+}
+
+.whatsapp-conexion__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 .whatsapp-conexion__btn {
@@ -62,6 +83,21 @@
   cursor: pointer;
 }
 
-.whatsapp-conexion__btn:hover {
+.whatsapp-conexion__btn:hover:not(:disabled) {
   background-color: #ea580c;
+}
+
+.whatsapp-conexion__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.whatsapp-conexion__btn--ghost {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #e5e5e5;
+}
+
+.whatsapp-conexion__btn--ghost:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
 }
