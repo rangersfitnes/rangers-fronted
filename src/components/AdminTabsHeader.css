@@ -5,14 +5,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1rem;
   padding: 0.75rem 2rem;
   background-color: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  isolation: isolate;
 }
 
 .admin-tabs-header__home-link {
+  position: relative;
+  z-index: 2;
   flex-shrink: 0;
   display: inline-flex;
   line-height: 0;
@@ -24,16 +27,22 @@
 }
 
 .admin-tabs-header__nav {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
   display: flex;
-  justify-content: center;
+  /* safe center: si el listado no cabe, alinea al inicio para poder scrollear
+     las pestañas de la izquierda (center puro las deja inaccesibles). */
+  justify-content: flex-start;
+  justify-content: safe center;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  scroll-padding-inline: 0.5rem;
 }
 
 .admin-tabs-header__nav::-webkit-scrollbar {
@@ -85,6 +94,8 @@
 }
 
 .admin-tabs-header__actions {
+  position: relative;
+  z-index: 2;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -135,6 +146,7 @@
     order: 0;
     flex: 1;
     width: auto;
+    justify-content: flex-start;
     scrollbar-width: none;
   }
 
