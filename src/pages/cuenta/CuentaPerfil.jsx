@@ -6,6 +6,7 @@ import {
   actualizarMiPerfil,
   eliminarFotoPerfil,
 } from '../../services/userService.js'
+import { cancelarDebitoAutomatico } from '../../services/wompiService.js'
 import EditarPerfilPersonalModal from '../../components/EditarPerfilPersonalModal.jsx'
 import { useToast } from '../../components/Toast.jsx'
 import {
@@ -18,14 +19,16 @@ import './Cuenta.css'
 
 function CuentaPerfil() {
   const toast = useToast()
-  const { usuario, actualizarUsuario } = useUsuario()
+  const { usuario, actualizarUsuario, refresh } = useUsuario()
   const fileInputRef = useRef(null)
   const planActivo = usuario?.planesActivos?.[0] ?? null
+  const debito = usuario?.debitoAutomatico
 
   const [editarAbierto, setEditarAbierto] = useState(false)
   const [guardandoDatos, setGuardandoDatos] = useState(false)
   const [errorEdicion, setErrorEdicion] = useState('')
   const [fotoCargando, setFotoCargando] = useState(false)
+  const [cancelandoDebito, setCancelandoDebito] = useState(false)
 
   const documento =
     [usuario?.tipoDocumento, usuario?.documento].filter(Boolean).join(' ') ||
@@ -91,6 +94,21 @@ function CuentaPerfil() {
       setErrorEdicion(err.message || 'No se pudo guardar la información')
     } finally {
       setGuardandoDatos(false)
+    }
+  }
+
+  const handleCancelarDebito = async () => {
+    if (cancelandoDebito || !debito?.activo) return
+    setCancelandoDebito(true)
+    try {
+      const actualizado = await cancelarDebitoAutomatico()
+      actualizarUsuario({ debitoAutomatico: actualizado })
+      await refresh().catch(() => null)
+      toast.success('Débito automático cancelado')
+    } catch (err) {
+      toast.error(err.message || 'No se pudo cancelar el débito automático')
+    } finally {
+      setCancelandoDebito(false)
     }
   }
 
@@ -250,6 +268,33 @@ function CuentaPerfil() {
                   {formatearFechaCuenta(usuario.planVencido.vigencia)}
                 </span>
               </div>
+            </>
+          ) : null}
+
+          {debito?.activo ? (
+            <>
+              <div className="cuenta-page__divider" aria-hidden="true" />
+              <div className="cuenta-page__row">
+                <span className="cuenta-page__row-label">Débito automático</span>
+                <span className="cuenta-page__row-value">
+                  Activo
+                  {debito.lastFour
+                    ? ` · ${debito.brand || 'Tarjeta'} ****${debito.lastFour}`
+                    : ''}
+                </span>
+              </div>
+              <p className="cuenta-page__debito-hint">
+                Al vencer tu plan cobraremos la renovación automáticamente con
+                Wompi.
+              </p>
+              <button
+                type="button"
+                className="cuenta-page__edit-btn cuenta-page__debito-cancel"
+                onClick={handleCancelarDebito}
+                disabled={cancelandoDebito}
+              >
+                {cancelandoDebito ? 'Cancelando…' : 'Cancelar débito automático'}
+              </button>
             </>
           ) : null}
         </div>

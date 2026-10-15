@@ -495,6 +495,72 @@
   animation: payment-spinner-rotate 0.7s linear infinite;
 }
 
+.payment-card__debito {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.payment-card__debito-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+.payment-card__debito-toggle input {
+  margin-top: 0.2rem;
+  accent-color: #f97316;
+}
+
+.payment-card__debito-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.payment-card__tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.payment-card__tarjeta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.payment-card__tarjeta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.payment-card__tarjeta-field input {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.payment-card__tarjeta-field input:focus {
+  outline: none;
+  border-color: #f97316;
+}
+
 @media (max-width: 480px) {
   .payment-page {
     padding: 5rem 1rem 2.5rem;

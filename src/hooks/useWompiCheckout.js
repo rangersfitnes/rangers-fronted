@@ -1,6 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
 import { useUsuario } from '../contexts/UsuarioContext.jsx'
-import { cargarWidgetWompi, crearTransaccionWompi } from '../services/wompiService.js'
+import {
+  cargarWidgetWompi,
+  crearTransaccionDebitoWompi,
+  crearTransaccionWompi,
+  tokenizarTarjetaWompi,
+} from '../services/wompiService.js'
 
 const MAX_INTENTOS_CONFIRMACION = 12
 const INTERVALO_CONFIRMACION_MS = 3000
@@ -51,7 +56,13 @@ export function useWompiCheckout({ sede } = {}) {
   }, [refresh])
 
   const pagar = useCallback(
-    async ({ planId, beneficiarios = [], codigoCupon = '' }) => {
+    async ({
+      planId,
+      beneficiarios = [],
+      codigoCupon = '',
+      debitoAutomatico = false,
+      tarjeta = null,
+    }) => {
       if (procesando || confirmando) return
 
       if (!planId) {
@@ -67,6 +78,46 @@ export function useWompiCheckout({ sede } = {}) {
             (planPrevio?.tipo === 'tiquetera' &&
               Number(planPrevio.entradasRestantes) === 0),
         )
+
+        if (debitoAutomatico) {
+          if (!tarjeta?.number || !tarjeta?.cvc || !tarjeta?.expMonth || !tarjeta?.expYear || !tarjeta?.cardHolder) {
+            throw new Error('Completa los datos de la tarjeta para el débito automático')
+          }
+
+          const { token } = await tokenizarTarjetaWompi({
+            number: tarjeta.number,
+            cvc: tarjeta.cvc,
+            expMonth: tarjeta.expMonth,
+            expYear: tarjeta.expYear,
+            cardHolder: tarjeta.cardHolder,
+          })
+
+          const resultado = await crearTransaccionDebitoWompi({
+            planId,
+            beneficiarios,
+            sede,
+            codigoCupon: codigoCupon || undefined,
+            cardToken: token,
+            customerEmail:
+              usuario?.correo ||
+              (usuario?.documento ? `${usuario.documento}@gmail.com` : undefined),
+            cuotas: 1,
+          })
+
+          const status = String(resultado.status || '').toUpperCase()
+          if (status === 'APPROVED' || resultado.activado) {
+            if (!confirmacionRef.current) {
+              confirmacionRef.current = true
+              await esperarActivacion()
+            }
+          } else if (status === 'DECLINED' || status === 'ERROR' || status === 'VOIDED') {
+            setError('El pago fue rechazado. Revisa los datos de tu tarjeta o intenta con otra.')
+          } else if (!confirmacionRef.current) {
+            confirmacionRef.current = true
+            await esperarActivacion()
+          }
+          return
+        }
 
         await cargarWidgetWompi()
 

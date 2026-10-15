@@ -81,6 +81,14 @@ function PaymentPlan() {
   const [cuponAplicado, setCuponAplicado] = useState(null)
   const [validandoCupon, setValidandoCupon] = useState(false)
   const [errorCupon, setErrorCupon] = useState('')
+  const [debitoAutomatico, setDebitoAutomatico] = useState(false)
+  const [tarjeta, setTarjeta] = useState({
+    number: '',
+    expMonth: '',
+    expYear: '',
+    cvc: '',
+    cardHolder: '',
+  })
   const timersRef = useRef({})
 
   useEffect(() => {
@@ -286,13 +294,23 @@ function PaymentPlan() {
     )
   }
 
+  const tarjetaLista =
+    !debitoAutomatico ||
+    (tarjeta.number.replace(/\s+/g, '').length >= 13 &&
+      tarjeta.expMonth.length === 2 &&
+      tarjeta.expYear.length >= 2 &&
+      tarjeta.cvc.length >= 3 &&
+      tarjeta.cardHolder.trim().length >= 5)
+
   const handlePagar = () => {
-    if (!todosOk || procesando || confirmando) return
+    if (!todosOk || !tarjetaLista || procesando || confirmando) return
     const idPlan = plan?.id || planId
     pagar({
       planId: idPlan,
       beneficiarios: beneficiarios.map((doc) => doc.trim()).filter(Boolean),
       codigoCupon: cuponAplicado?.cupon?.codigo || codigoCupon.trim() || undefined,
+      debitoAutomatico,
+      tarjeta: debitoAutomatico ? tarjeta : null,
     })
   }
 
@@ -573,6 +591,116 @@ function PaymentPlan() {
           </div>
         )}
 
+        <div className="payment-card__debito">
+          <label className="payment-card__debito-toggle">
+            <input
+              type="checkbox"
+              checked={debitoAutomatico}
+              onChange={(e) => setDebitoAutomatico(e.target.checked)}
+              disabled={procesando || confirmando}
+            />
+            <span>
+              Activar débito automático al vencer el plan
+            </span>
+          </label>
+          <p className="payment-card__debito-hint">
+            Al marcar esta opción cobramos con tu tarjeta este plan y, cuando
+            venza, renovamos automáticamente el mismo plan con Wompi. Puedes
+            cancelarlo cuando quieras desde tu perfil.
+          </p>
+
+          {debitoAutomatico && (
+            <div className="payment-card__tarjeta">
+              <label className="payment-card__tarjeta-field">
+                <span>Nombre en la tarjeta</span>
+                <input
+                  type="text"
+                  autoComplete="cc-name"
+                  value={tarjeta.cardHolder}
+                  onChange={(e) =>
+                    setTarjeta((prev) => ({
+                      ...prev,
+                      cardHolder: e.target.value.slice(0, 60),
+                    }))
+                  }
+                  placeholder="Como aparece en la tarjeta"
+                  disabled={procesando || confirmando}
+                />
+              </label>
+              <label className="payment-card__tarjeta-field">
+                <span>Número de tarjeta</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="cc-number"
+                  value={tarjeta.number}
+                  onChange={(e) =>
+                    setTarjeta((prev) => ({
+                      ...prev,
+                      number: e.target.value.replace(/[^\d\s]/g, '').slice(0, 23),
+                    }))
+                  }
+                  placeholder="•••• •••• •••• ••••"
+                  disabled={procesando || confirmando}
+                />
+              </label>
+              <div className="payment-card__tarjeta-row">
+                <label className="payment-card__tarjeta-field">
+                  <span>Mes</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="cc-exp-month"
+                    value={tarjeta.expMonth}
+                    onChange={(e) =>
+                      setTarjeta((prev) => ({
+                        ...prev,
+                        expMonth: e.target.value.replace(/\D/g, '').slice(0, 2),
+                      }))
+                    }
+                    placeholder="MM"
+                    disabled={procesando || confirmando}
+                  />
+                </label>
+                <label className="payment-card__tarjeta-field">
+                  <span>Año</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="cc-exp-year"
+                    value={tarjeta.expYear}
+                    onChange={(e) =>
+                      setTarjeta((prev) => ({
+                        ...prev,
+                        expYear: e.target.value.replace(/\D/g, '').slice(0, 4),
+                      }))
+                    }
+                    placeholder="AA"
+                    disabled={procesando || confirmando}
+                  />
+                </label>
+                <label className="payment-card__tarjeta-field">
+                  <span>CVC</span>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="cc-csc"
+                    value={tarjeta.cvc}
+                    onChange={(e) =>
+                      setTarjeta((prev) => ({
+                        ...prev,
+                        cvc: e.target.value.replace(/\D/g, '').slice(0, 4),
+                      }))
+                    }
+                    placeholder="•••"
+                    disabled={procesando || confirmando}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+
         {error && (
           <p className="payment-card__error" role="alert">
             {error}
@@ -586,7 +714,14 @@ function PaymentPlan() {
           <button
             type="button"
             className="payment-card__pay-btn"
-            disabled={!plan || loading || !todosOk || procesando || confirmando}
+            disabled={
+              !plan ||
+              loading ||
+              !todosOk ||
+              !tarjetaLista ||
+              procesando ||
+              confirmando
+            }
             onClick={handlePagar}
           >
             {procesando ? (
@@ -594,6 +729,8 @@ function PaymentPlan() {
                 className="payment-card__pay-spinner"
                 aria-label="Procesando"
               />
+            ) : debitoAutomatico ? (
+              `Pagar y activar débito ${plan ? formatearPrecio(precioFinal) : ''}`
             ) : (
               `Pagar ${plan ? formatearPrecio(precioFinal) : ''}`
             )}
