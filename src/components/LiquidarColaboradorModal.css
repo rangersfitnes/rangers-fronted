@@ -412,6 +412,39 @@
   max-width: 42rem;
 }
 
+.liquidar-colaborador-modal .modal__footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.liquidar-colaborador__footer-aviso {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #fdba74;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 8px;
+}
+
+.liquidar-colaborador__footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .liquidar-colaborador__footer-actions {
+    flex-direction: column-reverse;
+  }
+
+  .liquidar-colaborador__footer-actions > * {
+    width: 100%;
+  }
+}
+
 .liquidar-colaborador__total {
   display: flex;
   justify-content: space-between;
@@ -431,6 +464,18 @@
 .liquidar-colaborador__total strong {
   font-size: 1.15rem;
   color: #4ade80;
+}
+
+.liquidar-colaborador__mixto-atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.liquidar-colaborador__origen-field--externo {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(15, 23, 42, 0.35);
 }
 
 .liquidar-colaborador__externo {

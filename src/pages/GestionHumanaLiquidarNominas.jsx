@@ -105,18 +105,33 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
 
     setLiquidando(true)
     try {
+      const montoExterno = Math.round(
+        Number(opciones.montoPresupuestoExterno) || 0,
+      )
+      const origenes = Array.isArray(opciones.origenesPresupuesto)
+        ? opciones.origenesPresupuesto
+        : []
+      const montoCaja = origenes.reduce(
+        (acc, item) => acc + (Math.round(Number(item?.monto) || 0)),
+        0,
+      )
+
       await ejecutarLiquidacionColaborador({
         colaboradorUid: colaborador.uid,
         presupuestoExterno: Boolean(opciones.presupuestoExterno),
+        montoPresupuestoExterno: montoExterno,
         cargoAdicional: Number(opciones.cargoAdicional) || 0,
         cargoAdicionalConcepto: opciones.cargoAdicionalConcepto,
-        origenesPresupuesto: opciones.origenesPresupuesto,
+        origenesPresupuesto: origenes,
       })
-      toast.success(
-        opciones.presupuestoExterno
-          ? `Nómina de ${colaborador.nombre} liquidada con presupuesto externo (sin salida en caja)`
-          : `Nómina de ${colaborador.nombre} liquidada`,
-      )
+
+      let mensaje = `Nómina de ${colaborador.nombre} liquidada`
+      if (montoExterno > 0 && montoCaja > 0) {
+        mensaje = `Nómina de ${colaborador.nombre} liquidada en pago mixto (externo ${formatearPrecioCuenta(montoExterno)} + caja ${formatearPrecioCuenta(montoCaja)})`
+      } else if (montoExterno > 0 && montoCaja === 0) {
+        mensaje = `Nómina de ${colaborador.nombre} liquidada con presupuesto externo (sin salida en caja)`
+      }
+      toast.success(mensaje)
       setColaboradorLiquidar(null)
       await Promise.all([cargarEstado(), cargarHistorial()])
     } catch (err) {
@@ -384,30 +399,50 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
                         : '—'}
                     </td>
                     <td>
-                      {item.presupuestoExterno ? (
-                        <span className="ag-liquidacion__badge ag-liquidacion__badge--externo">
-                          Presupuesto externo
-                        </span>
-                      ) : Array.isArray(item.origenesPresupuesto) &&
-                        item.origenesPresupuesto.length > 0 ? (
-                        <span className="ag-liquidacion__origenes">
-                          {item.origenesPresupuesto.map((origen) => (
-                            <span
-                              key={`${item.id}-${origen.metodo}`}
-                              className="ag-liquidacion__badge"
-                            >
-                              {origen.metodo === 'efectivo'
-                                ? 'Efectivo'
-                                : origen.metodo === 'wompi'
-                                  ? 'Wompi'
-                                  : 'Transferencia'}{' '}
-                              {formatearPrecioCuenta(origen.monto)}
-                            </span>
-                          ))}
-                        </span>
-                      ) : (
-                        <span className="ag-liquidacion__badge">Caja del box</span>
-                      )}
+                      <span className="ag-liquidacion__origenes">
+                        {(item.presupuestoMixto ||
+                          (Number(item.montoPresupuestoExterno) > 0 &&
+                            Array.isArray(item.origenesPresupuesto) &&
+                            item.origenesPresupuesto.length > 0)) && (
+                          <span className="ag-liquidacion__badge ag-liquidacion__badge--externo">
+                            Externo{' '}
+                            {formatearPrecioCuenta(
+                              item.montoPresupuestoExterno || 0,
+                            )}
+                          </span>
+                        )}
+                        {item.presupuestoExterno &&
+                        !item.presupuestoMixto &&
+                        !(
+                          Array.isArray(item.origenesPresupuesto) &&
+                          item.origenesPresupuesto.length > 0
+                        ) ? (
+                          <span className="ag-liquidacion__badge ag-liquidacion__badge--externo">
+                            Presupuesto externo
+                          </span>
+                        ) : null}
+                        {Array.isArray(item.origenesPresupuesto) &&
+                        item.origenesPresupuesto.length > 0
+                          ? item.origenesPresupuesto.map((origen) => (
+                              <span
+                                key={`${item.id}-${origen.metodo}`}
+                                className="ag-liquidacion__badge"
+                              >
+                                {origen.metodo === 'efectivo'
+                                  ? 'Efectivo'
+                                  : origen.metodo === 'wompi'
+                                    ? 'Wompi'
+                                    : 'Transferencia'}{' '}
+                                {formatearPrecioCuenta(origen.monto)}
+                              </span>
+                            ))
+                          : !item.presupuestoExterno &&
+                              !(Number(item.montoPresupuestoExterno) > 0) ? (
+                              <span className="ag-liquidacion__badge">
+                                Caja del box
+                              </span>
+                            ) : null}
+                      </span>
                     </td>
                     <td>{item.totalTurnos}</td>
                     <td>{formatearPrecioCuenta(item.totalPago)}</td>
@@ -488,7 +523,12 @@ function GestionHumanaLiquidarNominas({ onVolver }) {
       />
 
       <LoadingOverlay
-        visible={loading || liquidando || revertiendo || editandoPresupuesto}
+        visible={
+          liquidando ||
+          revertiendo ||
+          editandoPresupuesto ||
+          (loading && !colaboradorLiquidar)
+        }
         label={
           liquidando
             ? 'Registrando liquidación'

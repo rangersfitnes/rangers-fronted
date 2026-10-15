@@ -60,6 +60,7 @@ export async function obtenerPreviewColaborador({ colaboradorUid }) {
 export async function ejecutarLiquidacionColaborador({
   colaboradorUid,
   presupuestoExterno = false,
+  montoPresupuestoExterno = 0,
   cargoAdicional = 0,
   cargoAdicionalConcepto = 'Cargo adicional',
   origenesPresupuesto = null,
@@ -77,6 +78,7 @@ export async function ejecutarLiquidacionColaborador({
         body: JSON.stringify({
           colaboradorUid,
           presupuestoExterno: Boolean(presupuestoExterno),
+          montoPresupuestoExterno: Math.round(Number(montoPresupuestoExterno) || 0),
           cargoAdicional,
           cargoAdicionalConcepto,
           origenesPresupuesto,

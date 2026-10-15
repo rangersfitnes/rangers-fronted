@@ -374,6 +374,9 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
           liquidadoEn: item.liquidadoEn,
           liquidadoPorNombre: item.liquidadoPorNombre,
           presupuestoExterno: item.presupuestoExterno,
+          presupuestoMixto: item.presupuestoMixto,
+          montoPresupuestoExterno: item.montoPresupuestoExterno,
+          origenesPresupuesto: item.origenesPresupuesto,
         }))
   const jornadasEspeciales = textoJornadasEspeciales(esquema)
   const horasPorDia = useMemo(() => agruparHorasPorDia(turnos), [turnos])
@@ -634,9 +637,14 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
                         <td>{formatearFechaHoraCuenta(item.liquidadoEn)}</td>
                         <td>{item.liquidadoPorNombre || '—'}</td>
                         <td>
-                          {item.presupuestoExterno
-                            ? 'Externo'
-                            : 'Caja'}
+                          {item.presupuestoMixto ||
+                          (Number(item.montoPresupuestoExterno) > 0 &&
+                            Array.isArray(item.origenesPresupuesto) &&
+                            item.origenesPresupuesto.length > 0)
+                            ? 'Mixto'
+                            : item.presupuestoExterno
+                              ? 'Externo'
+                              : 'Caja'}
                         </td>
                       </tr>
                     ))}
