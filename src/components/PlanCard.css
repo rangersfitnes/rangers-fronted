@@ -26,6 +26,46 @@
   border-color: #f97316;
 }
 
+.plan-card--destacar {
+  border-color: #fb923c;
+  border-width: 2px;
+  box-shadow:
+    0 0 0 1px rgba(251, 146, 60, 0.45),
+    0 0 24px rgba(249, 115, 22, 0.28),
+    0 10px 28px rgba(0, 0, 0, 0.35);
+  animation: plan-card-destacar-pulse 2.4s ease-in-out infinite;
+}
+
+.plan-card--destacar:hover {
+  border-color: #fdba74;
+  box-shadow:
+    0 0 0 1px rgba(253, 186, 116, 0.55),
+    0 0 28px rgba(249, 115, 22, 0.38),
+    0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes plan-card-destacar-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(251, 146, 60, 0.4),
+      0 0 18px rgba(249, 115, 22, 0.22),
+      0 10px 28px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(253, 186, 116, 0.65),
+      0 0 32px rgba(249, 115, 22, 0.4),
+      0 12px 30px rgba(0, 0, 0, 0.38);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-card--destacar {
+    animation: none;
+  }
+}
+
 .plan-card--clickable {
   cursor: pointer;
 }

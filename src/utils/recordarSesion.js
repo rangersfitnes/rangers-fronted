@@ -85,7 +85,14 @@ export async function inicializarPersistenciaActiva() {
   const { getAdminToken } = await import('../services/authService.js')
   const { getUserToken } = await import('../services/userService.js')
 
-  const alcance = getAdminToken() ? 'admin' : getUserToken() ? 'user' : 'admin'
+  // Preferir sesión pública si hay token de usuario o no hay sesión admin.
+  // Antes se caía a 'admin' sin tokens y podía dejar persistencia de sesión
+  // (no local) en la web pública.
+  const alcance = getAdminToken()
+    ? 'admin'
+    : getUserToken() || leerPreferenciaRecordarSesion('user')
+      ? 'user'
+      : 'admin'
   await inicializarPersistenciaFirebase(auth, alcance)
 }
 

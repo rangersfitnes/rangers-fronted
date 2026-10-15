@@ -1,6 +1,25 @@
 import { API_BASE_URL } from '../variables/api.jsx'
+import { auth } from '../variables/firebase.jsx'
+import { resolverPersistenciaSesion } from '../utils/recordarSesion.js'
 
 export const USER_TOKEN_KEY = 'rb_user_token'
+const MARGEN_TOKEN_MS = 60 * 1000
+
+function obtenerExpiracionToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null
+  } catch {
+    return null
+  }
+}
+
+export function tokenUserExpirado(token, ahora = Date.now()) {
+  if (!token) return true
+  const expiraEn = obtenerExpiracionToken(token)
+  if (!expiraEn) return false
+  return expiraEn <= ahora + MARGEN_TOKEN_MS
+}
 
 export function getUserToken() {
   if (typeof window === 'undefined') return null
@@ -28,6 +47,37 @@ export function clearUserToken() {
 export function esUserTokenPersistente() {
   if (typeof window === 'undefined') return true
   return Boolean(localStorage.getItem(USER_TOKEN_KEY))
+}
+
+function guardarTokenUsuarioDesdeFirebase(idToken) {
+  saveUserToken(idToken, {
+    persistente: resolverPersistenciaSesion(
+      'user',
+      esUserTokenPersistente(),
+    ),
+  })
+}
+
+/** Token fresco de Firebase o almacenado si aún es válido. */
+export async function obtenerUserToken({ forzar = false } = {}) {
+  const user = auth.currentUser
+
+  if (user) {
+    try {
+      const idToken = await user.getIdToken(forzar)
+      guardarTokenUsuarioDesdeFirebase(idToken)
+      return idToken
+    } catch {
+      // Continúa con token almacenado si Firebase falla momentáneamente.
+    }
+  }
+
+  const almacenado = getUserToken()
+  if (almacenado && !tokenUserExpirado(almacenado)) {
+    return almacenado
+  }
+
+  return null
 }
 
 export async function registrarUsuarioPublico(datos) {
@@ -282,29 +332,53 @@ export async function guardarEntrenamiento(datos) {
 }
 
 export async function obtenerDatosUsuario({ signal, token: tokenOverride } = {}) {
-  const token = tokenOverride || getUserToken()
+  let token = tokenOverride || (await obtenerUserToken())
   if (!token) return null
 
-  let response
-
-  try {
-    response = await fetch(`${API_BASE_URL}/api/auth/user-data`, {
+  const pedir = async (authToken) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/user-data`, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${authToken}`,
       },
       signal,
     })
+    const data = await response.json().catch(() => ({}))
+    return { response, data }
+  }
+
+  let response
+  let data
+
+  try {
+    ;({ response, data } = await pedir(token))
   } catch (err) {
     if (err?.name === 'AbortError') throw err
     throw new Error('No se pudo conectar con el servidor')
   }
 
-  const data = await response.json().catch(() => ({}))
+  // Token vencido: renovar con Firebase y reintentar una vez.
+  if (
+    (response.status === 401 || response.status === 403) &&
+    !tokenOverride &&
+    auth.currentUser
+  ) {
+    const fresco = await obtenerUserToken({ forzar: true })
+    if (fresco && fresco !== token) {
+      try {
+        ;({ response, data } = await pedir(fresco))
+        token = fresco
+      } catch (err) {
+        if (err?.name === 'AbortError') throw err
+        throw new Error('No se pudo conectar con el servidor')
+      }
+    }
+  }
 
   if (response.status === 401 || response.status === 403) {
-    clearUserToken()
-    return null
+    const error = new Error(data.error || 'Sesión expirada')
+    error.status = response.status
+    throw error
   }
 
   if (!response.ok) {

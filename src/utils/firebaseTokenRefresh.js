@@ -8,10 +8,12 @@ import {
 } from '../services/authService.js'
 import {
   esUserTokenPersistente,
-  getUserToken,
   saveUserToken,
 } from '../services/userService.js'
-import { resolverPersistenciaSesion } from './recordarSesion.js'
+import {
+  leerPreferenciaRecordarSesion,
+  resolverPersistenciaSesion,
+} from './recordarSesion.js'
 
 const MARGEN_RENOVACION_MS = 5 * 60 * 1000
 
@@ -45,11 +47,13 @@ function guardarTokenActivo(idToken) {
     return
   }
 
-  if (getUserToken()) {
-    saveUserToken(idToken, {
-      persistente: resolverPersistenciaSesion('user', esUserTokenPersistente()),
-    })
-  }
+  // Sesión pública: persistir aunque el storage se haya vaciado temporalmente.
+  saveUserToken(idToken, {
+    persistente: resolverPersistenciaSesion(
+      'user',
+      esUserTokenPersistente() || leerPreferenciaRecordarSesion('user'),
+    ),
+  })
 }
 
 async function renovarToken(user) {
@@ -57,12 +61,10 @@ async function renovarToken(user) {
 
   try {
     const idToken = await user.getIdToken(true)
-    if (getAdminToken() || getUserToken()) {
-      if (getAdminToken()) {
-        await obtenerAdminToken()
-      } else {
-        guardarTokenActivo(idToken)
-      }
+    if (getAdminToken()) {
+      await obtenerAdminToken()
+    } else {
+      guardarTokenActivo(idToken)
     }
     programarRenovacion(user, idToken)
     return idToken
@@ -100,9 +102,9 @@ async function sincronizarToken(user) {
     }
 
     const idToken = await user.getIdToken()
-    if (getUserToken()) {
-      guardarTokenActivo(idToken)
-    }
+    // Renovar/guardar token de usuario público siempre que Firebase tenga sesión
+    // y no haya sesión admin activa.
+    guardarTokenActivo(idToken)
     programarRenovacion(user, idToken)
   } catch (err) {
     console.warn('[auth] No se pudo sincronizar el token de Firebase:', err.message)

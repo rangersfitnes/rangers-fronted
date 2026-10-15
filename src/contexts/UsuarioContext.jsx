@@ -15,11 +15,11 @@ import {
   getUserToken,
   loginUsuario,
   obtenerDatosUsuario,
+  obtenerUserToken,
   saveUserToken,
+  tokenUserExpirado,
 } from '../services/userService.js'
-import {
-  resolverPersistenciaSesion,
-} from '../utils/recordarSesion.js'
+import { resolverPersistenciaSesion } from '../utils/recordarSesion.js'
 import { esUsuarioCliente } from '../utils/usuarioRol.js'
 
 const UsuarioContext = createContext(null)
@@ -28,14 +28,31 @@ export function UsuarioProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const invalidarSesionNoCliente = useCallback(async () => {
+  const invalidarSesionCliente = useCallback(async ({ cerrarFirebase = true } = {}) => {
     clearUserToken()
     setUsuario(null)
-    await signOut(auth).catch(() => {})
+    if (cerrarFirebase && !getAdminToken()) {
+      await signOut(auth).catch(() => {})
+    }
+  }, [])
+
+  const aplicarUsuarioCliente = useCallback((datos) => {
+    if (!datos || !esUsuarioCliente(datos)) {
+      return false
+    }
+    setUsuario(datos)
+    return true
   }, [])
 
   const cargarUsuario = useCallback(async ({ signal, silent = false } = {}) => {
-    if (getAdminToken() || !getUserToken()) {
+    if (getAdminToken()) {
+      setUsuario(null)
+      if (!silent) setLoading(false)
+      return null
+    }
+
+    const token = await obtenerUserToken()
+    if (!token) {
       setUsuario(null)
       if (!silent) setLoading(false)
       return null
@@ -43,52 +60,50 @@ export function UsuarioProvider({ children }) {
 
     if (!silent) setLoading(true)
     try {
-      const datos = await obtenerDatosUsuario({ signal })
-      if (!datos || !esUsuarioCliente(datos)) {
-        if (auth.currentUser) {
-          await invalidarSesionNoCliente()
-        } else {
-          clearUserToken()
-          setUsuario(null)
-        }
+      const datos = await obtenerDatosUsuario({ signal, token })
+      if (!aplicarUsuarioCliente(datos)) {
+        // Admin/colaborador en Firebase: no cerrar la sesión de Firebase.
+        clearUserToken()
+        setUsuario(null)
         return null
       }
-      setUsuario(datos)
       return datos
     } catch (err) {
       if (err?.name === 'AbortError') return null
+
+      // Solo invalidar ante rechazo definitivo de auth.
+      if (err?.status === 401 || err?.status === 403) {
+        console.warn('[usuario] Sesión inválida:', err.message)
+        await invalidarSesionCliente({ cerrarFirebase: true })
+        return null
+      }
+
+      // Red/backend: conservar sesión local si el token aún sirve.
       console.warn('[usuario] No se pudo cargar el usuario:', err.message)
-      clearUserToken()
-      setUsuario(null)
+      const almacenado = getUserToken()
+      if (!almacenado || tokenUserExpirado(almacenado)) {
+        setUsuario(null)
+      }
       return null
     } finally {
       if (!signal?.aborted && !silent) setLoading(false)
     }
-  }, [invalidarSesionNoCliente])
-
-  const syncUserToken = useCallback(async (user) => {
-    if (getAdminToken()) {
-      clearUserToken()
-      setUsuario(null)
-      return
-    }
-
-    if (!user) {
-      if (getUserToken()) {
-        clearUserToken()
-        setUsuario(null)
-      }
-    }
-  }, [])
+  }, [aplicarUsuarioCliente, invalidarSesionCliente])
 
   const cargarUsuarioDesdeSesion = useCallback(async (user) => {
     if (!user || getAdminToken()) return null
 
     try {
       const idToken = await user.getIdToken()
+      const persistente = resolverPersistenciaSesion(
+        'user',
+        esUserTokenPersistente(),
+      )
+      saveUserToken(idToken, { persistente })
+
       const datos = await obtenerDatosUsuario({ token: idToken })
 
-      if (!datos || !esUsuarioCliente(datos)) {
+      if (!aplicarUsuarioCliente(datos)) {
         // Admin/colaborador: no cerrar Firebase; AdminAuthContext gestiona esa sesión.
         if (getUserToken()) {
           clearUserToken()
@@ -97,19 +112,24 @@ export function UsuarioProvider({ children }) {
         return null
       }
 
-      const persistente = resolverPersistenciaSesion('user', esUserTokenPersistente())
-      saveUserToken(idToken, { persistente })
-      setUsuario(datos)
       return datos
     } catch (err) {
-      console.warn('[usuario] No se pudo restaurar la sesión:', err.message)
-      if (getUserToken()) {
-        clearUserToken()
-        setUsuario(null)
+      if (err?.status === 401 || err?.status === 403) {
+        console.warn('[usuario] No se pudo restaurar la sesión:', err.message)
+        await invalidarSesionCliente({ cerrarFirebase: true })
+        return null
       }
+
+      console.warn('[usuario] Error restaurando sesión (se conserva token):', err.message)
+      const almacenado = getUserToken()
+      if (almacenado && !tokenUserExpirado(almacenado)) {
+        // Mantener loading=false con intento silencioso posterior vía refresh.
+        return null
+      }
+      setUsuario(null)
       return null
     }
-  }, [])
+  }, [aplicarUsuarioCliente, invalidarSesionCliente])
 
   useEffect(() => {
     let activo = true
@@ -133,14 +153,25 @@ export function UsuarioProvider({ children }) {
           return
         }
 
-        await syncUserToken(user)
+        if (!user) {
+          // Firebase a veces emite null de forma transitoria (refresh/red).
+          // No tirar la sesión si el token guardado sigue vigente.
+          const almacenado = getUserToken()
+          if (almacenado && !tokenUserExpirado(almacenado)) {
+            await cargarUsuario({ silent: true })
+            if (activo) setLoading(false)
+            return
+          }
 
-        if (user && getUserToken()) {
-          await cargarUsuarioDesdeSesion(user)
-        } else {
+          clearUserToken()
           setUsuario(null)
+          if (activo) setLoading(false)
+          return
         }
 
+        // Hay usuario Firebase: renovar token y restaurar sesión cliente
+        // aunque el storage se haya limpiado temporalmente.
+        await cargarUsuarioDesdeSesion(user)
         if (activo) setLoading(false)
       })
 
@@ -159,7 +190,7 @@ export function UsuarioProvider({ children }) {
       activo = false
       unsubscribe()
     }
-  }, [syncUserToken, cargarUsuarioDesdeSesion])
+  }, [cargarUsuario, cargarUsuarioDesdeSesion])
 
   const refresh = useCallback(() => cargarUsuario({ silent: true }), [cargarUsuario])
 
@@ -179,10 +210,8 @@ export function UsuarioProvider({ children }) {
   )
 
   const logout = useCallback(async () => {
-    clearUserToken()
-    setUsuario(null)
-    await signOut(auth).catch(() => {})
-  }, [])
+    await invalidarSesionCliente({ cerrarFirebase: true })
+  }, [invalidarSesionCliente])
 
   const actualizarUsuario = useCallback((patch) => {
     setUsuario((prev) => (prev ? { ...prev, ...patch } : prev))

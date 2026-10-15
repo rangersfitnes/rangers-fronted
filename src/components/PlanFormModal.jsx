@@ -15,6 +15,7 @@ const estadoInicial = {
   cantidadPersonas: '1',
   entradasIncluidas: '',
   oferta: false,
+  destacar: false,
   soloPuntoFisico: false,
   motivo: '',
   personalizarFechaInicio: false,
@@ -80,6 +81,7 @@ function PlanFormModal({
                   ? String(initialValues.entradasIncluidas)
                   : '',
               oferta: Boolean(initialValues.oferta),
+              destacar: Boolean(initialValues.destacar),
               soloPuntoFisico: Boolean(initialValues.soloPuntoFisico),
               motivo: initialValues.motivo ?? '',
               personalizarFechaInicio: Boolean(
@@ -97,6 +99,7 @@ function PlanFormModal({
   const handleChange = (field) => (event) => {
     const value =
       field === 'oferta' ||
+      field === 'destacar' ||
       field === 'soloPuntoFisico' ||
       field === 'personalizarFechaInicio'
         ? event.target.checked
@@ -325,6 +328,24 @@ function PlanFormModal({
           </span>
           <span className="crear-plan__switch-label">
             {form.oferta ? 'En oferta' : 'No está en oferta'}
+          </span>
+        </label>
+
+        <label className="crear-plan__switch">
+          <input
+            type="checkbox"
+            className="crear-plan__switch-input"
+            checked={form.destacar}
+            onChange={handleChange('destacar')}
+            disabled={submitting}
+          />
+          <span className="crear-plan__switch-track">
+            <span className="crear-plan__switch-thumb" />
+          </span>
+          <span className="crear-plan__switch-label">
+            {form.destacar
+              ? 'Plan destacado (marco llamativo, sin cinta de oferta)'
+              : 'Destacar plan'}
           </span>
         </label>
 

@@ -36,6 +36,7 @@ function PlanesTable({ planes, onRowClick }) {
             <th>Duración</th>
             <th>Personas</th>
             <th>Oferta</th>
+            <th>Destacar</th>
             <th>Estado</th>
             <th>Creado</th>
           </tr>
@@ -83,6 +84,15 @@ function PlanesTable({ planes, onRowClick }) {
                     }`}
                   >
                     {plan.oferta ? 'Sí' : 'No'}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    className={`planes-table__badge${
+                      plan.destacar ? ' planes-table__badge--on' : ''
+                    }`}
+                  >
+                    {plan.destacar ? 'Sí' : 'No'}
                   </span>
                 </td>
                 <td>

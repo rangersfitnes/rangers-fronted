@@ -59,8 +59,8 @@ function PlanCard({ plan }) {
     <>
       <article
         className={`plan-card${plan.oferta ? ' plan-card--oferta' : ''}${
-          soloPuntoFisico ? ' plan-card--clickable' : ''
-        }`}
+          plan.destacar ? ' plan-card--destacar' : ''
+        }${soloPuntoFisico ? ' plan-card--clickable' : ''}`}
         onClick={handleCardClick}
         onKeyDown={handleCardKeyDown}
         role={soloPuntoFisico ? 'button' : undefined}
