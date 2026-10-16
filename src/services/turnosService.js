@@ -135,3 +135,32 @@ export async function eliminarTurnoLaboral({ sede, turnoId }) {
 
   return parseJsonResponse(response, 'No se pudo eliminar el turno')
 }
+
+export async function actualizarTurnoLaboral({
+  sede,
+  turnoId,
+  inicioEn,
+  finEn,
+}) {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/nominas/turnos/actualizar`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sede, turnoId, inicioEn, finEn }),
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await parseJsonResponse(
+    response,
+    'No se pudo actualizar el turno',
+  )
+  return data.turno
+}

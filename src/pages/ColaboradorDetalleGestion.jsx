@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import ConfirmModal from '../components/ConfirmModal.jsx'
 import DesprendiblesNominaModal from '../components/DesprendiblesNominaModal.jsx'
 import LoadingOverlay from '../components/LoadingOverlay.jsx'
+import Modal from '../components/Modal.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { etiquetaMetodoPagoColaborador } from '../constants/metodosPagoColaborador.js'
 import { NOTA_LIQUIDACION_HASTA_DIA_ANTERIOR } from '../constants/nominaLaboral.js'
 import { SEDES } from '../services/horariosService.js'
 import { obtenerPerfilLaboralColaborador } from '../services/colaboradoresService.js'
+import {
+  actualizarTurnoLaboral,
+  eliminarTurnoLaboral,
+} from '../services/turnosService.js'
 import { MINUTOS_MINIMOS_HORA_EXTRA } from '../utils/calculoPagoTurnoUtils.js'
 import {
   DIAS_SEMANA_ESQUEMA,
@@ -16,10 +22,44 @@ import {
   formatearFechaCuenta,
   formatearFechaHoraCuenta,
   formatearFechaTabla,
+  formatearHoraCuenta,
   formatearPrecioCuenta,
 } from './cuenta/cuentaUtils.js'
 import './AdministracionGeneral.css'
 import './PuntoFisicoMiPerfil.css'
+
+const TZ_COLOMBIA = 'America/Bogota'
+
+function msADatetimeLocalColombia(ms) {
+  if (!ms) return ''
+  try {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone: TZ_COLOMBIA,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+        .formatToParts(new Date(ms))
+        .map((part) => [part.type, part.value]),
+    )
+    const hora = parts.hour === '24' ? '00' : parts.hour
+    return `${parts.year}-${parts.month}-${parts.day}T${hora}:${parts.minute}`
+  } catch {
+    return ''
+  }
+}
+
+function datetimeLocalColombiaAMs(valor) {
+  const texto = String(valor || '').trim()
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(texto)) return null
+  const base = texto.length === 16 ? `${texto}:00` : texto.slice(0, 19)
+  const ms = Date.parse(`${base}-05:00`)
+  return Number.isFinite(ms) ? ms : null
+}
 
 function etiquetaSede(sedeId) {
   return SEDES.find((sede) => sede.id === sedeId)?.nombre ?? sedeId ?? '—'
@@ -50,27 +90,6 @@ function fechaClaveColombia(ms) {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date(ms))
-}
-
-function formatearHoraCorta(ms) {
-  if (!ms) return '—'
-  try {
-    return new Date(ms).toLocaleTimeString('es-CO', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return '—'
-  }
-}
-
-function formatearHorarioTurno(inicioEn, finEn) {
-  const inicio = formatearHoraCorta(inicioEn)
-  const fin = formatearHoraCorta(finEn)
-  if (inicio === '—' && fin === '—') return '—'
-  if (inicio === '—') return `Hasta ${fin}`
-  if (fin === '—') return `Desde ${inicio}`
-  return `Desde ${inicio} hasta ${fin}`
 }
 
 function formatearTiempoExtraTrabajado(turno) {
@@ -142,6 +161,7 @@ function textoJornadasEspeciales(esquema) {
 function agruparHorasPorDia(turnos) {
   const mapa = new Map()
   for (const turno of turnos) {
+    if (turno.estado === 'activo') continue
     const clave = fechaClaveColombia(turno.inicioEn)
     if (!clave) continue
     const actual = mapa.get(clave) || {
@@ -193,18 +213,43 @@ function ResumenCard({ etiqueta, valor, variante = '', detalle = '' }) {
   )
 }
 
-function FilasTurnosTabla({ turnos }) {
+function FilasTurnosTabla({ turnos, onEditar, onEliminar }) {
+  const tieneActivos = turnos.some((turno) => turno.estado === 'activo')
   const tieneLiquidados = turnos.some((turno) => turno.liquidacionId)
-  const tienePendientes = turnos.some((turno) => !turno.liquidacionId)
-  const mostrarSeparador = tieneLiquidados && tienePendientes
-  let separadorInsertado = false
-  const columnas = 12
+  const tienePendientes = turnos.some(
+    (turno) => turno.estado !== 'activo' && !turno.liquidacionId,
+  )
+  const mostrarSeparadorPendientes =
+    tienePendientes && (tieneActivos || tieneLiquidados)
+  const mostrarSeparadorLiquidados = tieneLiquidados && (tieneActivos || tienePendientes)
+  let separadorPendienteInsertado = false
+  let separadorLiquidadoInsertado = false
+  const columnas = 14
 
   return turnos.flatMap((turno, index) => {
+    const esActivo = turno.estado === 'activo'
     const esLiquidado = Boolean(turno.liquidacionId)
+    const puedeModificar = !esLiquidado
     const filas = []
 
-    if (mostrarSeparador && index === 0 && !esLiquidado) {
+    if (tieneActivos && index === 0 && esActivo) {
+      filas.push(
+        <tr
+          key="turnos-separador-activos"
+          className="pf-mi-perfil__turnos-separador pf-mi-perfil__turnos-separador--activo"
+        >
+          <td colSpan={columnas}>Turno en curso</td>
+        </tr>,
+      )
+    }
+
+    if (
+      mostrarSeparadorPendientes &&
+      !separadorPendienteInsertado &&
+      !esActivo &&
+      !esLiquidado
+    ) {
+      separadorPendienteInsertado = true
       filas.push(
         <tr
           key="turnos-separador-pendientes"
@@ -215,8 +260,12 @@ function FilasTurnosTabla({ turnos }) {
       )
     }
 
-    if (mostrarSeparador && !separadorInsertado && esLiquidado) {
-      separadorInsertado = true
+    if (
+      mostrarSeparadorLiquidados &&
+      !separadorLiquidadoInsertado &&
+      esLiquidado
+    ) {
+      separadorLiquidadoInsertado = true
       filas.push(
         <tr
           key="turnos-separador-liquidados"
@@ -235,11 +284,21 @@ function FilasTurnosTabla({ turnos }) {
     filas.push(
       <tr
         key={turno.id}
-        className={esLiquidado ? 'pf-mi-perfil__fila--liquidado' : undefined}
+        className={
+          esActivo
+            ? 'pf-mi-perfil__fila--activo'
+            : esLiquidado
+              ? 'pf-mi-perfil__fila--liquidado'
+              : undefined
+        }
       >
         <td>{formatearFechaTabla(turno.inicioEn)}</td>
         <td>
-          {esLiquidado ? (
+          {esActivo ? (
+            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--activo">
+              En turno
+            </span>
+          ) : esLiquidado ? (
             <span className="pf-mi-perfil__badge pf-mi-perfil__badge--liquidado">
               Liquidado
             </span>
@@ -249,13 +308,22 @@ function FilasTurnosTabla({ turnos }) {
             </span>
           )}
         </td>
-        <td className="pf-mi-perfil__horario-celda">
-          {formatearHorarioTurno(turno.inicioEn, turno.finEn)}
+        <td>{formatearHoraCuenta(turno.inicioEn)}</td>
+        <td>
+          {esActivo ? (
+            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--activo">
+              En turno actualmente
+            </span>
+          ) : (
+            formatearHoraCuenta(turno.finEn)
+          )}
         </td>
         <td>{formatearDuracionMs(turno.duracionMs)}</td>
-        <td>{formatearHorasDecimal(turno.horasOrdinarias)}</td>
         <td>
-          {horasNocturnas > 0 ? (
+          {esActivo ? '—' : formatearHorasDecimal(turno.horasOrdinarias)}
+        </td>
+        <td>
+          {!esActivo && horasNocturnas > 0 ? (
             <span className="pf-mi-perfil__extra-celda">
               {formatearHorasDecimal(horasNocturnas)}
               {pagoNocturno > 0 ? (
@@ -269,7 +337,7 @@ function FilasTurnosTabla({ turnos }) {
           )}
         </td>
         <td>
-          {horasDominicales > 0 ? (
+          {!esActivo && horasDominicales > 0 ? (
             <span className="pf-mi-perfil__extra-celda">
               {formatearHorasDecimal(horasDominicales)}
               {turno.esFestivo && !turno.esDiaDominical
@@ -287,9 +355,9 @@ function FilasTurnosTabla({ turnos }) {
             '—'
           )}
         </td>
-        <td>{formatearTiempoExtraTrabajado(turno)}</td>
+        <td>{esActivo ? '—' : formatearTiempoExtraTrabajado(turno)}</td>
         <td>
-          {Number(turno.horasExtra) > 0 ? (
+          {!esActivo && Number(turno.horasExtra) > 0 ? (
             <span className="pf-mi-perfil__extra-celda">
               {formatearHorasDecimal(turno.horasExtra)}
               {etiquetaEstadoExtra(turno.horasExtraEstado) ? (
@@ -302,10 +370,36 @@ function FilasTurnosTabla({ turnos }) {
             '—'
           )}
         </td>
-        <td>{formatearPrecioCuenta(turno.pagoOrdinario)}</td>
-        <td>{formatearPagoExtra(turno)}</td>
+        <td>
+          {esActivo ? '—' : formatearPrecioCuenta(turno.pagoOrdinario)}
+        </td>
+        <td>{esActivo ? '—' : formatearPagoExtra(turno)}</td>
         <td className="pf-mi-perfil__total-celda">
-          {formatearPrecioCuenta(turno.pagoTotal)}
+          {esActivo ? '—' : formatearPrecioCuenta(turno.pagoTotal)}
+        </td>
+        <td className="ag-finanzas__tabla-acciones">
+          {puedeModificar ? (
+            <div className="pf-mi-perfil__turno-acciones">
+              <button
+                type="button"
+                className="ag-action-btn ag-action-btn--ghost"
+                onClick={() => onEditar?.(turno)}
+              >
+                Editar
+              </button>
+              {!esActivo ? (
+                <button
+                  type="button"
+                  className="ag-action-btn ag-action-btn--ghost"
+                  onClick={() => onEliminar?.(turno)}
+                >
+                  Borrar
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            <span className="pf-mi-perfil__hint">Sin cambios</span>
+          )}
         </td>
       </tr>,
     )
@@ -331,6 +425,13 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [desprendiblesOpen, setDesprendiblesOpen] = useState(false)
+  const [turnoEditar, setTurnoEditar] = useState(null)
+  const [inicioEdit, setInicioEdit] = useState('')
+  const [finEdit, setFinEdit] = useState('')
+  const [editError, setEditError] = useState('')
+  const [guardandoTurno, setGuardandoTurno] = useState(false)
+  const [turnoEliminar, setTurnoEliminar] = useState(null)
+  const [eliminandoTurno, setEliminandoTurno] = useState(false)
 
   const uid = colaboradorInicial?.uid
 
@@ -355,6 +456,94 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
   useEffect(() => {
     cargar()
   }, [cargar])
+
+  const abrirEditarTurno = useCallback((turno) => {
+    setTurnoEditar(turno)
+    setInicioEdit(msADatetimeLocalColombia(turno.inicioEn))
+    setFinEdit(
+      turno.estado === 'activo' ? '' : msADatetimeLocalColombia(turno.finEn),
+    )
+    setEditError('')
+  }, [])
+
+  const cerrarEditarTurno = useCallback(() => {
+    if (guardandoTurno) return
+    setTurnoEditar(null)
+    setInicioEdit('')
+    setFinEdit('')
+    setEditError('')
+  }, [guardandoTurno])
+
+  const handleGuardarTurno = useCallback(async () => {
+    if (!turnoEditar?.id || !turnoEditar?.sede) return
+
+    const inicioMs = datetimeLocalColombiaAMs(inicioEdit)
+    if (!inicioMs) {
+      setEditError('Indica una hora de llegada válida')
+      return
+    }
+
+    const esActivo = turnoEditar.estado === 'activo'
+    const finMs = finEdit ? datetimeLocalColombiaAMs(finEdit) : null
+
+    if (!esActivo && !finMs) {
+      setEditError('Indica una hora de salida válida')
+      return
+    }
+
+    if (finEdit && !finMs) {
+      setEditError('La hora de salida no es válida')
+      return
+    }
+
+    if (finMs != null && finMs <= inicioMs) {
+      setEditError('La salida debe ser posterior a la llegada')
+      return
+    }
+
+    setGuardandoTurno(true)
+    setEditError('')
+    try {
+      await actualizarTurnoLaboral({
+        sede: turnoEditar.sede,
+        turnoId: turnoEditar.id,
+        inicioEn: inicioMs,
+        finEn: finMs,
+      })
+      toast.success(
+        esActivo && !finMs
+          ? 'Hora de llegada actualizada'
+          : 'Turno actualizado correctamente',
+      )
+      setTurnoEditar(null)
+      setInicioEdit('')
+      setFinEdit('')
+      await cargar()
+    } catch (err) {
+      setEditError(err.message || 'No se pudo actualizar el turno')
+    } finally {
+      setGuardandoTurno(false)
+    }
+  }, [cargar, finEdit, inicioEdit, toast, turnoEditar])
+
+  const handleConfirmarEliminarTurno = useCallback(async () => {
+    if (!turnoEliminar?.id || !turnoEliminar?.sede) return
+
+    setEliminandoTurno(true)
+    try {
+      await eliminarTurnoLaboral({
+        sede: turnoEliminar.sede,
+        turnoId: turnoEliminar.id,
+      })
+      toast.success('Turno eliminado')
+      setTurnoEliminar(null)
+      await cargar()
+    } catch (err) {
+      toast.error(err.message || 'No se pudo eliminar el turno')
+    } finally {
+      setEliminandoTurno(false)
+    }
+  }, [cargar, toast, turnoEliminar])
 
   const colaborador = datos?.colaborador ?? colaboradorInicial
   const esquema = datos?.esquema
@@ -655,15 +844,16 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
           </section>
 
           <section className="pf-mi-perfil__turnos">
-            <h2 className="pf-mi-perfil__panel-title">Turnos completados</h2>
+            <h2 className="pf-mi-perfil__panel-title">Registro de turnos</h2>
             <p className="pf-mi-perfil__nota pf-mi-perfil__nota--turnos">
-              {NOTA_LIQUIDACION_HASTA_DIA_ANTERIOR}
+              {NOTA_LIQUIDACION_HASTA_DIA_ANTERIOR} Solo se pueden editar o
+              borrar turnos que aún no hayan sido liquidados.
             </p>
 
             {turnos.length === 0 ? (
               <div className="ag-panel">
                 <p className="ag-panel__empty">
-                  Aún no hay turnos finalizados registrados.
+                  Aún no hay turnos registrados.
                 </p>
               </div>
             ) : (
@@ -673,7 +863,8 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
                     <tr>
                       <th>Fecha</th>
                       <th>Nómina</th>
-                      <th>Horario</th>
+                      <th>Hora llegada</th>
+                      <th>Hora salida</th>
                       <th>Tiempo laborado</th>
                       <th>H. ordinarias</th>
                       <th>H. nocturnas</th>
@@ -683,10 +874,15 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
                       <th>Pago ordinario</th>
                       <th>Pago extra</th>
                       <th>Total</th>
+                      <th aria-label="Acciones" />
                     </tr>
                   </thead>
                   <tbody>
-                    <FilasTurnosTabla turnos={turnos} />
+                    <FilasTurnosTabla
+                      turnos={turnos}
+                      onEditar={abrirEditarTurno}
+                      onEliminar={setTurnoEliminar}
+                    />
                   </tbody>
                 </table>
               </div>
@@ -701,6 +897,93 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
         open={desprendiblesOpen}
         onClose={() => setDesprendiblesOpen(false)}
         desprendibles={desprendibles}
+      />
+
+      <Modal
+        open={Boolean(turnoEditar)}
+        onClose={cerrarEditarTurno}
+        title="Corregir turno laboral"
+        footer={
+          <>
+            <button
+              type="button"
+              className="confirm-modal__btn confirm-modal__btn--ghost"
+              onClick={cerrarEditarTurno}
+              disabled={guardandoTurno}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="confirm-modal__btn confirm-modal__btn--default"
+              onClick={handleGuardarTurno}
+              disabled={guardandoTurno}
+            >
+              {guardandoTurno ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </>
+        }
+      >
+        {turnoEditar ? (
+          <div className="pf-mi-perfil__editar-turno">
+            <p className="pf-mi-perfil__hint">
+              Horas en zona horaria de Colombia. Los turnos liquidados no se
+              pueden modificar.
+              {turnoEditar.estado === 'activo'
+                ? ' Si indicas hora de salida, el turno en curso se cerrará con esa marca.'
+                : ''}
+            </p>
+            <label className="pf-mi-perfil__editar-turno-campo">
+              <span>Hora de llegada</span>
+              <input
+                type="datetime-local"
+                value={inicioEdit}
+                onChange={(e) => {
+                  setInicioEdit(e.target.value)
+                  setEditError('')
+                }}
+                disabled={guardandoTurno}
+              />
+            </label>
+            <label className="pf-mi-perfil__editar-turno-campo">
+              <span>
+                Hora de salida
+                {turnoEditar.estado === 'activo' ? ' (opcional)' : ''}
+              </span>
+              <input
+                type="datetime-local"
+                value={finEdit}
+                onChange={(e) => {
+                  setFinEdit(e.target.value)
+                  setEditError('')
+                }}
+                disabled={guardandoTurno}
+              />
+            </label>
+            {editError ? (
+              <p className="pf-mi-perfil__error" role="alert">
+                {editError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </Modal>
+
+      <ConfirmModal
+        open={Boolean(turnoEliminar)}
+        onClose={
+          eliminandoTurno ? undefined : () => setTurnoEliminar(null)
+        }
+        onConfirm={handleConfirmarEliminarTurno}
+        title="Eliminar turno laboral"
+        message={
+          turnoEliminar
+            ? `¿Eliminar el turno del ${formatearFechaTabla(turnoEliminar.inicioEn)} (${formatearHoraCuenta(turnoEliminar.inicioEn)} – ${formatearHoraCuenta(turnoEliminar.finEn)}) por ${formatearPrecioCuenta(turnoEliminar.pagoTotal)}? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmLabel="Eliminar turno"
+        variant="danger"
+        loading={eliminandoTurno}
       />
     </section>
   )

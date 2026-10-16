@@ -389,6 +389,11 @@ function filasResumenEstadoFinanciero(liquidez, reporte) {
 
   const totalIngresos = liquidez?.totalIngresos ?? resumen.totalGeneral ?? 0
   const totalEgresos = liquidez?.totalEgresos ?? resumen.totalEgresos ?? 0
+  const liquidezOperativa =
+    liquidez?.liquidezOperativa ??
+    (Number(efectivo.disponible) || 0) +
+      (Number(transferencia.disponible) || 0) +
+      (Number(wompi.disponible) || 0)
   const liquidezTotal =
     liquidez?.liquidezTotal ?? resumen.balanceNeto ?? totalIngresos - totalEgresos
 
@@ -396,7 +401,8 @@ function filasResumenEstadoFinanciero(liquidez, reporte) {
     ['Concepto', 'Monto'],
     ['Total ingresos históricos', totalIngresos],
     ['Total egresos históricos', totalEgresos],
-    ['Liquidez total', liquidezTotal],
+    ['Liquidez disponible (efectivo + transferencia + Wompi)', liquidezOperativa],
+    ['Liquidez contable (incluye otros medios)', liquidezTotal],
     [],
     ['Medio de pago', 'Ingresos', 'Egresos', 'Disponible'],
     [

@@ -124,9 +124,11 @@ function LiquidezHistoricaPanel({
             <TarjetaContador
               label="Liquidez disponible"
               valor={
-                (Number(liquidez.efectivo?.disponible) || 0) +
-                (Number(liquidez.transferencia?.disponible) || 0) +
-                (Number(liquidez.wompi?.disponible) || 0)
+                liquidez.liquidezOperativa != null
+                  ? Number(liquidez.liquidezOperativa) || 0
+                  : (Number(liquidez.efectivo?.disponible) || 0) +
+                    (Number(liquidez.transferencia?.disponible) || 0) +
+                    (Number(liquidez.wompi?.disponible) || 0)
               }
               hint="Efectivo + transferencia + Wompi"
               variante="total"

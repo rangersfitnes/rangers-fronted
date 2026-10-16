@@ -36,6 +36,12 @@ function LiquidezDetalleModal({ open, onClose, liquidez }) {
     disponible: (banco?.ingresosWompi ?? 0) - (banco?.egresosWompi ?? 0),
   }
   const muestraOtro = (otro?.ingresos ?? 0) > 0 || (otro?.egresos ?? 0) > 0
+  const liquidezOperativa =
+    liquidez.liquidezOperativa != null
+      ? Number(liquidez.liquidezOperativa) || 0
+      : (Number(efectivo?.disponible) || 0) +
+        (Number(transferenciaData.disponible) || 0) +
+        (Number(wompiData.disponible) || 0)
 
   return (
     <Modal
@@ -53,10 +59,11 @@ function LiquidezDetalleModal({ open, onClose, liquidez }) {
         <div className="ag-liquidez-modal__total">
           <span className="ag-liquidez-modal__total-label">Total disponible</span>
           <span className="ag-liquidez-modal__total-valor">
-            {formatearPrecioCuenta(liquidezTotal)}
+            {formatearPrecioCuenta(liquidezOperativa)}
           </span>
           <p className="ag-liquidez-modal__total-hint">
-            Suma histórica de ingresos menos egresos registrados.
+            Efectivo + transferencia + Wompi (ingresos − egresos de cada
+            cuenta).
           </p>
         </div>
 
@@ -120,6 +127,10 @@ function LiquidezDetalleModal({ open, onClose, liquidez }) {
             <FilaDesglose label="Ingresos" valor={otro.ingresos} tipo="ingreso" />
             <FilaDesglose label="Egresos" valor={otro.egresos} tipo="egreso" />
             <FilaDesglose label="Saldo" valor={otro.disponible} />
+            <p className="ag-liquidez-modal__total-hint">
+              No suma a la liquidez operativa. Contable total:{' '}
+              {formatearPrecioCuenta(liquidezTotal ?? liquidezOperativa)}.
+            </p>
           </section>
         ) : null}
       </div>
