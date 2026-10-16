@@ -1,3 +1,49 @@
+.pf-mi-perfil__anclas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.pf-mi-perfil__ancla-btn {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: inherit;
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.pf-mi-perfil__ancla-btn:hover {
+  color: #ffffff;
+  background: rgba(249, 115, 22, 0.16);
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
+#colaborador-resumen,
+#colaborador-horas-dia,
+#colaborador-nominas,
+#colaborador-turnos,
+#colaborador-turnos-pendientes,
+#colaborador-turnos-liquidados,
+#colaborador-turnos-activos,
+#colaborador-datos {
+  scroll-margin-top: 5.5rem;
+}
+
 .pf-mi-perfil__error {
   margin: 0 0 1.25rem;
   padding: 0.85rem 1rem;
@@ -215,6 +261,19 @@
   color: #7dd3fc;
   background: rgba(14, 165, 233, 0.14);
   border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.pf-mi-perfil__badge--manual {
+  color: #e9d5ff;
+  background: rgba(168, 85, 247, 0.14);
+  border: 1px solid rgba(192, 132, 252, 0.4);
+}
+
+.pf-mi-perfil__badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
 }
 
 .pf-mi-perfil__fila--activo td {

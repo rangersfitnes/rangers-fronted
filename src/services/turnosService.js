@@ -164,3 +164,27 @@ export async function actualizarTurnoLaboral({
   )
   return data.turno
 }
+
+export async function crearTurnoManual({ colaboradorUid, inicioEn, finEn }) {
+  const token = await requerirAdminToken()
+
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}/api/nominas/turnos/manual`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ colaboradorUid, inicioEn, finEn }),
+    })
+  } catch {
+    throw new Error('No se pudo conectar con el servidor')
+  }
+
+  const data = await parseJsonResponse(
+    response,
+    'No se pudo crear el turno manual',
+  )
+  return data.turno
+}

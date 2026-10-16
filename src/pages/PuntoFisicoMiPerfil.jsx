@@ -195,15 +195,22 @@ function FilasTurnosTabla({ turnos }) {
       >
         <td>{formatearFechaTabla(turno.inicioEn)}</td>
         <td>
-          {esLiquidado ? (
-            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--liquidado">
-              Liquidado
-            </span>
-          ) : (
-            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--pendiente">
-              Pendiente
-            </span>
-          )}
+          <div className="pf-mi-perfil__badges">
+            {esLiquidado ? (
+              <span className="pf-mi-perfil__badge pf-mi-perfil__badge--liquidado">
+                Liquidado
+              </span>
+            ) : (
+              <span className="pf-mi-perfil__badge pf-mi-perfil__badge--pendiente">
+                Pendiente
+              </span>
+            )}
+            {turno.agregadoManual || turno.origen === 'manual' ? (
+              <span className="pf-mi-perfil__badge pf-mi-perfil__badge--manual">
+                Manual
+              </span>
+            ) : null}
+          </div>
         </td>
         <td>{formatearHoraCuenta(turno.inicioEn)}</td>
         <td>{formatearHoraCuenta(turno.finEn)}</td>

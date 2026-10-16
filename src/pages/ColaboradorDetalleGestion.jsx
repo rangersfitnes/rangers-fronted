@@ -10,6 +10,7 @@ import { SEDES } from '../services/horariosService.js'
 import { obtenerPerfilLaboralColaborador } from '../services/colaboradoresService.js'
 import {
   actualizarTurnoLaboral,
+  crearTurnoManual,
   eliminarTurnoLaboral,
 } from '../services/turnosService.js'
 import { MINUTOS_MINIMOS_HORA_EXTRA } from '../utils/calculoPagoTurnoUtils.js'
@@ -59,6 +60,28 @@ function datetimeLocalColombiaAMs(valor) {
   const base = texto.length === 16 ? `${texto}:00` : texto.slice(0, 19)
   const ms = Date.parse(`${base}-05:00`)
   return Number.isFinite(ms) ? ms : null
+}
+
+const SECCIONES_COLABORADOR = [
+  { id: 'colaborador-resumen', label: 'Resumen' },
+  { id: 'colaborador-horas-dia', label: 'Horas por día' },
+  { id: 'colaborador-nominas', label: 'Nóminas liquidadas' },
+  { id: 'colaborador-turnos', label: 'Registro de turnos' },
+  { id: 'colaborador-turnos-pendientes', label: 'Pendientes' },
+  { id: 'colaborador-turnos-liquidados', label: 'Liquidados' },
+]
+
+function irASeccion(id) {
+  const fallbacks = {
+    'colaborador-turnos-pendientes': 'colaborador-turnos',
+    'colaborador-turnos-liquidados': 'colaborador-turnos',
+    'colaborador-resumen': 'colaborador-datos',
+  }
+  const el =
+    document.getElementById(id) ||
+    document.getElementById(fallbacks[id] || '')
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function etiquetaSede(sedeId) {
@@ -221,9 +244,12 @@ function FilasTurnosTabla({ turnos, onEditar, onEliminar }) {
   )
   const mostrarSeparadorPendientes =
     tienePendientes && (tieneActivos || tieneLiquidados)
-  const mostrarSeparadorLiquidados = tieneLiquidados && (tieneActivos || tienePendientes)
+  const mostrarSeparadorLiquidados =
+    tieneLiquidados && (tieneActivos || tienePendientes)
   let separadorPendienteInsertado = false
   let separadorLiquidadoInsertado = false
+  let anclaPendienteAsignada = false
+  let anclaLiquidadoAsignada = false
   const columnas = 14
 
   return turnos.flatMap((turno, index) => {
@@ -236,6 +262,7 @@ function FilasTurnosTabla({ turnos, onEditar, onEliminar }) {
       filas.push(
         <tr
           key="turnos-separador-activos"
+          id="colaborador-turnos-activos"
           className="pf-mi-perfil__turnos-separador pf-mi-perfil__turnos-separador--activo"
         >
           <td colSpan={columnas}>Turno en curso</td>
@@ -250,9 +277,11 @@ function FilasTurnosTabla({ turnos, onEditar, onEliminar }) {
       !esLiquidado
     ) {
       separadorPendienteInsertado = true
+      anclaPendienteAsignada = true
       filas.push(
         <tr
           key="turnos-separador-pendientes"
+          id="colaborador-turnos-pendientes"
           className="pf-mi-perfil__turnos-separador pf-mi-perfil__turnos-separador--pendiente"
         >
           <td colSpan={columnas}>Turnos pendientes de liquidación</td>
@@ -266,9 +295,11 @@ function FilasTurnosTabla({ turnos, onEditar, onEliminar }) {
       esLiquidado
     ) {
       separadorLiquidadoInsertado = true
+      anclaLiquidadoAsignada = true
       filas.push(
         <tr
           key="turnos-separador-liquidados"
+          id="colaborador-turnos-liquidados"
           className="pf-mi-perfil__turnos-separador"
         >
           <td colSpan={columnas}>Turnos ya liquidados en nómina</td>
@@ -281,9 +312,19 @@ function FilasTurnosTabla({ turnos, onEditar, onEliminar }) {
     const pagoNocturno = Number(turno.pagoRecargoNocturno) || 0
     const pagoDominical = Number(turno.pagoRecargoDominical) || 0
 
+    let filaId
+    if (!esActivo && !esLiquidado && !anclaPendienteAsignada) {
+      anclaPendienteAsignada = true
+      filaId = 'colaborador-turnos-pendientes'
+    } else if (esLiquidado && !anclaLiquidadoAsignada) {
+      anclaLiquidadoAsignada = true
+      filaId = 'colaborador-turnos-liquidados'
+    }
+
     filas.push(
       <tr
         key={turno.id}
+        id={filaId}
         className={
           esActivo
             ? 'pf-mi-perfil__fila--activo'
@@ -294,19 +335,26 @@ function FilasTurnosTabla({ turnos, onEditar, onEliminar }) {
       >
         <td>{formatearFechaTabla(turno.inicioEn)}</td>
         <td>
-          {esActivo ? (
-            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--activo">
-              En turno
-            </span>
-          ) : esLiquidado ? (
-            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--liquidado">
-              Liquidado
-            </span>
-          ) : (
-            <span className="pf-mi-perfil__badge pf-mi-perfil__badge--pendiente">
-              Pendiente
-            </span>
-          )}
+          <div className="pf-mi-perfil__badges">
+            {esActivo ? (
+              <span className="pf-mi-perfil__badge pf-mi-perfil__badge--activo">
+                En turno
+              </span>
+            ) : esLiquidado ? (
+              <span className="pf-mi-perfil__badge pf-mi-perfil__badge--liquidado">
+                Liquidado
+              </span>
+            ) : (
+              <span className="pf-mi-perfil__badge pf-mi-perfil__badge--pendiente">
+                Pendiente
+              </span>
+            )}
+            {turno.agregadoManual || turno.origen === 'manual' ? (
+              <span className="pf-mi-perfil__badge pf-mi-perfil__badge--manual">
+                Manual
+              </span>
+            ) : null}
+          </div>
         </td>
         <td>{formatearHoraCuenta(turno.inicioEn)}</td>
         <td>
@@ -432,6 +480,11 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
   const [guardandoTurno, setGuardandoTurno] = useState(false)
   const [turnoEliminar, setTurnoEliminar] = useState(null)
   const [eliminandoTurno, setEliminandoTurno] = useState(false)
+  const [crearTurnoOpen, setCrearTurnoOpen] = useState(false)
+  const [inicioCrear, setInicioCrear] = useState('')
+  const [finCrear, setFinCrear] = useState('')
+  const [crearError, setCrearError] = useState('')
+  const [creandoTurno, setCreandoTurno] = useState(false)
 
   const uid = colaboradorInicial?.uid
 
@@ -545,6 +598,60 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
     }
   }, [cargar, toast, turnoEliminar])
 
+  const abrirCrearTurno = useCallback(() => {
+    setCrearTurnoOpen(true)
+    setInicioCrear('')
+    setFinCrear('')
+    setCrearError('')
+  }, [])
+
+  const cerrarCrearTurno = useCallback(() => {
+    if (creandoTurno) return
+    setCrearTurnoOpen(false)
+    setInicioCrear('')
+    setFinCrear('')
+    setCrearError('')
+  }, [creandoTurno])
+
+  const handleCrearTurnoManual = useCallback(async () => {
+    if (!uid) return
+
+    const inicioMs = datetimeLocalColombiaAMs(inicioCrear)
+    const finMs = datetimeLocalColombiaAMs(finCrear)
+
+    if (!inicioMs) {
+      setCrearError('Indica una hora de llegada válida')
+      return
+    }
+    if (!finMs) {
+      setCrearError('Indica una hora de salida válida')
+      return
+    }
+    if (finMs <= inicioMs) {
+      setCrearError('La salida debe ser posterior a la llegada')
+      return
+    }
+
+    setCreandoTurno(true)
+    setCrearError('')
+    try {
+      await crearTurnoManual({
+        colaboradorUid: uid,
+        inicioEn: inicioMs,
+        finEn: finMs,
+      })
+      toast.success('Turno manual creado')
+      setCrearTurnoOpen(false)
+      setInicioCrear('')
+      setFinCrear('')
+      await cargar()
+    } catch (err) {
+      setCrearError(err.message || 'No se pudo crear el turno')
+    } finally {
+      setCreandoTurno(false)
+    }
+  }, [cargar, finCrear, inicioCrear, toast, uid])
+
   const colaborador = datos?.colaborador ?? colaboradorInicial
   const esquema = datos?.esquema
   const esquemaClave = datos?.esquemaClave ?? colaborador?.esquemaPago ?? ''
@@ -594,6 +701,14 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
         <div className="ag-page__view-actions">
           <button
             type="button"
+            className="ag-action-btn"
+            onClick={abrirCrearTurno}
+            disabled={loading || !uid}
+          >
+            + Turno manual
+          </button>
+          <button
+            type="button"
             className="ag-action-btn ag-action-btn--ghost"
             onClick={cargar}
             disabled={loading}
@@ -603,11 +718,29 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
         </div>
       </header>
 
+      {colaborador ? (
+        <nav
+          className="pf-mi-perfil__anclas"
+          aria-label="Ir a secciones del colaborador"
+        >
+          {SECCIONES_COLABORADOR.map((seccion) => (
+            <button
+              key={seccion.id}
+              type="button"
+              className="pf-mi-perfil__ancla-btn"
+              onClick={() => irASeccion(seccion.id)}
+            >
+              {seccion.label}
+            </button>
+          ))}
+        </nav>
+      ) : null}
+
       {error ? <p className="pf-mi-perfil__error">{error}</p> : null}
 
       {colaborador ? (
         <>
-          <div className="pf-mi-perfil__grid">
+          <div className="pf-mi-perfil__grid" id="colaborador-datos">
             <section className="pf-mi-perfil__panel">
               <h2 className="pf-mi-perfil__panel-title">Datos personales</h2>
               <div className="pf-mi-perfil__campos">
@@ -687,7 +820,7 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
           </div>
 
           {resumen ? (
-            <div className="pf-mi-perfil__resumen">
+            <div className="pf-mi-perfil__resumen" id="colaborador-resumen">
               <ResumenCard
                 etiqueta="Turnos registrados"
                 valor={String(resumen.totalTurnos)}
@@ -724,7 +857,10 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
             </div>
           ) : null}
 
-          <section className="pf-mi-perfil__turnos">
+          <section
+            className="pf-mi-perfil__turnos"
+            id="colaborador-horas-dia"
+          >
             <h2 className="pf-mi-perfil__panel-title">Horas por día</h2>
             {horasPorDia.length === 0 ? (
               <p className="pf-mi-perfil__hint">
@@ -786,7 +922,7 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
             )}
           </section>
 
-          <section className="pf-mi-perfil__nomina">
+          <section className="pf-mi-perfil__nomina" id="colaborador-nominas">
             <div className="pf-mi-perfil__nomina-head">
               <h2 className="pf-mi-perfil__panel-title">Nóminas liquidadas</h2>
               <button
@@ -843,11 +979,15 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
             )}
           </section>
 
-          <section className="pf-mi-perfil__turnos">
+          <section
+            className="pf-mi-perfil__turnos"
+            id="colaborador-turnos"
+          >
             <h2 className="pf-mi-perfil__panel-title">Registro de turnos</h2>
             <p className="pf-mi-perfil__nota pf-mi-perfil__nota--turnos">
               {NOTA_LIQUIDACION_HASTA_DIA_ANTERIOR} Solo se pueden editar o
-              borrar turnos que aún no hayan sido liquidados.
+              borrar turnos que aún no hayan sido liquidados. Los turnos
+              cargados a mano se marcan como Manual.
             </p>
 
             {turnos.length === 0 ? (
@@ -898,6 +1038,69 @@ function ColaboradorDetalleGestion({ colaborador: colaboradorInicial, onVolver }
         onClose={() => setDesprendiblesOpen(false)}
         desprendibles={desprendibles}
       />
+
+      <Modal
+        open={crearTurnoOpen}
+        onClose={cerrarCrearTurno}
+        title="Agregar turno manual"
+        footer={
+          <>
+            <button
+              type="button"
+              className="confirm-modal__btn confirm-modal__btn--ghost"
+              onClick={cerrarCrearTurno}
+              disabled={creandoTurno}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="confirm-modal__btn confirm-modal__btn--default"
+              onClick={handleCrearTurnoManual}
+              disabled={creandoTurno}
+            >
+              {creandoTurno ? 'Creando…' : 'Crear turno'}
+            </button>
+          </>
+        }
+      >
+        <div className="pf-mi-perfil__editar-turno">
+          <p className="pf-mi-perfil__hint">
+            Úsalo cuando el colaborador no marcó con el cronómetro. Indica
+            llegada y salida en hora de Colombia. Quedará etiquetado como
+            Manual en el registro y en su perfil.
+          </p>
+          <label className="pf-mi-perfil__editar-turno-campo">
+            <span>Hora de llegada</span>
+            <input
+              type="datetime-local"
+              value={inicioCrear}
+              onChange={(e) => {
+                setInicioCrear(e.target.value)
+                setCrearError('')
+              }}
+              disabled={creandoTurno}
+            />
+          </label>
+          <label className="pf-mi-perfil__editar-turno-campo">
+            <span>Hora de salida</span>
+            <input
+              type="datetime-local"
+              value={finCrear}
+              onChange={(e) => {
+                setFinCrear(e.target.value)
+                setCrearError('')
+              }}
+              disabled={creandoTurno}
+            />
+          </label>
+          {crearError ? (
+            <p className="pf-mi-perfil__error" role="alert">
+              {crearError}
+            </p>
+          ) : null}
+        </div>
+      </Modal>
 
       <Modal
         open={Boolean(turnoEditar)}
