@@ -219,10 +219,12 @@ function TraspasoAjusteModal({ open, onClose, onGuardado }) {
   const mensajeAlarma = (() => {
     if (!plan || plan.desfase === 0) return ''
     const monto = formatearPrecioCuenta(Math.abs(plan.desfase))
+    const avisoWompi =
+      ' Recuerda: el disponible Wompi del sistema es neto (después de comisión). Si comparas contra el panel de Wompi en bruto, la diferencia no se debe “cuadrar” con un ajuste.'
     if (plan.desfase > 0) {
-      return `Hay un desfase positivo (a favor) de ${monto}. El sistema registrará un ajuste automático por ese valor para cuadrar las cuentas. ¿Deseas continuar?`
+      return `Hay un desfase positivo (a favor) de ${monto}. El sistema registrará un ajuste automático por ese valor para cuadrar las cuentas.${avisoWompi} ¿Deseas continuar?`
     }
-    return `Hay un desfase negativo (en contra) de ${monto}. El sistema registrará un ajuste automático por ese valor para cuadrar las cuentas. ¿Deseas continuar?`
+    return `Hay un desfase negativo (en contra) de ${monto}. El sistema registrará un ajuste automático por ese valor para cuadrar las cuentas.${avisoWompi} ¿Deseas continuar?`
   })()
 
   return (
@@ -237,7 +239,9 @@ function TraspasoAjusteModal({ open, onClose, onGuardado }) {
           <p className="activar-plan__metodo-pago-hint">
             Digita cuánto hay realmente en cada cuenta. El sistema hará los
             traspasos necesarios y, si queda un descuadre, registrará un ajuste
-            con causal «{MOTIVO_AJUSTE_AUTOMATICO}».
+            con causal «{MOTIVO_AJUSTE_AUTOMATICO}». Wompi en el sistema es el
+            neto (bruto − comisión); no digites el bruto de la pasarela ni uses
+            ajustes para “arreglar” diferencias de comisión.
           </p>
 
           <CampoFechaCalendario
