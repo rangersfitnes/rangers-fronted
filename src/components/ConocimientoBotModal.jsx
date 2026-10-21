@@ -184,7 +184,9 @@ function ConocimientoBotModal({ open, onClose }) {
           Registra alianzas, promociones, servicios o reglas del box (ej. fisio
           aliado, qué pasa en festivos). Rex usará esta info cuando alguien
           pregunte algo relacionado; en festivos prioriza estas reglas junto al
-          calendario oficial.
+          calendario oficial. También puedes enseñarle por WhatsApp o chat web
+          con “aprende: …” (si eres del equipo queda activo; si es un atleta,
+          llega aquí como sugerencia inactiva para revisar).
         </p>
 
         {error ? <p className="crear-plan__error">{error}</p> : null}
@@ -217,6 +219,11 @@ function ConocimientoBotModal({ open, onClose }) {
                   </p>
                   <p className="conocimiento-bot__item-meta">
                     {item.activo ? 'Activo' : 'Inactivo'}
+                    {item.pendienteRevision && !item.activo
+                      ? ' · Sugerencia por chat — pendiente de revisar'
+                      : ''}
+                    {item.origen ? ` · ${item.origen}` : ''}
+                    {item.creadoPorNombre ? ` · ${item.creadoPorNombre}` : ''}
                     {item.palabrasClave?.length
                       ? ` · ${item.palabrasClave.join(', ')}`
                       : ''}
