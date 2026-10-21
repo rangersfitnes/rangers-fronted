@@ -50,3 +50,32 @@ export async function eliminarConocimientoBot(id) {
   await request(`/${encodeURIComponent(id)}`, { method: 'DELETE' })
   return true
 }
+
+/* Números autorizados a enseñarle al bot por chat. */
+export async function obtenerBotAdministradores({ signal } = {}) {
+  const data = await request('/administradores', { signal })
+  return Array.isArray(data.lista) ? data.lista : []
+}
+
+export async function crearBotAdministrador(payload) {
+  const data = await request('/administradores', {
+    method: 'POST',
+    body: payload,
+  })
+  return data.item
+}
+
+export async function actualizarBotAdministrador(id, payload) {
+  const data = await request(`/administradores/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: payload,
+  })
+  return data.item
+}
+
+export async function eliminarBotAdministrador(id) {
+  await request(`/administradores/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
+  return true
+}

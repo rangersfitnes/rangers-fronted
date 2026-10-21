@@ -9,6 +9,30 @@
   gap: 1rem;
 }
 
+.conocimiento-bot__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.conocimiento-bot__tab {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #d4d4d4;
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.conocimiento-bot__tab--activo {
+  color: #fff;
+  background: rgba(249, 115, 22, 0.2);
+  border-color: #f97316;
+}
+
 .conocimiento-bot__intro {
   margin: 0;
   font-size: 0.88rem;

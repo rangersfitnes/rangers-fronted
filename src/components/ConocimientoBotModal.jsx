@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
 import {
+  actualizarBotAdministrador,
   actualizarConocimientoBot,
+  crearBotAdministrador,
   crearConocimientoBot,
+  eliminarBotAdministrador,
   eliminarConocimientoBot,
+  obtenerBotAdministradores,
   obtenerConocimientoBot,
 } from '../services/conocimientoBotService.js'
 import './CrearPlanModal.css'
@@ -38,6 +42,14 @@ function ConocimientoBotModal({ open, onClose }) {
   const [editandoId, setEditandoId] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [pestana, setPestana] = useState('info')
+  const [admins, setAdmins] = useState([])
+  const [adminForm, setAdminForm] = useState({
+    nombre: '',
+    telefono: '',
+    activo: true,
+  })
+  const [editandoAdminId, setEditandoAdminId] = useState(null)
 
   const cargar = async ({ signal } = {}) => {
     setCargando(true)
@@ -52,18 +64,113 @@ function ConocimientoBotModal({ open, onClose }) {
     }
   }
 
+  const cargarAdmins = async ({ signal } = {}) => {
+    try {
+      const data = await obtenerBotAdministradores({ signal })
+      if (!signal?.aborted) setAdmins(data)
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      setError(err.message || 'No se pudieron cargar los administradores')
+    }
+  }
+
   useEffect(() => {
     if (!open) {
       setForm(estadoInicial)
       setEditandoId(null)
       setError('')
       setLista([])
+      setAdmins([])
+      setPestana('info')
+      setEditandoAdminId(null)
+      setAdminForm({ nombre: '', telefono: '', activo: true })
       return undefined
     }
     const controller = new AbortController()
     cargar({ signal: controller.signal })
+    cargarAdmins({ signal: controller.signal })
     return () => controller.abort()
-  }, [open])
+  }, [open ])
+
+  const handleAprobarAprendizaje = async (item) => {
+    setSubmitting(true)
+    setError('')
+    try {
+      await actualizarConocimientoBot(item.id, {
+        titulo: item.titulo,
+        tipo: item.tipo,
+        descripcion: item.descripcion,
+        palabrasClave: Array.isArray(item.palabrasClave)
+          ? item.palabrasClave.join(', ')
+          : '',
+        contacto: item.contacto || '',
+        url: item.url || '',
+        activo: true,
+        pendienteRevision: false,
+      })
+      await cargar()
+    } catch (err) {
+      setError(err.message || 'No se pudo activar el aprendizaje')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleSubmitAdmin = async (event) => {
+    event.preventDefault()
+    setSubmitting(true)
+    setError('')
+    const payload = {
+      nombre: adminForm.nombre.trim(),
+      telefono: adminForm.telefono.trim(),
+      activo: Boolean(adminForm.activo),
+    }
+    try {
+      if (editandoAdminId) {
+        await actualizarBotAdministrador(editandoAdminId, payload)
+      } else {
+        await crearBotAdministrador(payload)
+      }
+      setEditandoAdminId(null)
+      setAdminForm({ nombre: '', telefono: '', activo: true })
+      await cargarAdmins()
+    } catch (err) {
+      setError(err.message || 'No se pudo guardar el administrador')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleEliminarAdmin = async (item) => {
+    if (
+      !window.confirm(
+        `¿Quitar a "${item.nombre}" (${item.telefono}) como administrador del bot? Ya no podrá enseñarle por chat.`,
+      )
+    ) {
+      return
+    }
+    setSubmitting(true)
+    setError('')
+    try {
+      await eliminarBotAdministrador(item.id)
+      if (editandoAdminId === item.id) {
+        setEditandoAdminId(null)
+        setAdminForm({ nombre: '', telefono: '', activo: true })
+      }
+      await cargarAdmins()
+    } catch (err) {
+      setError(err.message || 'No se pudo eliminar')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const aprendizajesChat = lista.filter((item) =>
+    String(item.origen || '').startsWith('chat-'),
+  )
+  const pendientesChat = aprendizajesChat.filter(
+    (item) => item.pendienteRevision && !item.activo,
+  ).length
 
   const resetForm = () => {
     setForm(estadoInicial)
@@ -142,6 +249,9 @@ function ConocimientoBotModal({ open, onClose }) {
     }
   }
 
+  const listaVisible =
+    pestana === 'aprendizajes' ? aprendizajesChat : lista
+
   return (
     <Modal
       open={open}
@@ -164,42 +274,205 @@ function ConocimientoBotModal({ open, onClose }) {
           >
             Cerrar
           </button>
-          <button
-            type="submit"
-            form="conocimiento-bot-form"
-            className="crear-plan__btn crear-plan__btn--primary"
-            disabled={submitting}
-          >
-            {submitting
-              ? 'Guardando…'
-              : editandoId
-                ? 'Actualizar'
-                : 'Agregar info'}
-          </button>
+          {pestana === 'info' ? (
+            <button
+              type="submit"
+              form="conocimiento-bot-form"
+              className="crear-plan__btn crear-plan__btn--primary"
+              disabled={submitting}
+            >
+              {submitting
+                ? 'Guardando…'
+                : editandoId
+                  ? 'Actualizar'
+                  : 'Agregar info'}
+            </button>
+          ) : null}
+          {pestana === 'admins' ? (
+            <button
+              type="submit"
+              form="bot-admin-form"
+              className="crear-plan__btn crear-plan__btn--primary"
+              disabled={submitting}
+            >
+              {submitting
+                ? 'Guardando…'
+                : editandoAdminId
+                  ? 'Actualizar número'
+                  : 'Agregar número'}
+            </button>
+          ) : null}
         </>
       }
     >
       <div className="conocimiento-bot">
+        <div className="conocimiento-bot__tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pestana === 'info'}
+            className={`conocimiento-bot__tab${pestana === 'info' ? ' conocimiento-bot__tab--activo' : ''}`}
+            onClick={() => setPestana('info')}
+          >
+            Info para el bot
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pestana === 'admins'}
+            className={`conocimiento-bot__tab${pestana === 'admins' ? ' conocimiento-bot__tab--activo' : ''}`}
+            onClick={() => setPestana('admins')}
+          >
+            Administradores ({admins.length})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pestana === 'aprendizajes'}
+            className={`conocimiento-bot__tab${pestana === 'aprendizajes' ? ' conocimiento-bot__tab--activo' : ''}`}
+            onClick={() => setPestana('aprendizajes')}
+          >
+            Aprendizajes por chat ({aprendizajesChat.length}
+            {pendientesChat ? ` · ${pendientesChat} pend.` : ''})
+          </button>
+        </div>
+
         <p className="conocimiento-bot__intro">
-          Registra alianzas, promociones, servicios o reglas del box (ej. fisio
-          aliado, qué pasa en festivos). Rex usará esta info cuando alguien
-          pregunte algo relacionado; en festivos prioriza estas reglas junto al
-          calendario oficial. También puedes enseñarle por WhatsApp o chat web
-          con “aprende: …” (si eres del equipo queda activo; si es un atleta,
-          llega aquí como sugerencia inactiva para revisar).
+          {pestana === 'admins'
+            ? 'Números de WhatsApp autorizados a enseñarle al bot con “aprende: …”. Solo estos números (y los perfiles admin/entrenador) activan el aprendizaje al instante.'
+            : pestana === 'aprendizajes'
+              ? 'Todo lo que el bot ha aprendido o le han sugerido por WhatsApp / chat web. Activa, edita o elimina cada registro.'
+              : 'Registra alianzas, promociones, servicios o reglas del box (ej. fisio aliado, qué pasa en festivos). Rex usará esta info cuando alguien pregunte algo relacionado.'}
         </p>
 
         {error ? <p className="crear-plan__error">{error}</p> : null}
 
-        {cargando ? (
+        {pestana === 'admins' ? (
+          <>
+            {admins.length === 0 ? (
+              <p className="conocimiento-bot__vacio">
+                Aún no hay números autorizados. Agrega el primero abajo.
+              </p>
+            ) : (
+              <div className="conocimiento-bot__lista">
+                {admins.map((item) => (
+                  <article
+                    key={item.id}
+                    className={`conocimiento-bot__item${item.activo ? '' : ' conocimiento-bot__item--inactivo'}`}
+                  >
+                    <div className="conocimiento-bot__item-main">
+                      <p className="conocimiento-bot__item-titulo">
+                        {item.nombre}
+                      </p>
+                      <p className="conocimiento-bot__item-meta">
+                        WhatsApp {item.telefono} ·{' '}
+                        {item.activo ? 'Autorizado' : 'Inactivo'}
+                      </p>
+                    </div>
+                    <div className="conocimiento-bot__item-actions">
+                      <button
+                        type="button"
+                        className="conocimiento-bot__btn-mini"
+                        disabled={submitting}
+                        onClick={() => {
+                          setEditandoAdminId(item.id)
+                          setAdminForm({
+                            nombre: item.nombre || '',
+                            telefono: item.telefono || '',
+                            activo: item.activo !== false,
+                          })
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="conocimiento-bot__btn-mini conocimiento-bot__btn-mini--danger"
+                        disabled={submitting}
+                        onClick={() => handleEliminarAdmin(item)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            <h3 className="conocimiento-bot__form-title">
+              {editandoAdminId ? 'Editar administrador' : 'Nuevo administrador'}
+            </h3>
+            <form
+              id="bot-admin-form"
+              className="crear-plan__form"
+              onSubmit={handleSubmitAdmin}
+            >
+              <label className="crear-plan__field">
+                <span className="crear-plan__label">Nombre</span>
+                <input
+                  className="crear-plan__input"
+                  value={adminForm.nombre}
+                  onChange={(e) =>
+                    setAdminForm((p) => ({ ...p, nombre: e.target.value }))
+                  }
+                  placeholder="Ej. Juanda (dueño)"
+                  required
+                  maxLength={120}
+                />
+              </label>
+              <label className="crear-plan__field">
+                <span className="crear-plan__label">Número de WhatsApp</span>
+                <input
+                  className="crear-plan__input"
+                  value={adminForm.telefono}
+                  onChange={(e) =>
+                    setAdminForm((p) => ({ ...p, telefono: e.target.value }))
+                  }
+                  placeholder="300 123 4567"
+                  required
+                  inputMode="tel"
+                />
+                <p className="crear-plan__hint">
+                  El mismo número desde el que escribe al bot. Puede ir con o
+                  sin +57.
+                </p>
+              </label>
+              <label className="conocimiento-bot__check">
+                <input
+                  type="checkbox"
+                  checked={adminForm.activo}
+                  onChange={(e) =>
+                    setAdminForm((p) => ({ ...p, activo: e.target.checked }))
+                  }
+                />
+                Activo (puede enseñarle al bot)
+              </label>
+              {editandoAdminId ? (
+                <button
+                  type="button"
+                  className="crear-plan__btn crear-plan__btn--ghost"
+                  disabled={submitting}
+                  onClick={() => {
+                    setEditandoAdminId(null)
+                    setAdminForm({ nombre: '', telefono: '', activo: true })
+                  }}
+                >
+                  Cancelar edición
+                </button>
+              ) : null}
+            </form>
+          </>
+        ) : cargando ? (
           <p className="conocimiento-bot__cargando">Cargando…</p>
-        ) : lista.length === 0 ? (
+        ) : listaVisible.length === 0 ? (
           <p className="conocimiento-bot__vacio">
-            Aún no hay info registrada. Agrega la primera abajo.
+            {pestana === 'aprendizajes'
+              ? 'Aún no hay aprendizajes por chat. Cuando alguien escriba “aprende: …”, aparecerá aquí.'
+              : 'Aún no hay info registrada. Agrega la primera abajo.'}
           </p>
         ) : (
           <div className="conocimiento-bot__lista">
-            {lista.map((item) => (
+            {listaVisible.map((item) => (
               <article
                 key={item.id}
                 className={`conocimiento-bot__item${
@@ -235,11 +508,24 @@ function ConocimientoBotModal({ open, onClose }) {
                   ) : null}
                 </div>
                 <div className="conocimiento-bot__item-actions">
+                  {item.pendienteRevision && !item.activo ? (
+                    <button
+                      type="button"
+                      className="conocimiento-bot__btn-mini"
+                      disabled={submitting}
+                      onClick={() => handleAprobarAprendizaje(item)}
+                    >
+                      Activar
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="conocimiento-bot__btn-mini"
                     disabled={submitting}
-                    onClick={() => handleEditar(item)}
+                    onClick={() => {
+                      setPestana('info')
+                      handleEditar(item)
+                    }}
                   >
                     Editar
                   </button>
@@ -257,6 +543,8 @@ function ConocimientoBotModal({ open, onClose }) {
           </div>
         )}
 
+        {pestana === 'info' ? (
+          <>
         <h3 className="conocimiento-bot__form-title">
           {editandoId ? 'Editar registro' : 'Nuevo registro'}
         </h3>
@@ -366,6 +654,8 @@ function ConocimientoBotModal({ open, onClose }) {
             </button>
           ) : null}
         </form>
+          </>
+        ) : null}
       </div>
     </Modal>
   )
