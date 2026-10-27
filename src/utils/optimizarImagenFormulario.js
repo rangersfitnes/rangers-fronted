@@ -1,10 +1,10 @@
-const MAX_BYTES = 900 * 1024
-const MAX_LADO = 1280
-const CALIDAD_INICIAL = 0.72
-const CALIDAD_MINIMA = 0.45
+const MAX_BYTES = 1.8 * 1024 * 1024
+const MAX_LADO = 1600
+const CALIDAD_INICIAL = 0.85
+const CALIDAD_MINIMA = 0.68
 
 /**
- * Comprime portadas de formularios antes de subirlas (más agresivo que eventos).
+ * Comprime portadas de formularios antes de subirlas (equilibrio calidad/peso).
  */
 export async function optimizarImagenFormulario(file) {
   if (!file) return null
