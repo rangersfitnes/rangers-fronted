@@ -1,41 +1,7 @@
-/* Desktop/móvil: el diálogo entero scrollea (más fiable que flex+max-height). */
-.modal.formularios-modal {
-  align-items: center;
-  padding: 1rem;
-  /* Evita que el overlay “robe” la rueda del mouse al diálogo. */
-  overflow: hidden;
-}
-
+/* Ancho propio; el scroll lo resuelve .modal--scrollable en Modal.css. */
 .formularios-modal .modal__dialog {
   width: min(820px, 96vw);
-  max-height: min(90vh, 880px);
-  max-height: min(90dvh, 880px);
-  margin: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-}
-
-.formularios-modal .modal__header {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background-color: rgba(0, 0, 0, 0.92);
-  backdrop-filter: blur(12px);
-}
-
-.formularios-modal .modal__footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 3;
-  background-color: rgba(0, 0, 0, 0.92);
-  backdrop-filter: blur(12px);
-}
-
-.formularios-modal .modal__body {
-  overflow: visible;
+  max-width: min(820px, 96vw);
 }
 
 .formularios {

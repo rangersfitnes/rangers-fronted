@@ -21,6 +21,42 @@
   z-index: 1100;
 }
 
+/**
+ * Modal con scroll interno (desktop + móvil).
+ * Causa raíz del bug: un flex item con min-height:auto ignora max-height y
+ * el contenido se recorta sin generar scrollport. Aquí forzamos altura fija
+ * del diálogo y dejamos que solo .modal__body haga scroll.
+ */
+.modal--scrollable {
+  align-items: center;
+  overflow: hidden;
+}
+
+.modal--scrollable .modal__dialog {
+  min-height: 0;
+  height: min(90vh, 880px);
+  height: min(90dvh, 880px);
+  max-height: min(90vh, 880px);
+  max-height: min(90dvh, 880px);
+  margin: 0;
+  overflow: hidden;
+}
+
+.modal--scrollable .modal__header,
+.modal--scrollable .modal__footer {
+  flex-shrink: 0;
+}
+
+.modal--scrollable .modal__body {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
 .modal::-webkit-scrollbar {
   width: 8px;
 }
@@ -205,6 +241,20 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* En móvil scrollable también ancla altura (no solo max-height). */
+  .modal--scrollable {
+    align-items: flex-end;
+  }
+
+  .modal--scrollable .modal__dialog {
+    width: 100%;
+    max-width: none;
+    height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
+    max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 
   .modal__header,

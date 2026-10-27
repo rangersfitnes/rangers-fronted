@@ -2,7 +2,16 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import './Modal.css'
 
-function Modal({ open, onClose, title, children, footer, className = '' }) {
+function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  className = '',
+  /** Desktop/móvil: altura fija del diálogo + scroll solo en el body. */
+  scrollable = false,
+}) {
   useEffect(() => {
     if (!open) return
 
@@ -22,9 +31,17 @@ function Modal({ open, onClose, title, children, footer, className = '' }) {
 
   if (!open) return null
 
+  const rootClass = [
+    'modal',
+    scrollable ? 'modal--scrollable' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return createPortal(
     <div
-      className={`modal${className ? ` ${className}` : ''}`}
+      className={rootClass}
       role="dialog"
       aria-modal="true"
       aria-label={typeof title === 'string' ? title : 'Modal'}

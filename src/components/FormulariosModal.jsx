@@ -895,6 +895,7 @@ function FormulariosModal({ open, onClose }) {
         }}
         title="Formularios / Preguntas"
         className="formularios-modal"
+        scrollable
         footer={
           <div className="formularios-modal__footer">
             <button
