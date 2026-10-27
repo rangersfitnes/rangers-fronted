@@ -1,6 +1,60 @@
+/*
+  La home oculta scrollbars en html/body/#root (index.css). En desktop eso hace
+  que el formulario parezca “sin scroll”: el contenido se corta y no hay barra.
+  Aquí el propio .form-publico es el único scrollport, con scrollbar visible.
+*/
+html.pagina-formulario-publico,
+html.pagina-formulario-publico body,
+html.pagina-formulario-publico #root,
+html.pagina-formulario-publico .app,
+html:has(.form-publico),
+html:has(.form-publico) body,
+html:has(.form-publico) #root,
+html:has(.form-publico) .app {
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 .form-publico {
-  min-height: 100vh;
+  box-sizing: border-box;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   color: #f5f5f5;
+  -webkit-user-select: text;
+  user-select: text;
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 rgba(255, 255, 255, 0.12);
+}
+
+.form-publico::-webkit-scrollbar {
+  width: 10px;
+  display: block;
+}
+
+.form-publico::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.form-publico::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.form-publico::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+  background-clip: padding-box;
 }
 
 .form-publico__portada {
@@ -9,6 +63,7 @@
   height: min(42vh, 360px);
   overflow: hidden;
   background: #0a0a0a;
+  flex-shrink: 0;
 }
 
 .form-publico__portada--vacia {
@@ -38,6 +93,7 @@
   margin: -2.5rem auto 3rem;
   position: relative;
   z-index: 1;
+  padding-bottom: 2rem;
 }
 
 .form-publico__brand {

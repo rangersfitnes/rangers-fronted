@@ -18,6 +18,15 @@ function FormularioPublico() {
   const [mensajeOk, setMensajeOk] = useState('')
 
   useEffect(() => {
+    document.documentElement.classList.add('pagina-formulario-publico')
+    document.body.classList.add('pagina-formulario-publico')
+    return () => {
+      document.documentElement.classList.remove('pagina-formulario-publico')
+      document.body.classList.remove('pagina-formulario-publico')
+    }
+  }, [])
+
+  useEffect(() => {
     if (!id) return undefined
     const controller = new AbortController()
     setCargando(true)
