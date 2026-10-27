@@ -17,6 +17,7 @@ import EnviarMensajeWhatsAppModal from '../components/EnviarMensajeWhatsAppModal
 import WhatsAppConexionModal from '../components/WhatsAppConexionModal.jsx'
 import PlantillaFormModal from '../components/PlantillaFormModal.jsx'
 import ConocimientoBotModal from '../components/ConocimientoBotModal.jsx'
+import FormulariosModal from '../components/FormulariosModal.jsx'
 import EnviarMensajeMasivoModal from '../components/EnviarMensajeMasivoModal.jsx'
 import RowActionsMenu from '../components/RowActionsMenu.jsx'
 import trashIcon from '../assets/images/icons/trash.svg'
@@ -568,6 +569,7 @@ function VistaEventos() {
   const [iniciandoBarridoGrupo, setIniciandoBarridoGrupo] = useState(false)
   const [audioAsistenciasOpen, setAudioAsistenciasOpen] = useState(false)
   const [conocimientoBotOpen, setConocimientoBotOpen] = useState(false)
+  const [formulariosOpen, setFormulariosOpen] = useState(false)
 
   const cargarEventos = useCallback(
     async ({ signal } = {}) => {
@@ -828,6 +830,13 @@ function VistaEventos() {
           </button>
           <button
             type="button"
+            className="ag-action-btn ag-action-btn--ghost"
+            onClick={() => setFormulariosOpen(true)}
+          >
+            Formularios
+          </button>
+          <button
+            type="button"
             className="ag-action-btn"
             onClick={() => {
               setFormError('')
@@ -953,6 +962,11 @@ function VistaEventos() {
       <ConocimientoBotModal
         open={conocimientoBotOpen}
         onClose={() => setConocimientoBotOpen(false)}
+      />
+
+      <FormulariosModal
+        open={formulariosOpen}
+        onClose={() => setFormulariosOpen(false)}
       />
 
       <EnviarMensajeMasivoModal

@@ -32,6 +32,7 @@ import CuentaAsistencias from './pages/cuenta/CuentaAsistencias.jsx'
 import CuentaRutinas from './pages/cuenta/CuentaRutinas.jsx'
 import CuentaActividad from './pages/cuenta/CuentaActividad.jsx'
 import CuentaRecordatorios from './pages/cuenta/CuentaRecordatorios.jsx'
+import FormularioPublico from './pages/FormularioPublico.jsx'
 
 function App() {
   const { pathname } = useLocation()
@@ -47,9 +48,15 @@ function App() {
   const isLoginArea = pathname === '/login'
   const isPaymentArea = pathname.startsWith('/payment-plan')
   const isTrainerSignup = pathname === '/soy-entrenador'
+  const isFormularioPublico =
+    pathname.startsWith('/f/') || pathname.startsWith('/preguntas/')
   const isHome = pathname === '/'
   const hideChrome =
-    isAdminArea || isLoginArea || isPaymentArea || isTrainerSignup
+    isAdminArea ||
+    isLoginArea ||
+    isPaymentArea ||
+    isTrainerSignup ||
+    isFormularioPublico
   const showHomeAuthHeader = isHome && Boolean(usuario)
   const mostrarCompletarPerfil = Boolean(
     usuario?.perfilIncompleto && esUsuarioCliente(usuario),
@@ -72,6 +79,7 @@ function App() {
   const mostrarChatAtleta =
     !isAdminArea &&
     !isLoginArea &&
+    !isFormularioPublico &&
     (esUsuarioCliente(usuario) || (!usuario && isHome))
 
   if (usuarioLoading) {
@@ -97,6 +105,8 @@ function App() {
         <Route path="/sobre-nosotros" element={<SobreNosotrosPage />} />
         <Route path="/clases" element={<ClasesPage />} />
         <Route path="/planes" element={<Planes />} />
+        <Route path="/f/:id" element={<FormularioPublico />} />
+        <Route path="/preguntas/:id" element={<FormularioPublico />} />
         <Route path="/login" element={<Login />} />
         <Route path="/soy-entrenador" element={<SoyEntrenador />} />
         <Route path="/payment-plan/:planId" element={<PaymentPlan />} />
