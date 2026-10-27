@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Modal from './Modal.jsx'
 import ConfirmModal from './ConfirmModal.jsx'
 import {
@@ -14,6 +14,77 @@ import './CrearPlanModal.css'
 import './FormulariosModal.css'
 
 const NUEVO_ID = '__nuevo__'
+const DRAFT_STORAGE_KEY = 'rangers.formularios.borradores.v1'
+
+function leerBorradoresStorage() {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function escribirBorradoresStorage(mapa) {
+  try {
+    sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(mapa))
+  } catch {
+    // quota / private mode: ignore
+  }
+}
+
+function obtenerBorradorStorage(id) {
+  const clave = String(id || '')
+  if (!clave) return null
+  return leerBorradoresStorage()[clave] || null
+}
+
+function guardarBorradorStorage(id, borrador) {
+  const clave = String(id || '')
+  if (!clave || !borrador) return
+  const mapa = leerBorradoresStorage()
+  mapa[clave] = {
+    form: borrador.form,
+    baselineJson: borrador.baselineJson,
+    portadaPreview: borrador.portadaPreview || '',
+    pestana: borrador.pestana || 'formulario',
+    actualizadoEn: Date.now(),
+  }
+  escribirBorradoresStorage(mapa)
+}
+
+function eliminarBorradorStorage(id) {
+  const clave = String(id || '')
+  if (!clave) return
+  const mapa = leerBorradoresStorage()
+  if (!(clave in mapa)) return
+  delete mapa[clave]
+  escribirBorradoresStorage(mapa)
+}
+
+function clonarForm(form) {
+  return {
+    titulo: String(form?.titulo || ''),
+    descripcion: String(form?.descripcion || ''),
+    mensajeAgradecimiento: String(
+      form?.mensajeAgradecimiento ||
+        '¡Gracias! Recibimos tus respuestas.',
+    ),
+    activo: form?.activo !== false,
+    preguntas: Array.isArray(form?.preguntas)
+      ? form.preguntas.map((p, i) => ({
+          id: p.id,
+          tipo: p.tipo,
+          enunciado: String(p.enunciado || ''),
+          opciones: Array.isArray(p.opciones) ? [...p.opciones] : undefined,
+          requerida: p.requerida !== false,
+          orden: Number.isFinite(p.orden) ? p.orden : i,
+        }))
+      : [],
+  }
+}
 
 function nuevoIdLocal() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -101,6 +172,29 @@ function FormulariosModal({ open, onClose }) {
     JSON.stringify(crearEstadoInicial()),
   )
 
+  // Archivos de portada no caben en sessionStorage: se guardan en memoria por id.
+  const portadasArchivoRef = useRef(new Map())
+  const persistTimerRef = useRef(null)
+  const snapshotRef = useRef({
+    expandidoId: null,
+    form: crearEstadoInicial(),
+    baselineJson: JSON.stringify(crearEstadoInicial()),
+    portadaPreview: '',
+    pestana: 'formulario',
+    portadaFile: null,
+  })
+
+  useEffect(() => {
+    snapshotRef.current = {
+      expandidoId,
+      form,
+      baselineJson,
+      portadaPreview,
+      pestana,
+      portadaFile,
+    }
+  }, [expandidoId, form, baselineJson, portadaPreview, pestana, portadaFile])
+
   const editandoId = expandidoId && expandidoId !== NUEVO_ID ? expandidoId : null
   const creandoNuevo = expandidoId === NUEVO_ID
   const hayCambiosSinGuardar = useMemo(() => {
@@ -135,28 +229,87 @@ function FormulariosModal({ open, onClose }) {
     }
   }
 
-  const resetEditor = () => {
-    const inicial = crearEstadoInicial()
-    setForm(inicial)
-    setBaselineJson(JSON.stringify(inicial))
-    setPortadaFile(null)
-    setPortadaPreview('')
-    setPestana('formulario')
+  const aplicarEstadoEditor = ({
+    form: siguienteForm,
+    baselineJson: baseline,
+    portadaPreview: preview,
+    portadaFile: archivo,
+    pestana: pestanaActiva,
+  }) => {
+    const formClon = clonarForm(siguienteForm || crearEstadoInicial())
+    setForm(formClon)
+    setBaselineJson(
+      baseline || JSON.stringify(formClon),
+    )
+    setPortadaPreview(preview || '')
+    setPortadaFile(archivo || null)
+    setPestana(pestanaActiva === 'respuestas' ? 'respuestas' : 'formulario')
     setRespuestas([])
   }
 
-  const confirmarDescartarSiHayCambios = () => {
-    if (!hayCambiosSinGuardar) return true
-    return window.confirm(
-      'Tienes cambios sin guardar. ¿Descartarlos y continuar?',
-    )
+  const resetEditor = () => {
+    aplicarEstadoEditor({
+      form: crearEstadoInicial(),
+      baselineJson: JSON.stringify(crearEstadoInicial()),
+      portadaPreview: '',
+      portadaFile: null,
+      pestana: 'formulario',
+    })
   }
+
+  const persistirBorradorActual = (idForce) => {
+    const snap = snapshotRef.current
+    const id = idForce || snap.expandidoId
+    if (!id) return
+    const formClon = clonarForm(snap.form)
+    guardarBorradorStorage(id, {
+      form: formClon,
+      baselineJson: snap.baselineJson,
+      portadaPreview: snap.portadaPreview || '',
+      pestana: snap.pestana,
+    })
+    if (snap.portadaFile) {
+      portadasArchivoRef.current.set(id, snap.portadaFile)
+    }
+  }
+
+  const restaurarBorrador = (id) => {
+    const guardado = obtenerBorradorStorage(id)
+    if (!guardado?.form) return false
+    aplicarEstadoEditor({
+      form: guardado.form,
+      baselineJson: guardado.baselineJson,
+      portadaPreview: guardado.portadaPreview || '',
+      portadaFile: portadasArchivoRef.current.get(id) || null,
+      pestana: guardado.pestana,
+    })
+    return true
+  }
+
+  const descartarBorrador = (id) => {
+    if (!id) return
+    eliminarBorradorStorage(id)
+    portadasArchivoRef.current.delete(id)
+  }
+
+  // Autoguardado continuo del borrador mientras se edita.
+  useEffect(() => {
+    if (!open || !expandidoId) return undefined
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current)
+    persistTimerRef.current = setTimeout(() => {
+      persistirBorradorActual(expandidoId)
+    }, 200)
+    return () => {
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current)
+    }
+  }, [open, expandidoId, form, baselineJson, portadaPreview, pestana, portadaFile])
 
   useEffect(() => {
     if (!open) {
+      // Al cerrar: guarda borrador y NO lo borra (se recupera al reabrir).
+      if (expandidoId) persistirBorradorActual(expandidoId)
       setLista([])
       setExpandidoId(null)
-      resetEditor()
       setError('')
       setCopiadoId(null)
       setEliminarTarget(null)
@@ -187,48 +340,63 @@ function FormulariosModal({ open, onClose }) {
     return () => controller.abort()
   }, [open, editandoId, pestana])
 
-  const cargarItemEnEditor = (item) => {
+  const cargarItemEnEditor = (item, { preferirBorrador = true } = {}) => {
     setError('')
+    if (preferirBorrador && restaurarBorrador(item.id)) {
+      return
+    }
     const siguiente = formDesdeItem(item)
-    setForm(siguiente)
-    setBaselineJson(JSON.stringify(siguiente))
-    setPortadaFile(null)
-    setPortadaPreview(item.portadaUrl || '')
-    // No tocar pestana aquí si ya estamos editando el mismo; al abrir otro sí volver a formulario
-    setPestana('formulario')
-    setRespuestas([])
+    aplicarEstadoEditor({
+      form: siguiente,
+      baselineJson: JSON.stringify(siguiente),
+      portadaPreview: item.portadaUrl || '',
+      portadaFile: null,
+      pestana: 'formulario',
+    })
   }
 
   const toggleExpandir = (item) => {
     if (submitting) return
     if (expandidoId === item.id) {
-      if (!confirmarDescartarSiHayCambios()) return
+      persistirBorradorActual(item.id)
       setExpandidoId(null)
-      resetEditor()
       return
     }
-    if (expandidoId && !confirmarDescartarSiHayCambios()) return
-    cargarItemEnEditor(item)
+    if (expandidoId) persistirBorradorActual(expandidoId)
+    cargarItemEnEditor(item, { preferirBorrador: true })
     setExpandidoId(item.id)
   }
 
   const abrirCrear = () => {
     if (submitting) return
-    if (expandidoId && !confirmarDescartarSiHayCambios()) return
+    if (expandidoId) persistirBorradorActual(expandidoId)
     setError('')
-    resetEditor()
+    if (!restaurarBorrador(NUEVO_ID)) {
+      resetEditor()
+    }
     setExpandidoId(NUEVO_ID)
   }
 
   const colapsar = () => {
     if (submitting) return
-    if (!confirmarDescartarSiHayCambios()) return
+    if (expandidoId) persistirBorradorActual(expandidoId)
     setExpandidoId(null)
-    resetEditor()
   }
 
   const setCampo = (campo, valor) => {
-    setForm((prev) => ({ ...prev, [campo]: valor }))
+    setForm((prev) => {
+      const next = { ...prev, [campo]: valor }
+      // Persistencia inmediata de texto (evita perder descripción al colapsar rápido).
+      if (expandidoId) {
+        guardarBorradorStorage(expandidoId, {
+          form: clonarForm(next),
+          baselineJson,
+          portadaPreview,
+          pestana,
+        })
+      }
+      return next
+    })
   }
 
   const actualizarPregunta = (id, patch) => {
@@ -320,19 +488,46 @@ function FormulariosModal({ open, onClose }) {
         portada: portadaFile || undefined,
       }
 
+      const idBorradorAntes = expandidoId
       let guardado
       if (editandoId) {
         guardado = await actualizarFormulario(editandoId, payload)
       } else {
         guardado = await crearFormulario(payload)
-        setExpandidoId(guardado.id)
       }
 
-      setPortadaFile(null)
-      setPortadaPreview(guardado.portadaUrl || portadaPreview)
-      const siguiente = formDesdeItem(guardado)
-      setForm(siguiente)
-      setBaselineJson(JSON.stringify(siguiente))
+      // Preferir lo que el usuario tenía escrito si el API no devolvió algún campo.
+      const siguiente = formDesdeItem({
+        ...guardado,
+        titulo: guardado.titulo || form.titulo,
+        descripcion:
+          guardado.descripcion != null && guardado.descripcion !== ''
+            ? guardado.descripcion
+            : form.descripcion,
+        mensajeAgradecimiento:
+          guardado.mensajeAgradecimiento || form.mensajeAgradecimiento,
+        preguntas:
+          Array.isArray(guardado.preguntas) && guardado.preguntas.length
+            ? guardado.preguntas
+            : form.preguntas,
+      })
+
+      descartarBorrador(idBorradorAntes)
+      if (idBorradorAntes === NUEVO_ID) {
+        descartarBorrador(NUEVO_ID)
+      }
+      portadasArchivoRef.current.delete(idBorradorAntes)
+
+      setExpandidoId(guardado.id)
+      aplicarEstadoEditor({
+        form: siguiente,
+        baselineJson: JSON.stringify(siguiente),
+        portadaPreview: guardado.portadaUrl || portadaPreview,
+        portadaFile: null,
+        pestana,
+      })
+      // El guardado ya está en servidor: limpia borrador del id definitivo también.
+      descartarBorrador(guardado.id)
       await cargar()
     } catch (err) {
       setError(err.message || 'No se pudo guardar el formulario')
@@ -357,6 +552,7 @@ function FormulariosModal({ open, onClose }) {
     setError('')
     try {
       await eliminarFormulario(eliminarTarget.id)
+      descartarBorrador(eliminarTarget.id)
       if (expandidoId === eliminarTarget.id) {
         setExpandidoId(null)
         resetEditor()
@@ -534,8 +730,7 @@ function FormulariosModal({ open, onClose }) {
                       </button>
                     </div>
                   </div>
-                  <input
-                    type="text"
+                  <textarea
                     className="formularios__pregunta-enunciado"
                     value={p.enunciado}
                     onChange={(e) =>
@@ -545,6 +740,7 @@ function FormulariosModal({ open, onClose }) {
                     }
                     placeholder="Enunciado de la pregunta"
                     maxLength={500}
+                    rows={3}
                   />
                   <div className="formularios__requerida">
                     <span className="formularios__requerida-label">
@@ -694,7 +890,7 @@ function FormulariosModal({ open, onClose }) {
         open={open}
         onClose={() => {
           if (submitting) return
-          if (!confirmarDescartarSiHayCambios()) return
+          if (expandidoId) persistirBorradorActual(expandidoId)
           onClose?.()
         }}
         title="Formularios / Preguntas"
@@ -725,7 +921,17 @@ function FormulariosModal({ open, onClose }) {
 
           <p className="formularios__intro">
             Despliega una card para editarla. El link público es corto:{' '}
-            <code>/f/…</code>
+            <code>/f/…</code>. El borrador (título, descripción, preguntas) se
+            guarda solo al escribir; no se pierde al cambiar de pestaña ni al
+            colapsar la card.
+            {hayCambiosSinGuardar ? (
+              <>
+                {' '}
+                <strong className="formularios__draft-flag">
+                  Borrador sin publicar
+                </strong>
+              </>
+            ) : null}
           </p>
 
           {cargando ? (

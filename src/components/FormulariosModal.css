@@ -21,6 +21,11 @@
   color: #fb923c;
 }
 
+.formularios__draft-flag {
+  color: #fdba74;
+  font-weight: 700;
+}
+
 .formularios__error {
   margin: 0;
   padding: 0.65rem 0.85rem;
@@ -55,7 +60,7 @@
   background: #121212;
   border: 1px solid #333;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .formularios__card--inactivo {
@@ -237,8 +242,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  max-height: min(48vh, 420px);
-  overflow: auto;
+  /* El scroll lo hace .formularios__cards; así no se corta el enunciado. */
+  max-height: none;
+  overflow: visible;
   padding-right: 0.2rem;
 }
 
@@ -262,14 +268,22 @@
 .formularios__opcion-row input,
 .formularios__link-row input {
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
   padding: 0.55rem 0.7rem;
   font: inherit;
   font-size: 0.88rem;
+  line-height: 1.35;
   color: #f5f5f5;
   background: #0a0a0a;
   border: 1px solid #404040;
   border-radius: 8px;
+}
+
+.formularios__pregunta-enunciado {
+  display: block;
+  min-height: 4.5rem;
+  resize: vertical;
 }
 
 .formularios__label textarea {
@@ -368,6 +382,8 @@
   background: #0a0a0a;
   border: 1px solid #333;
   border-radius: 10px;
+  overflow: visible;
+  min-width: 0;
 }
 
 .formularios__pregunta-top {
@@ -453,8 +469,8 @@
 }
 
 .formularios__respuestas {
-  max-height: min(48vh, 420px);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .formularios__respuestas-lista {
