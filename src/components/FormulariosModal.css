@@ -242,6 +242,11 @@
   padding-right: 0.2rem;
 }
 
+.formularios__editor[hidden],
+.formularios__respuestas[hidden] {
+  display: none !important;
+}
+
 .formularios__label {
   display: flex;
   flex-direction: column;

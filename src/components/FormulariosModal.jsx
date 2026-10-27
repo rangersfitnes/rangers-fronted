@@ -33,12 +33,14 @@ function preguntaVacia(tipo = 'abierta') {
   }
 }
 
-const estadoInicial = {
-  titulo: '',
-  descripcion: '',
-  mensajeAgradecimiento: '¡Gracias! Recibimos tus respuestas.',
-  activo: true,
-  preguntas: [],
+function crearEstadoInicial() {
+  return {
+    titulo: '',
+    descripcion: '',
+    mensajeAgradecimiento: '¡Gracias! Recibimos tus respuestas.',
+    activo: true,
+    preguntas: [],
+  }
 }
 
 function formatearFecha(ms) {
@@ -84,7 +86,7 @@ function FormulariosModal({ open, onClose }) {
   const [cargando, setCargando] = useState(false)
   const [expandidoId, setExpandidoId] = useState(null)
   const [pestana, setPestana] = useState('formulario')
-  const [form, setForm] = useState(estadoInicial)
+  const [form, setForm] = useState(crearEstadoInicial)
   const [portadaFile, setPortadaFile] = useState(null)
   const [portadaPreview, setPortadaPreview] = useState('')
   const [portadaProcesando, setPortadaProcesando] = useState(false)
@@ -95,9 +97,17 @@ function FormulariosModal({ open, onClose }) {
   const [eliminando, setEliminando] = useState(false)
   const [respuestas, setRespuestas] = useState([])
   const [cargandoRespuestas, setCargandoRespuestas] = useState(false)
+  const [baselineJson, setBaselineJson] = useState(() =>
+    JSON.stringify(crearEstadoInicial()),
+  )
 
   const editandoId = expandidoId && expandidoId !== NUEVO_ID ? expandidoId : null
   const creandoNuevo = expandidoId === NUEVO_ID
+  const hayCambiosSinGuardar = useMemo(() => {
+    if (!expandidoId) return false
+    if (portadaFile) return true
+    return JSON.stringify(form) !== baselineJson
+  }, [expandidoId, form, portadaFile, baselineJson])
 
   const linkPublico = useMemo(
     () => (editandoId ? linkPublicoFormulario(editandoId) : ''),
@@ -126,11 +136,20 @@ function FormulariosModal({ open, onClose }) {
   }
 
   const resetEditor = () => {
-    setForm(estadoInicial)
+    const inicial = crearEstadoInicial()
+    setForm(inicial)
+    setBaselineJson(JSON.stringify(inicial))
     setPortadaFile(null)
     setPortadaPreview('')
     setPestana('formulario')
     setRespuestas([])
+  }
+
+  const confirmarDescartarSiHayCambios = () => {
+    if (!hayCambiosSinGuardar) return true
+    return window.confirm(
+      'Tienes cambios sin guardar. ¿Descartarlos y continuar?',
+    )
   }
 
   useEffect(() => {
@@ -170,9 +189,12 @@ function FormulariosModal({ open, onClose }) {
 
   const cargarItemEnEditor = (item) => {
     setError('')
-    setForm(formDesdeItem(item))
+    const siguiente = formDesdeItem(item)
+    setForm(siguiente)
+    setBaselineJson(JSON.stringify(siguiente))
     setPortadaFile(null)
     setPortadaPreview(item.portadaUrl || '')
+    // No tocar pestana aquí si ya estamos editando el mismo; al abrir otro sí volver a formulario
     setPestana('formulario')
     setRespuestas([])
   }
@@ -180,16 +202,19 @@ function FormulariosModal({ open, onClose }) {
   const toggleExpandir = (item) => {
     if (submitting) return
     if (expandidoId === item.id) {
+      if (!confirmarDescartarSiHayCambios()) return
       setExpandidoId(null)
       resetEditor()
       return
     }
+    if (expandidoId && !confirmarDescartarSiHayCambios()) return
     cargarItemEnEditor(item)
     setExpandidoId(item.id)
   }
 
   const abrirCrear = () => {
     if (submitting) return
+    if (expandidoId && !confirmarDescartarSiHayCambios()) return
     setError('')
     resetEditor()
     setExpandidoId(NUEVO_ID)
@@ -197,6 +222,7 @@ function FormulariosModal({ open, onClose }) {
 
   const colapsar = () => {
     if (submitting) return
+    if (!confirmarDescartarSiHayCambios()) return
     setExpandidoId(null)
     resetEditor()
   }
@@ -304,7 +330,9 @@ function FormulariosModal({ open, onClose }) {
 
       setPortadaFile(null)
       setPortadaPreview(guardado.portadaUrl || portadaPreview)
-      setForm(formDesdeItem(guardado))
+      const siguiente = formDesdeItem(guardado)
+      setForm(siguiente)
+      setBaselineJson(JSON.stringify(siguiente))
       await cargar()
     } catch (err) {
       setError(err.message || 'No se pudo guardar el formulario')
@@ -356,7 +384,6 @@ function FormulariosModal({ open, onClose }) {
           type="button"
           className={`formularios__tab${pestana === 'respuestas' ? ' formularios__tab--activo' : ''}`}
           onClick={() => setPestana('respuestas')}
-          disabled={!editandoId}
           title={
             editandoId
               ? undefined
@@ -367,8 +394,11 @@ function FormulariosModal({ open, onClose }) {
         </button>
       </div>
 
-      {pestana === 'formulario' ? (
-        <div className="formularios__editor">
+      {/* Se ocultan con CSS (no se desmontan) para no perder el avance al cambiar de pestaña. */}
+      <div
+        className="formularios__editor"
+        hidden={pestana !== 'formulario'}
+      >
           {editandoId ? (
             <div className="formularios__link-box">
               <label>Link público</label>
@@ -597,42 +627,45 @@ function FormulariosModal({ open, onClose }) {
               ))}
             </ul>
           )}
-        </div>
-      ) : (
-        <div className="formularios__respuestas">
-          {!editandoId ? (
-            <p className="formularios__vacio">
-              Guarda el formulario primero para ver respuestas.
-            </p>
-          ) : cargandoRespuestas ? (
-            <p className="formularios__cargando">Cargando respuestas…</p>
-          ) : respuestas.length === 0 ? (
-            <p className="formularios__vacio">Todavía no hay respuestas.</p>
-          ) : (
-            <ul className="formularios__respuestas-lista">
-              {respuestas.map((r, idx) => (
-                <li key={r.id} className="formularios__respuesta-item">
-                  <header>
-                    <strong>Envío #{respuestas.length - idx}</strong>
-                    <span>{formatearFecha(r.creadoEn)}</span>
-                  </header>
-                  <dl>
-                    {(r.respuestas || []).map((entry) => {
-                      const pregunta = mapaPreguntas.get(entry.preguntaId)
-                      return (
-                        <div key={`${r.id}_${entry.preguntaId}`}>
-                          <dt>{pregunta?.enunciado || entry.preguntaId}</dt>
-                          <dd>{String(entry.valor ?? '—')}</dd>
-                        </div>
-                      )
-                    })}
-                  </dl>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      </div>
+
+      <div
+        className="formularios__respuestas"
+        hidden={pestana !== 'respuestas'}
+      >
+        {!editandoId ? (
+          <p className="formularios__vacio">
+            Guarda el formulario primero para ver respuestas. Tus cambios del
+            formulario se mantienen al volver a la otra pestaña.
+          </p>
+        ) : cargandoRespuestas ? (
+          <p className="formularios__cargando">Cargando respuestas…</p>
+        ) : respuestas.length === 0 ? (
+          <p className="formularios__vacio">Todavía no hay respuestas.</p>
+        ) : (
+          <ul className="formularios__respuestas-lista">
+            {respuestas.map((r, idx) => (
+              <li key={r.id} className="formularios__respuesta-item">
+                <header>
+                  <strong>Envío #{respuestas.length - idx}</strong>
+                  <span>{formatearFecha(r.creadoEn)}</span>
+                </header>
+                <dl>
+                  {(r.respuestas || []).map((entry) => {
+                    const pregunta = mapaPreguntas.get(entry.preguntaId)
+                    return (
+                      <div key={`${r.id}_${entry.preguntaId}`}>
+                        <dt>{pregunta?.enunciado || entry.preguntaId}</dt>
+                        <dd>{String(entry.valor ?? '—')}</dd>
+                      </div>
+                    )
+                  })}
+                </dl>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="formularios__panel-actions">
         <button
@@ -661,6 +694,7 @@ function FormulariosModal({ open, onClose }) {
         open={open}
         onClose={() => {
           if (submitting) return
+          if (!confirmarDescartarSiHayCambios()) return
           onClose?.()
         }}
         title="Formularios / Preguntas"
