@@ -79,3 +79,21 @@ export async function eliminarBotAdministrador(id) {
   })
   return true
 }
+
+/* Ajustes globales del bot. */
+export async function obtenerAjustesBot({ signal } = {}) {
+  const data = await request('/ajustes', { signal })
+  return (
+    data.ajustes || {
+      respuestasGruposWhatsApp: true,
+    }
+  )
+}
+
+export async function actualizarAjustesBot(payload) {
+  const data = await request('/ajustes', {
+    method: 'PUT',
+    body: payload,
+  })
+  return data.ajustes
+}

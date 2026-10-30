@@ -9,10 +9,111 @@
   gap: 1rem;
 }
 
+.conocimiento-bot__ajuste {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: #121212;
+  border: 1px solid #333;
+  border-radius: 10px;
+}
+
+.conocimiento-bot__ajuste-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.conocimiento-bot__ajuste-texto strong {
+  font-size: 0.88rem;
+  color: #f5f5f5;
+}
+
+.conocimiento-bot__ajuste-texto span {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #a3a3a3;
+}
+
+.conocimiento-bot__switch {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a3a3a3;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.conocimiento-bot__switch:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.conocimiento-bot__switch-knob {
+  position: relative;
+  width: 2.6rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  background: #404040;
+  border: 1px solid #525252;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.conocimiento-bot__switch-knob::after {
+  content: '';
+  position: absolute;
+  top: 0.12rem;
+  left: 0.12rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: #d4d4d4;
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.conocimiento-bot__switch--on {
+  color: #fdba74;
+}
+
+.conocimiento-bot__switch--on .conocimiento-bot__switch-knob {
+  background: rgba(249, 115, 22, 0.35);
+  border-color: #f97316;
+}
+
+.conocimiento-bot__switch--on .conocimiento-bot__switch-knob::after {
+  transform: translateX(1.1rem);
+  background: #f97316;
+}
+
+.conocimiento-bot__switch-label {
+  min-width: 3.6rem;
+  text-align: left;
+}
+
 .conocimiento-bot__tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+@media (max-width: 560px) {
+  .conocimiento-bot__ajuste {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .conocimiento-bot__switch {
+    align-self: flex-end;
+  }
 }
 
 .conocimiento-bot__tab {

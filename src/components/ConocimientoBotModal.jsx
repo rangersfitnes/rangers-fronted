@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
 import {
+  actualizarAjustesBot,
   actualizarBotAdministrador,
   actualizarConocimientoBot,
   crearBotAdministrador,
   crearConocimientoBot,
   eliminarBotAdministrador,
   eliminarConocimientoBot,
+  obtenerAjustesBot,
   obtenerBotAdministradores,
   obtenerConocimientoBot,
 } from '../services/conocimientoBotService.js'
@@ -50,6 +52,9 @@ function ConocimientoBotModal({ open, onClose }) {
     activo: true,
   })
   const [editandoAdminId, setEditandoAdminId] = useState(null)
+  const [respuestasGruposWhatsApp, setRespuestasGruposWhatsApp] =
+    useState(true)
+  const [guardandoAjuste, setGuardandoAjuste] = useState(false)
 
   const cargar = async ({ signal } = {}) => {
     setCargando(true)
@@ -74,6 +79,18 @@ function ConocimientoBotModal({ open, onClose }) {
     }
   }
 
+  const cargarAjustes = async ({ signal } = {}) => {
+    try {
+      const ajustes = await obtenerAjustesBot({ signal })
+      if (!signal?.aborted) {
+        setRespuestasGruposWhatsApp(ajustes.respuestasGruposWhatsApp !== false)
+      }
+    } catch (err) {
+      if (err?.name === 'AbortError') return
+      setError(err.message || 'No se pudieron cargar los ajustes del bot')
+    }
+  }
+
   useEffect(() => {
     if (!open) {
       setForm(estadoInicial)
@@ -84,13 +101,37 @@ function ConocimientoBotModal({ open, onClose }) {
       setPestana('info')
       setEditandoAdminId(null)
       setAdminForm({ nombre: '', telefono: '', activo: true })
+      setRespuestasGruposWhatsApp(true)
+      setGuardandoAjuste(false)
       return undefined
     }
     const controller = new AbortController()
     cargar({ signal: controller.signal })
     cargarAdmins({ signal: controller.signal })
+    cargarAjustes({ signal: controller.signal })
     return () => controller.abort()
   }, [open ])
+
+  const handleToggleRespuestasGrupos = async () => {
+    if (guardandoAjuste || submitting) return
+    const siguiente = !respuestasGruposWhatsApp
+    setGuardandoAjuste(true)
+    setError('')
+    setRespuestasGruposWhatsApp(siguiente)
+    try {
+      const ajustes = await actualizarAjustesBot({
+        respuestasGruposWhatsApp: siguiente,
+      })
+      setRespuestasGruposWhatsApp(ajustes.respuestasGruposWhatsApp !== false)
+    } catch (err) {
+      setRespuestasGruposWhatsApp(!siguiente)
+      setError(
+        err.message || 'No se pudo actualizar las respuestas a grupos',
+      )
+    } finally {
+      setGuardandoAjuste(false)
+    }
+  }
 
   const handleAprobarAprendizaje = async (item) => {
     setSubmitting(true)
@@ -306,6 +347,34 @@ function ConocimientoBotModal({ open, onClose }) {
       }
     >
       <div className="conocimiento-bot">
+        <div className="conocimiento-bot__ajuste">
+          <div className="conocimiento-bot__ajuste-texto">
+            <strong>Respuestas automáticas a grupos de WhatsApp</strong>
+            <span>
+              Si está apagado, el bot no responde en el grupo público ni en el
+              de admin. Los chats privados siguen igual.
+            </span>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={respuestasGruposWhatsApp}
+            aria-label="Respuestas automáticas a grupos de WhatsApp"
+            className={`conocimiento-bot__switch${respuestasGruposWhatsApp ? ' conocimiento-bot__switch--on' : ''}`}
+            disabled={guardandoAjuste || submitting}
+            onClick={handleToggleRespuestasGrupos}
+          >
+            <span className="conocimiento-bot__switch-knob" />
+            <span className="conocimiento-bot__switch-label">
+              {guardandoAjuste
+                ? '…'
+                : respuestasGruposWhatsApp
+                  ? 'Activado'
+                  : 'Apagado'}
+            </span>
+          </button>
+        </div>
+
         <div className="conocimiento-bot__tabs" role="tablist">
           <button
             type="button"
